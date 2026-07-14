@@ -1,0 +1,43 @@
+# ==========================
+# R artifacts
+# ==========================
+.Rhistory
+.Rdata
+.RData
+*.RData
+.Rproj.user/
+Rplots.pdf
+
+# ==========================
+# Generated output (reproducible)
+# ==========================
+output/figures/*.pdf
+output/figures/*.png
+output/tables/*.tex
+output/*.RData
+
+# ==========================
+# LaTeX build artifacts
+# ==========================
+LaTeX_report/*.aux
+LaTeX_report/*.bbl
+LaTeX_report/*.bcf
+LaTeX_report/*.blg
+LaTeX_report/*.fdb_latexmk
+LaTeX_report/*.fls
+LaTeX_report/*.log
+LaTeX_report/*.out
+LaTeX_report/*.toc
+LaTeX_report/*.lof
+LaTeX_report/*.lot
+LaTeX_report/*.synctex.gz
+LaTeX_report/*.run.xml
+LaTeX_report/*.nav
+LaTeX_report/*.snm
+LaTeX_report/*.vrb
+LaTeX_LaTeX_report/sections/*.aux
+LaTeX_LaTeX_report/appendices/*.aux
+
+# Keep the output directories
+!output/figures/.gitkeep
+!output/tables/.gitkeep

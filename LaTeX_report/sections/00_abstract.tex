@@ -1,0 +1,25 @@
+% =============================================================================
+% 00_abstract.tex — Abstract
+% =============================================================================
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+
+% TODO: Write a concise abstract (max 150 words) covering:
+%   1. The prediction problem (predict brozek body-fat percentage from 14 anthropometric predictors)
+%   2. Methods used (OLS, Ridge, Lasso, Elastic Net, random ReLU features)
+%   3. Main quantitative evidence (e.g., best CV-RMSE, selected model)
+%   4. Final recommendation and key takeaway
+
+\textit{%
+This report investigates regularised regression methods for predicting body-fat
+percentage (brozek) from anthropometric measurements in the \texttt{fat.csv}
+dataset ($n = 252$, $p = 14$ candidate predictors).  After excluding
+leakage-prone variables, we compare Ordinary Least Squares (OLS), Ridge, Lasso,
+and Elastic Net regression using 5-fold cross-validation.  We further explore
+fixed random ReLU feature expansions to bridge classical penalisation with
+neural-network concepts.
+% TODO: Add quantitative results (CV-RMSE values, chosen model, holdout performance).
+% TODO: State final recommendation.
+}
+
+\bigskip

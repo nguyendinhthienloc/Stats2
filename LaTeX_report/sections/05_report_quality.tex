@@ -1,0 +1,110 @@
+% =============================================================================
+% 05_report_quality.tex — Problem 5: Report Quality and Reproducibility
+% =============================================================================
+\section{Report Quality and Reproducibility}
+\label{sec:report-quality}
+
+% ---- 5.1 Reproduction Record ------------------------------------------------
+\subsection{Reproduction Record}
+\label{sec:reproduction}
+
+The following step-by-step instructions reproduce all results, figures, and
+tables in this report from scratch.
+
+\paragraph{Prerequisites.}
+\begin{itemize}
+    \item R $\geq$ 4.3.0 with packages: \texttt{glmnet}, \texttt{ggplot2},
+          \texttt{dplyr}, \texttt{corrplot}, \texttt{caret}, \texttt{knitr},
+          \texttt{xtable}.
+    \item \LaTeX\ distribution (e.g.\ TeX Live 2024 or MiKTeX) with
+          \texttt{latexmk}.
+    \item The dataset \texttt{fat.csv} placed in
+          \texttt{project\_quiz1\_latex/data/}.
+\end{itemize}
+
+\paragraph{Steps.}
+
+\begin{lstlisting}[language=bash, caption={Reproduction commands.}]
+# 1. Clone or download the project
+cd D:/Stats2/.
+
+# 2. Run the R analysis pipeline
+make all
+# This generates all figures in output/figures/
+# and all tables in output/tables/
+
+# 3. Compile the LaTeX report
+cd report
+latexmk -pdf main.tex
+
+# 4. Clean auxiliary files (optional)
+latexmk -c
+\end{lstlisting}
+
+% TODO: Add any additional steps or notes about the environment setup,
+%       e.g., specific R package versions, OS-specific instructions.
+
+% ---- 5.2 Recommendation and Limitations ------------------------------------
+\subsection{Recommendation and Limitations}
+\label{sec:recommendation}
+
+% TODO: Write a final recommendation addressing:
+%   1. Which model should be used for predicting brozek body-fat percentage?
+%   2. Is the goal prediction accuracy or interpretability? How does this
+%      affect the recommendation?
+%   3. What are the key limitations of this analysis?
+%      (e.g., small sample size, linearity assumption, limited predictor set,
+%       potential measurement error, generalisability to other populations)
+
+\paragraph{Recommendation.}
+\textit{TODO: State your final model recommendation with supporting evidence
+from the cross-validation and holdout results.}
+
+\paragraph{Prediction vs.\ Interpretation.}
+\textit{TODO: Discuss the trade-off. Ridge retains all predictors (better for
+interpretation of relative importance), while Lasso provides a sparse model
+(easier to deploy and communicate). Elastic Net offers a middle ground.}
+
+\paragraph{Limitations.}
+\begin{enumerate}
+    \item \textit{TODO: Limitation 1 (e.g., sample size and generalisability).}
+    \item \textit{TODO: Limitation 2 (e.g., linearity assumption).}
+    \item \textit{TODO: Limitation 3 (e.g., predictor measurement error).}
+\end{enumerate}
+
+% ---- 5.3 AI Verification Record --------------------------------------------
+\subsection{AI Verification Record}
+\label{sec:ai-verification}
+
+All AI-assisted outputs were independently verified by team members.
+Table~\ref{tab:ai-verification} summarises the verification process.
+
+\begin{table}[H]
+\centering
+\caption{AI verification record.}
+\label{tab:ai-verification}
+\begin{tabularx}{\textwidth}{l X X l}
+\toprule
+\textbf{AI-Assisted Item} &
+\textbf{How Checked} &
+\textbf{Evidence} &
+\textbf{Modification} \\
+\midrule
+% TODO: Fill in each row. Examples:
+%
+% Ridge derivation &
+% Verified each step by hand &
+% Handwritten notes (scanned) &
+% None \\[4pt]
+%
+% R code for CV &
+% Compared output with manual calculation on subset &
+% Console output matches &
+% Fixed seed for reproducibility \\[4pt]
+%
+\textit{TODO: Item 1} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\[4pt]
+\textit{TODO: Item 2} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\[4pt]
+\textit{TODO: Item 3} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\
+\bottomrule
+\end{tabularx}
+\end{table}

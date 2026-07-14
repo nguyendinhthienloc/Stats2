@@ -1,0 +1,180 @@
+% =============================================================================
+% 04_elastic_net.tex — Problem 4: Elastic Net and Neural-Feature Bridge
+%                      (P5 — Tài)
+% =============================================================================
+\section{Elastic Net and Neural-Feature Bridge}
+\label{sec:elastic-net}
+
+% ---- 4.1 Research Question and Source Map -----------------------------------
+\subsection{Research Question and Source Map}
+\label{sec:research-question}
+
+% TODO: Pick ONE research direction to investigate:
+%   (a) Weight decay as L2 regularisation in neural networks
+%   (b) L1 penalty → sparse weights in neural networks
+%   (c) Pruning as post-training sparsification
+%   (d) Dropout as implicit regularisation
+%
+% State your question clearly, e.g.:
+% ``How does L2 weight decay in SGD relate to Ridge regression, and what are
+%   the differences in the stochastic vs.\ batch setting?''
+
+\textit{TODO: State research question here.}
+
+\begin{table}[H]
+\centering
+\caption{Source map linking claims to evidence.}
+\label{tab:source-map}
+\begin{tabularx}{\textwidth}{X l X X}
+\toprule
+\textbf{Claim} &
+\textbf{Source} &
+\textbf{Establishes} &
+\textbf{Does Not Establish} \\
+\midrule
+% TODO: Fill in at least 3 rows.
+%
+% Example row:
+% L2 weight decay is equivalent to Ridge regression in batch GD &
+% \citet{Krogh1991} &
+% Equivalence holds for batch gradient descent with fixed learning rate &
+% Does NOT hold for Adam or other adaptive optimisers \\[4pt]
+%
+\textit{TODO: Claim 1} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\[4pt]
+\textit{TODO: Claim 2} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\[4pt]
+\textit{TODO: Claim 3} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---- 4.2 Elastic Net on Original Predictors ---------------------------------
+\subsection{Elastic Net on Original Predictors}
+\label{sec:enet-original}
+
+The Elastic Net \citep{ZouHastie2005} combines $\ell_1$ and $\ell_2$ penalties:
+\[
+    \hat{\bbeta}^{\mathrm{ENet}}
+    = \argmin_{\bbeta}
+      \left\{
+          \frac{1}{2n} \norm{\by - \bX\bbeta}_2^2
+          + \lambda\!\left[
+              \alpha \norm{\bbeta}_1
+              + \frac{1 - \alpha}{2} \norm{\bbeta}_2^2
+          \right]
+      \right\},
+    \quad \alpha \in [0, 1].
+\]
+
+% -- Alpha comparison plot
+\includefigure{0.75\textwidth}{fig_enet_alpha_comparison}%
+    {Elastic Net CV error across different $\alpha$ values.}%
+    {fig:enet-alpha}
+
+% -- Elastic Net coefficient plot
+\includefigure{0.75\textwidth}{fig_p4_enet_coef}%
+    {Elastic Net coefficient estimates at optimal $(\alpha, \lambda)$.}%
+    {fig:enet-coef}
+
+% TODO: Report the best (alpha, lambda) combination from CV.
+%       Interpret how Elastic Net balances Ridge's grouping effect with
+%       Lasso's sparsity.
+
+% ---- 4.3 Fixed ReLU Features -----------------------------------------------
+\subsection{Fixed ReLU Features}
+\label{sec:relu-features}
+
+To bridge regularised regression with neural-network concepts, we generate
+$M = 200$ random features via:
+\[
+    h_m(\bx) = \max\!\bigl(\bm{w}_m^\top \bx + b_m,\; 0\bigr),
+    \qquad m = 1, \dots, M,
+\]
+where $\bm{w}_m \sim \mathcal{N}(\bm{0}, \bm{I}_p)$ and
+$b_m \sim \mathcal{N}(0, 1)$ are \textbf{fixed} (not learned).
+Only the output-layer coefficients $\bbeta \in \R^M$ are learned via
+Ridge/Lasso/Elastic Net on the transformed design matrix
+$\bm{H} \in \R^{n \times M}$.
+
+% -- Neural model CV plot
+\includefigure{0.75\textwidth}{fig_neural_cv}%
+    {CV error of Ridge/Lasso/Elastic Net on fixed ReLU features ($M = 200$).}%
+    {fig:neural-cv}
+
+% TODO: Compare the performance of models trained on original $p = 14$
+%       predictors vs.\ the $M = 200$ ReLU features.
+%       Discuss: Does the feature expansion help? Why or why not?
+
+% ---- 4.4 Locked Declaration and Final Holdout --------------------------------
+\subsection{Locked Declaration and Final Holdout}
+\label{sec:holdout}
+
+\bigskip
+\noindent
+\fbox{\parbox{0.95\textwidth}{%
+\textbf{Locked Model Declaration} \\[4pt]
+\begin{tabular}{@{}ll@{}}
+    \textbf{Feature set:}    & \textit{TODO: original 14 / ReLU 200 / other} \\
+    \textbf{Method:}         & \textit{TODO: Ridge / Lasso / Elastic Net} \\
+    \textbf{Tuning:}         & \textit{TODO: $\alpha = \ldots$, $\lambda = \ldots$} \\
+    \textbf{Justification:}  & \textit{TODO: brief reason} \\
+\end{tabular}\\[4pt]
+\textit{This declaration was made before examining holdout results.}
+}}
+\bigskip
+
+% -- Holdout comparison table
+\begin{table}[H]
+\centering
+\caption{Final holdout performance: RMSE and $R^2$ on the test set.}
+\label{tab:holdout}
+% TODO: Uncomment once generated:
+% \input{../output/tables/tab_holdout_comparison}
+\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
+    \texttt{tab\_holdout\_comparison.tex} — run the R pipeline to generate.
+\vspace{0.8cm}}}
+\end{table}
+
+% -- Actual vs predicted plot
+\includefigure{0.65\textwidth}{fig_p4_actual_vs_pred}%
+    {Actual vs.\ predicted \texttt{brozek} on the holdout test set.}%
+    {fig:actual-vs-predicted}
+
+% TODO: State whether the holdout results support the pre-declared model choice.
+%       Discuss any discrepancies.
+
+% ---- 4.5 Deep-Learning Connection and Limitations ---------------------------
+\subsection{Deep-Learning Connection and Limitations}
+\label{sec:dl-connection}
+
+% TODO: Discuss the following, citing sources from Table~\ref{tab:source-map}:
+%
+% 1. Weight decay vs.\ L2 penalty:
+%    - In batch GD, weight decay ≡ L2 regularisation \citep{Krogh1991}.
+%    - In adaptive optimisers (Adam), decoupled weight decay differs
+%      \citep{GoodfellowBengioCourville2016}.
+%
+% 2. L1 penalty → sparse weights:
+%    - Lasso encourages sparsity; analogous to L1-regularised neural networks.
+%
+% 3. Pruning:
+%    - Post-training removal of small weights \citep{HanPoolTranDally2015}.
+%    - Different from L1: pruning is a discrete, post-hoc operation.
+%
+% 4. Dropout:
+%    - Randomly zeroing activations during training \citep{Srivastava2014}.
+%    - Provides an ensemble-like regularisation effect.
+%
+% Distinguish clearly between these four concepts.
+
+\textit{TODO: Write the deep-learning connection discussion here.}
+
+\paragraph{Limitations.}
+% TODO: Discuss at least TWO limitations, e.g.:
+%   (a) Fixed ReLU features are not optimised; a trained network would learn
+%       better representations.
+%   (b) Weight decay equivalence breaks down for adaptive optimisers.
+%   (c) L1 penalty in NNs is rarely used in practice due to optimisation
+%       difficulties.
+%   (d) Our dataset (n=252) is far too small for deep learning to show benefit.
+
+\textit{TODO: Discuss $\geq 2$ limitations.}

@@ -1,0 +1,121 @@
+% =============================================================================
+% preamble.sty — Custom style for ASESII 24A02 Project-Based Quiz 1
+% =============================================================================
+\ProvidesPackage{preamble}[2025/07/14 ASESII Quiz 1 Report Style]
+
+% ---- Layout ----------------------------------------------------------------
+\RequirePackage[margin=1in]{geometry}
+\RequirePackage{setspace}
+\setstretch{1.15}
+
+% ---- Mathematics -----------------------------------------------------------
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsthm}
+\RequirePackage{mathtools}
+\RequirePackage{bm}
+
+% ---- Font (Times-like, professional) ---------------------------------------
+\RequirePackage{newtxtext}
+\RequirePackage{newtxmath}
+
+
+% ---- Tables ----------------------------------------------------------------
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+\RequirePackage{longtable}
+\RequirePackage{multirow}
+
+% ---- Graphics --------------------------------------------------------------
+\RequirePackage{graphicx}
+\RequirePackage{float}
+\RequirePackage{subcaption}
+\graphicspath{{../output/figures/}}
+
+% ---- Colors ----------------------------------------------------------------
+\RequirePackage[dvipsnames]{xcolor}
+
+% ---- Hyperlinks ------------------------------------------------------------
+\RequirePackage[
+    colorlinks = true,
+    linkcolor  = blue,
+    citecolor  = blue,
+    urlcolor   = blue
+]{hyperref}
+
+% ---- Code listings (R) ----------------------------------------------------
+\RequirePackage{listings}
+\lstset{
+    language         = R,
+    basicstyle       = \small\ttfamily,
+    backgroundcolor  = \color{gray!10},
+    keywordstyle     = \color{blue}\bfseries,
+    commentstyle     = \color{OliveGreen}\itshape,
+    stringstyle      = \color{BrickRed},
+    numbers          = left,
+    numberstyle      = \tiny\color{gray},
+    numbersep        = 8pt,
+    frame            = single,
+    rulecolor        = \color{gray!40},
+    breaklines       = true,
+    breakatwhitespace= true,
+    showstringspaces = false,
+    tabsize          = 2,
+    captionpos       = b
+}
+
+% ---- Bibliography ----------------------------------------------------------
+\RequirePackage{natbib}
+\bibliographystyle{plainnat}
+
+% ---- Miscellaneous ---------------------------------------------------------
+\RequirePackage{enumitem}         % better list control
+\RequirePackage{microtype}        % microtypographic enhancements
+\RequirePackage{parskip}          % paragraph spacing instead of indent
+\RequirePackage{fancybox}         % \shadowbox, \doublebox, etc.
+
+% ---- Custom math commands --------------------------------------------------
+\newcommand{\bx}{\bm{x}}
+\newcommand{\by}{\bm{y}}
+\newcommand{\bX}{\bm{X}}
+\newcommand{\bbeta}{\bm{\beta}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+\newcommand{\R}{\mathbb{R}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% ---- Theorem environments --------------------------------------------------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% ---- Conditional file inclusion helper -------------------------------------
+% Usage: \includefigure{width}{filename}{caption}{label}
+\newcommand{\includefigure}[4]{%
+    \begin{figure}[H]
+        \centering
+        \IfFileExists{../output/figures/#2.pdf}{%
+            \includegraphics[width=#1]{#2}%
+        }{%
+            \IfFileExists{../output/figures/#2.png}{%
+                \includegraphics[width=#1]{#2}%
+            }{%
+                \fbox{\parbox{#1}{\centering\vspace{2cm}%
+                    \textbf{Figure placeholder}\\[4pt]%
+                    \texttt{\detokenize{#2}} not found\\[4pt]%
+                    Run the R pipeline first.%
+                \vspace{2cm}}}%
+            }%
+        }%
+        \caption{#3}
+        \label{#4}
+    \end{figure}
+}
+
+\endinput

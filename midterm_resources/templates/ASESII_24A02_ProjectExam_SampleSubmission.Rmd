@@ -1,0 +1,377 @@
+---
+title: "ASESII 24A02 Project-Based Quiz 1"
+subtitle: "Ridge, Lasso, and Regularization for Neural Features"
+author: "Group XX: [names and student IDs]"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+    latex_engine: xelatex
+    fig_crop: false
+  html_document:
+    toc: true
+    toc_depth: 3
+bibliography: references.bib
+link-citations: true
+params:
+  group_number: 0
+fontsize: 11pt
+geometry: margin=1in
+---
+
+<!--
+Copy this template into your group submission folder, rename it
+GroupXX_ProjectQuiz1.Rmd, place references.bib beside it, and set the group
+number parameter before rendering. Remove instructional comments from the
+final report.
+-->
+
+# Authorship and contribution statement {-}
+
+We confirm that every group member can explain the submitted analysis. AI use is reported in `GroupXX_AI_Log.csv`, and the group checked every AI-assisted item used in this report.
+
+| Student | ID | Main contributions | Verification performed |
+|---|---|---|---|
+| [Name] | [ID] | [Work] | [Check] |
+
+# Abstract {-}
+
+*Maximum 150 words: prediction problem, methods, main evidence, and recommendation.*
+
+# Reproducible setup {-}
+
+```{r setup, message=FALSE, warning=FALSE}
+required_packages <- c("tidyverse", "glmnet", "broom", "knitr")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages)) {
+  stop("Install the required packages before rendering: ",
+       paste(missing_packages, collapse = ", "))
+}
+
+library(tidyverse)
+library(glmnet)
+library(broom)
+library(knitr)
+
+group_number <- as.integer(params$group_number)
+if (length(group_number) != 1L || is.na(group_number) || group_number < 1L) {
+  stop("Set params$group_number to your assigned positive group number.")
+}
+
+seeds <- list(
+  split = 240200L + group_number,
+  cv = 240300L + group_number,
+  features = 240400L + group_number
+)
+```
+
+## Shared helper functions {-}
+
+```{r helpers}
+find_exam_data <- function(filename) {
+  input <- knitr::current_input(dir = TRUE)
+  input_dir <- if (length(input) && nzchar(input)) dirname(input) else getwd()
+  candidates <- c(
+    file.path(input_dir, "data", filename),
+    file.path(input_dir, "..", "data", filename),
+    file.path(getwd(), "data", filename)
+  )
+  existing <- candidates[file.exists(candidates)]
+  if (!length(existing)) stop("Cannot locate ", filename, " by a relative path.")
+  hits <- unique(normalizePath(existing, winslash = "/", mustWork = TRUE))
+  if (length(hits) > 1L && length(unique(unname(tools::md5sum(hits)))) > 1L) {
+    stop("Multiple nonidentical copies of ", filename, " were found.")
+  }
+  hits[[1L]]
+}
+
+split_rows <- function(n, train_prop = 0.80, seed) {
+  stopifnot(n >= 10L, train_prop > 0, train_prop < 1)
+  set.seed(seed)
+  train <- sort(sample.int(n, floor(train_prop * n), replace = FALSE))
+  list(train = train, test = setdiff(seq_len(n), train))
+}
+
+fit_scaler <- function(x, tol = 1e-12) {
+  x <- as.matrix(x)
+  center <- colMeans(x)
+  centered <- sweep(x, 2L, center, "-")
+  scale <- sqrt(colMeans(centered^2))
+  keep <- is.finite(scale) & scale > tol
+  if (!any(keep)) stop("No nonconstant training predictor remains.")
+  list(
+    center = center[keep],
+    scale = scale[keep],
+    keep = keep,
+    dropped = colnames(x)[!keep]
+  )
+}
+
+apply_scaler <- function(x, prep) {
+  x <- as.matrix(x)[, prep$keep, drop = FALSE]
+  x <- sweep(x, 2L, prep$center, "-")
+  sweep(x, 2L, prep$scale, "/")
+}
+
+make_foldid <- function(n, k = 5L, seed) {
+  if (k < 3L || k > n) stop("Require 3 <= k <= number of training rows.")
+  set.seed(seed)
+  sample(rep(seq_len(k), length.out = n))
+}
+
+fit_cv_glmnet <- function(x, y, alpha, foldid) {
+  glmnet::cv.glmnet(
+    x = x,
+    y = y,
+    family = "gaussian",
+    alpha = alpha,
+    foldid = foldid,
+    standardize = FALSE,
+    intercept = TRUE,
+    type.measure = "mse"
+  )
+}
+
+score_regression <- function(y, prediction) {
+  y <- as.numeric(y)
+  prediction <- as.numeric(prediction)
+  if (length(y) != length(prediction) || any(!is.finite(c(y, prediction)))) {
+    stop("Metrics require equal-length finite vectors.")
+  }
+  c(RMSE = sqrt(mean((y - prediction)^2)),
+    MAE = mean(abs(y - prediction)))
+}
+
+count_nonzero <- function(fit, s = "lambda.min", tol = 1e-8) {
+  b <- as.matrix(stats::coef(fit, s = s))
+  slopes <- b[rownames(b) != "(Intercept)", 1L]
+  sum(abs(slopes) > tol)
+}
+
+safe_condition_numbers <- function(x, lambda, tol = 1e-10) {
+  eigenvalues <- eigen(
+    crossprod(x) / nrow(x),
+    symmetric = TRUE,
+    only.values = TRUE
+  )$values
+  largest <- max(eigenvalues)
+  smallest <- max(min(eigenvalues), 0)
+  cutoff <- tol * max(1, largest)
+  c(
+    gram = if (smallest <= cutoff) Inf else largest / smallest,
+    ridge = (largest + lambda) / (smallest + lambda)
+  )
+}
+```
+
+# Problem 1. Prediction design and leakage control
+
+## 1A. Target and predictors
+
+```{r data-configuration, eval=FALSE}
+config <- if (group_number %% 2L == 1L) {
+  list(
+    file = "fat.csv",
+    response = "brozek",
+    excluded = c("brozek", "siri", "density", "free")
+  )
+} else {
+  list(
+    file = "prostate.csv",
+    response = "lpsa",
+    excluded = "lpsa"
+  )
+}
+
+data_raw <- read.csv(find_exam_data(config$file), check.names = FALSE)
+predictors <- setdiff(names(data_raw), config$excluded)
+analysis_data <- data_raw[, c(config$response, predictors), drop = FALSE]
+
+if (anyNA(analysis_data)) stop("Declare a training-only missing-value plan.")
+if (!all(vapply(analysis_data, is.numeric, logical(1)))) {
+  stop("The assigned response and predictors must be numeric.")
+}
+```
+
+*Define the prediction task and justify every exclusion.*
+
+## 1B. Split and train-only preprocessing
+
+```{r split-and-scale, eval=FALSE}
+split <- split_rows(nrow(analysis_data), seed = seeds$split)
+train_id <- split$train
+test_id <- split$test
+
+x_raw <- as.matrix(analysis_data[, predictors, drop = FALSE])
+y_raw <- analysis_data[[config$response]]
+
+x_prep <- fit_scaler(x_raw[train_id, , drop = FALSE])
+x_train <- apply_scaler(x_raw[train_id, , drop = FALSE], x_prep)
+x_test <- apply_scaler(x_raw[test_id, , drop = FALSE], x_prep)
+y_train <- y_raw[train_id]
+y_test <- y_raw[test_id]
+
+foldid <- make_foldid(nrow(x_train), k = 5L, seed = seeds$cv)
+```
+
+*Report seeds, dimensions, scaling, folds, and leakage safeguards.*
+
+## 1C. Training-data exploration
+
+```{r training-eda, eval=FALSE}
+# Use analysis_data[train_id, ] only. Add focused plots and summaries.
+```
+
+*Interpret multicollinearity, one anomaly, and the question regularization will address.*
+
+# Problem 2. OLS, ridge, and lasso
+
+## 2A. OLS baseline
+
+```{r ols, eval=FALSE}
+# Fit OLS on x_train and y_train. Do not access y_test here.
+```
+
+## 2B. Ridge
+
+```{r ridge, eval=FALSE}
+# Use fit_cv_glmnet(..., alpha = 0, foldid = foldid).
+# Report lambda.min, lambda.1se, paths, coefficients, and CV evidence.
+```
+
+## 2C. Lasso
+
+```{r lasso, eval=FALSE}
+# Use fit_cv_glmnet(..., alpha = 1, foldid = foldid).
+# Report lambda.min, lambda.1se, paths, and nonzero predictors.
+```
+
+## 2D. Training-based comparison and locked core model
+
+```{r core-comparison, eval=FALSE}
+# Build a comparison from training/CV quantities only.
+```
+
+**Core model nominated before holdout evaluation:** [method and reason]
+
+## 2E. Perturbation or stability check
+
+**Prediction before running the check:** [prediction]
+
+```{r perturbation, eval=FALSE}
+# Implement one allowed training-only stability check.
+```
+
+**Observed result and explanation:** [result]
+
+# Problem 3. Mathematical mechanisms
+
+## 3A. Ridge and conditioning
+
+*Write the ridge derivation. Define dimensions and explain uniqueness.*
+
+```{r ridge-conditioning, eval=FALSE}
+# Use x_train and the fitted ridge lambda.min.
+# safe_condition_numbers(x_train, lambda = ...)
+```
+
+## 3B. Lasso optimality and soft thresholding
+
+*Derive the zero/nonzero optimality conditions and the orthonormal-design formula.*
+
+## 3C. Connect algebra to evidence
+
+*Connect one specific numerical result to Problem 3A or 3B.*
+
+# Problem 4. Elastic net and a neural-feature bridge
+
+## 4A. Research question and source map
+
+**Research direction:** [weight decay / sparse weights / pruning / dropout]
+
+| Claim | Exact primary source and locator | What it establishes | What it does not establish |
+|---|---|---|---|
+| [Claim] | [Citation, section/page/equation] | [Support] | [Boundary] |
+
+## 4B. Elastic net on original predictors
+
+```{r original-elastic-net, eval=FALSE}
+alpha_grid <- c(0.10, 0.25, 0.50, 0.75, 0.90)
+
+# Fit one cv.glmnet object per alpha with the same foldid.
+# Select alpha and lambda using training CV only.
+```
+
+## 4C. Fixed ReLU features
+
+```{r random-relu-features, eval=FALSE}
+relu <- function(z) pmax(z, 0)
+M <- 200L
+
+# TODO:
+# 1. Generate A and bias once from seeds$features using the stated distributions.
+# 2. Apply the same A and bias to x_train and x_test.
+# 3. Fit a scaler to H_train only and apply it to H_test.
+# 4. Fit ridge, lasso, and elastic net on H_train with the shared foldid.
+```
+
+*State which weights are fixed, which are learned, and how active features are counted.*
+
+## 4D. Locked declaration and final holdout evaluation
+
+> **Locked before viewing `y_test`:** [preprocessing, candidate specifications, selected tuning values, feature seed, nominated deployment model, metrics]
+
+```{r final-holdout-evaluation, eval=FALSE}
+# This must be the first analysis chunk that uses y_test for evaluation.
+# Generate all fixed candidate predictions and one RMSE/MAE table here.
+```
+
+*State whether the holdout evidence supports the predeclared choice. Do not retune.*
+
+## 4E. Deep-learning connection and limitations
+
+*Distinguish penalty, weight decay, output-weight sparsity, pruning, dropout, and a trained deep network. Cite the sources from 4A and discuss at least two limitations.*
+
+# Problem 5. Report quality and reproducibility
+
+## 5A. Reproduction record
+
+```text
+1. Open a clean R session.
+2. [Exact commands and folder layout.]
+3. Render GroupXX_ProjectQuiz1.Rmd.
+```
+
+## 5B. Recommendation and limitations
+
+*Give the final recommendation, distinguish prediction from interpretation, and state limitations.*
+
+## 5C. AI verification record
+
+| AI-assisted item | How it was checked | Evidence | Modification or rejection |
+|---|---|---|---|
+| [Item] | [Method] | [Test/source/output] | [Decision] |
+
+# Preflight and session information {-}
+
+```{r preflight, eval=FALSE}
+# Add every object required to reproduce the final table and figures.
+required_objects <- c(
+  "train_id", "test_id", "x_train", "x_test", "y_train", "y_test", "foldid"
+)
+missing_objects <- setdiff(required_objects, ls())
+if (length(missing_objects)) {
+  stop(
+    "Missing required objects: ",
+    paste(missing_objects, collapse = ", ")
+  )
+}
+stopifnot(length(intersect(train_id, test_id)) == 0L)
+```
+
+```{r session-info}
+sessionInfo()
+```

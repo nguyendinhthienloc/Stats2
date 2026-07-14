@@ -1,0 +1,2 @@
+"Item","AI Tool Used","Date","How Checked","Evidence","Modification or Rejection"
+"Example: Helper function for scaling","ChatGPT","2026-07-14","Compared to lecture formula and ran unit test","Output matches hand calculation","Accepted with minor variable rename"
