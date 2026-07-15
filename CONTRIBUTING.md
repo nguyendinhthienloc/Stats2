@@ -47,9 +47,9 @@ If not using `make all`, run scripts strictly in this order:
 ## 📅 Task Tracker
 
 ### Phase 1: Foundation (Nguyễn Đình Thiên Lộc / P1)
-- [ ] Run `01_data_prep_eda.R`, split data, generate `shared_data.RData`.
-- [ ] Generate EDA figures (`fig_p1_correlation.pdf`, etc.) and summary table.
-- [ ] Draft Section 1 in LaTeX. Fill authorship info.
+- [x] Run `01_data_prep_eda.R`, split data, generate `shared_data.RData`.
+- [x] Generate EDA figures (`fig_p1_correlation.pdf`, etc.) and summary table.
+- [x] Draft Section 1 in LaTeX. Fill authorship info.
 
 ### Phase 2: Core Models (Trần Lê Anh Tuấn / P2 & Lê Minh Thuận / P3)
 - [ ] **P2:** Run `02_ols.R` & `02_ridge.R`. Generate baselines, CV curves, coeff paths.

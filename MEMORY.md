@@ -6,13 +6,13 @@
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Repo structure | ✅ Done | Makefile, directories ready |
-| `setup.R` | ✅ Scaffolded | Helpers ready |
-| `01_data_prep_eda.R` | ✅ Scaffolded | P1 needs to run |
+| `setup.R` | ✅ Done | Helpers ready |
+| `01_data_prep_eda.R` | ✅ Done | Shared data and EDA generated |
 | R Model Scripts | ✅ Scaffolded | P2/P3/P5 need to execute |
-| LaTeX report | ✅ Scaffolded | Needs content |
+| LaTeX report | 🚧 In Progress | P1 section done, needs more content |
 | Math derivations | ✅ Partial | P4 needs to complete |
 
-**Current Phase:** Phase 1 — Foundation (Loc/P1 is up next).
+**Current Phase:** Phase 2 — Core Models (Tuan/P2 and Thuan/P3 are up next).
 
 ## Key Decisions
 1. **Separate Workflow:** R scripts + LaTeX compiled via `latexmk` (not RMarkdown).
