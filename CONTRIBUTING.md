@@ -67,4 +67,4 @@ If not using `make all`, run scripts strictly in this order:
 ### Phase 5: Holdout & Polish (Nguyễn Hồng Tấn Tài / P5)
 - [ ] **P5:** Run `04_holdout.R` (use `y_test`). Generate final comparisons.
 - [ ] **P5:** Draft Sections 4.4, 4.5, 5, and Abstract.
-- [ ] **All:** Verify scripts run cleanly, resolve TODOs, update AI log.
+- [ ] **All:** Verify scripts run cleanly and resolve TODOs.
