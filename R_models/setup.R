@@ -14,8 +14,13 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # 0.  LOAD REQUIRED PACKAGES
 # ─────────────────────────────────────────────────────────────────────────────
-# suppressPackageStartupMessages() silences the chatty startup messages that
-# packages like glmnet print when they load.
+# Check and install missing packages automatically for cross-machine reproducibility
+required_packages <- c("glmnet", "xtable", "tidyverse", "broom", "knitr", "corrplot")
+new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if (length(new_packages) > 0) {
+  cat("[setup] Installing missing packages:", paste(new_packages, collapse = ", "), "\n")
+  install.packages(new_packages, repos = "http://cran.rstudio.com/")
+}
 
 suppressPackageStartupMessages({
   library(glmnet)    # Ridge, Lasso, Elastic Net via cv.glmnet()

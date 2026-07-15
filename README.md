@@ -6,7 +6,7 @@
 This project predicts body fat percentage (`brozek`) from the `fat.csv` dataset using linear and regularized models, exploring their mathematical properties and connection to deep learning.
 
 ## Prerequisites
-- **R** (>= 4.0) with: `tidyverse`, `glmnet`, `broom`, `knitr`, `xtable`, `corrplot`
+- **R** (>= 4.0). Required packages (`tidyverse`, `glmnet`, `broom`, `knitr`, `xtable`, `corrplot`) will automatically install upon first run of any script.
 - **LaTeX** distribution with `latexmk`
 - **GNU Make** (optional, for automated builds)
 

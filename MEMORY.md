@@ -26,6 +26,7 @@
 - **Predictors (14):** age, weight, height, adipos, neck, chest, abdom, hip, thigh, knee, ankle, biceps, forearm, wrist.
 
 ## Technical Details & Gotchas
+- **Reproducibility:** `setup.R` auto-installs missing R packages, ensuring cross-machine compatibility without `renv` overhead.
 - **Seeds:** `240201` (split), `240301` (CV folds), `240401` (random ReLU features).
 - **`glmnet` standardize:** Set `standardize=FALSE` since `fit_scaler()` is used manually.
 - **Condition number:** `safe_condition_numbers()` may return `Inf` if `X'X` is singular.
