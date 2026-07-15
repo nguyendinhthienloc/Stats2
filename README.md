@@ -15,8 +15,7 @@ Install R packages explicitly with:
 ```bash
 Rscript R_models/install_requirements.R
 ```
-
-The scripts also read `requirements.txt` through `R_models/setup.R` and install missing packages on first run.
+Analysis scripts read `requirements.txt` through `R_models/setup.R` and stop with a clear message if required packages are missing.
 
 ## Quick Start
 ```bash

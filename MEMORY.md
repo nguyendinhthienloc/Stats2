@@ -26,7 +26,7 @@
 - **Predictors (14):** age, weight, height, adipos, neck, chest, abdom, hip, thigh, knee, ankle, biceps, forearm, wrist.
 
 ## Technical Details & Gotchas
-- **Reproducibility:** R package names are declared in `requirements.txt`; `setup.R` and `R_models/install_requirements.R` install missing packages from that list. This is lightweight dependency declaration, not exact version pinning. Use `renv.lock` later if exact package versions must be frozen.
+- **Reproducibility:** R package names are declared in `requirements.txt`; `R_models/install_requirements.R` installs missing packages from that list, while `setup.R` verifies that they are available before analysis scripts run. This is lightweight dependency declaration, not exact version pinning. Use `renv.lock` later if exact package versions must be frozen.
 - **Seeds:** `240201` (split), `240301` (CV folds), `240401` (random ReLU features).
 - **`glmnet` standardize:** Set `standardize=FALSE` since `fit_scaler()` is used manually.
 - **Condition number:** `safe_condition_numbers()` may return `Inf` if `X'X` is singular.

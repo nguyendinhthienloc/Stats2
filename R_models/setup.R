@@ -14,9 +14,10 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # 0.  LOAD REQUIRED PACKAGES
 # ─────────────────────────────────────────────────────────────────────────────
-# Check and install missing packages automatically for cross-machine reproducibility.
+# Check that required packages are installed.
 # The package list lives in requirements.txt so dependencies are declared in one
-# obvious place, similar to Python projects.
+# obvious place, similar to Python projects. Installation is handled separately
+# by R_models/install_requirements.R so sourcing setup.R has no network side effects.
 requirements_file <- "requirements.txt"
 if (file.exists(requirements_file)) {
   required_packages <- readLines(requirements_file, warn = FALSE)
@@ -28,8 +29,9 @@ if (file.exists(requirements_file)) {
 
 new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
 if (length(new_packages) > 0) {
-  cat("[setup] Installing missing packages:", paste(new_packages, collapse = ", "), "\n")
-  install.packages(new_packages, repos = "https://cloud.r-project.org/")
+  stop("[setup] Missing required packages: ", paste(new_packages, collapse = ", "),
+       "\n  Install them first with: Rscript R_models/install_requirements.R",
+       call. = FALSE)
 }
 
 suppressPackageStartupMessages({
