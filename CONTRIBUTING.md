@@ -42,7 +42,7 @@ If not using `make all`, run scripts strictly in this order:
 2. `Rscript R_models/02_ols.R`, `02_ridge.R`, `02_lasso.R`, `04_enet.R`, `04_neural.R` (Parallel)
 3. `Rscript R_models/02_comparison.R` (Needs OLS/Ridge/Lasso)
 4. `Rscript R_models/04_holdout.R` (Needs ALL fits)
-5. `cd LaTeX_report && latexmk -pdf main.tex`
+5. `cd report && latexmk -pdf main.tex`
 
 ## 📅 Task Tracker
 

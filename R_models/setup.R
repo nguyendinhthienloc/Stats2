@@ -14,12 +14,22 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # 0.  LOAD REQUIRED PACKAGES
 # ─────────────────────────────────────────────────────────────────────────────
-# Check and install missing packages automatically for cross-machine reproducibility
-required_packages <- c("glmnet", "xtable", "tidyverse", "broom", "knitr", "corrplot")
+# Check and install missing packages automatically for cross-machine reproducibility.
+# The package list lives in requirements.txt so dependencies are declared in one
+# obvious place, similar to Python projects.
+requirements_file <- "requirements.txt"
+if (file.exists(requirements_file)) {
+  required_packages <- readLines(requirements_file, warn = FALSE)
+  required_packages <- trimws(sub("#.*$", "", required_packages))
+  required_packages <- required_packages[nzchar(required_packages)]
+} else {
+  required_packages <- c("glmnet", "xtable", "tidyverse", "broom", "knitr", "corrplot")
+}
+
 new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
 if (length(new_packages) > 0) {
   cat("[setup] Installing missing packages:", paste(new_packages, collapse = ", "), "\n")
-  install.packages(new_packages, repos = "http://cran.rstudio.com/")
+  install.packages(new_packages, repos = "https://cloud.r-project.org/")
 }
 
 suppressPackageStartupMessages({

@@ -1,0 +1,8 @@
+# R package requirements for this project.
+# Install with: Rscript R_models/install_requirements.R
+glmnet
+xtable
+tidyverse
+broom
+knitr
+corrplot

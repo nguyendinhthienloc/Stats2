@@ -16,7 +16,7 @@ R_DIR     := R_models
 OUT_DIR   := output
 FIG_DIR   := $(OUT_DIR)/figures
 TAB_DIR   := $(OUT_DIR)/tables
-RPT_DIR   := LaTeX_report
+RPT_DIR   := report
 
 # R scripts in execution order
 SETUP     := $(R_DIR)/setup.R

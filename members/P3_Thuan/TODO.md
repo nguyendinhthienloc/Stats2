@@ -10,7 +10,7 @@ Hãy chắc chắn bạn đang ở nhánh của mình trước khi viết code:
 
 **Bạn cần chỉnh sửa các file sau:**
 1. Code R: `R_models/02_lasso.R` và `R_models/02_comparison.R`
-2. Báo cáo LaTeX: `LaTeX_report/sections/02_ols_ridge_lasso.tex` (Phần 2.3, 2.4 và 2.5)
+2. Báo cáo LaTeX: `report/sections/02_ols_ridge_lasso.tex` (Phần 2.3, 2.4 và 2.5)
 
 **Mục tiêu (Phase 2):**
 - Đợi Lộc (P1) hoàn thành dữ liệu chuẩn.

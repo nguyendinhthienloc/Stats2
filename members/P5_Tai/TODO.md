@@ -10,7 +10,7 @@ Hãy chắc chắn bạn đang ở nhánh của mình trước khi viết code:
 
 **Bạn cần chỉnh sửa các file sau:**
 1. Code R: `R_models/04_enet.R`, `R_models/04_neural.R`, `R_models/04_holdout.R`
-2. Báo cáo LaTeX: `LaTeX_report/sections/00_abstract.tex`, `LaTeX_report/sections/04_elastic_net.tex`, `LaTeX_report/sections/05_report_quality.tex`
+2. Báo cáo LaTeX: `report/sections/00_abstract.tex`, `report/sections/04_elastic_net.tex`, `report/sections/05_report_quality.tex`
 
 **Mục tiêu (Phase 4 & 5):**
 - Phase 4: Code mô hình Elastic Net (Tìm alpha tốt nhất) và tạo các biến đổi Random Neural Features (sử dụng seed `240401`).

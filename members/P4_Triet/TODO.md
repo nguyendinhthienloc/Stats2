@@ -9,7 +9,7 @@ Hãy chắc chắn bạn đang ở nhánh của mình trước khi viết code:
 **Nhiệm vụ chính:** Chứng minh Toán học (Math Derivations)
 
 **Bạn cần chỉnh sửa các file sau:**
-1. Báo cáo LaTeX: `LaTeX_report/sections/03_math_mechanisms.tex` (Làm việc toàn bộ trên file này)
+1. Báo cáo LaTeX: `report/sections/03_math_mechanisms.tex` (Làm việc toàn bộ trên file này)
 
 **Mục tiêu (Phase 3):**
 - Không cần viết code R.

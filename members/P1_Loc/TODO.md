@@ -10,7 +10,7 @@ Hãy chắc chắn bạn đang ở nhánh của mình trước khi viết code:
 
 **Bạn cần chỉnh sửa các file sau:**
 1. Code R: `R_models/setup.R` và `R_models/01_data_prep_eda.R`
-2. Báo cáo LaTeX: `LaTeX_report/sections/00_authorship.tex` và `LaTeX_report/sections/01_prediction_design.tex`
+2. Báo cáo LaTeX: `report/sections/00_authorship.tex` và `report/sections/01_prediction_design.tex`
 
 **Mục tiêu (Phase 1):**
 - Đọc file `data/fat.csv`.

@@ -10,7 +10,7 @@ Hãy chắc chắn bạn đang ở nhánh của mình trước khi viết code:
 
 **Bạn cần chỉnh sửa các file sau:**
 1. Code R: `R_models/02_ols.R` và `R_models/02_ridge.R`
-2. Báo cáo LaTeX: `LaTeX_report/sections/02_ols_ridge_lasso.tex` (Phần 2.1 và 2.2)
+2. Báo cáo LaTeX: `report/sections/02_ols_ridge_lasso.tex` (Phần 2.1 và 2.2)
 
 **Mục tiêu (Phase 2):**
 - Đợi Lộc (P1) chạy xong để lấy file `output/shared_data.RData`.

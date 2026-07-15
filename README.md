@@ -6,9 +6,17 @@
 This project predicts body fat percentage (`brozek`) from the `fat.csv` dataset using linear and regularized models, exploring their mathematical properties and connection to deep learning.
 
 ## Prerequisites
-- **R** (>= 4.0). Required packages (`tidyverse`, `glmnet`, `broom`, `knitr`, `xtable`, `corrplot`) will automatically install upon first run of any script.
+- **R** (>= 4.0). Required packages are listed in `requirements.txt`.
 - **LaTeX** distribution with `latexmk`
 - **GNU Make** (optional, for automated builds)
+
+Install R packages explicitly with:
+
+```bash
+Rscript R_models/install_requirements.R
+```
+
+The scripts also read `requirements.txt` through `R_models/setup.R` and install missing packages on first run.
 
 ## Quick Start
 ```bash
@@ -30,7 +38,7 @@ For step-by-step execution, see `CONTRIBUTING.md`.
 ## Repository Map
 - `data/` — Raw dataset
 - `R_models/` — R scripts for analysis
-- `LaTeX_report/` — LaTeX source files
+- `report/` — LaTeX source files
 - `output/` — Generated figures and tables
 - `CONTRIBUTING.md` — Team roster, workflow, and tasks
 - `MEMORY.md` — Project context, status, and decisions
