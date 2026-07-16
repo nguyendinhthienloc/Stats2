@@ -139,6 +139,8 @@ best_model_name <- final_df$Model[1]
 cat("*** BEST MODEL:", best_model_name,
     "(Test RMSE =", final_df$Test_RMSE[1], ") ***\n\n")
 
+best_score_row <- final_df[1, ]
+
 ###############################################################################
 #                              FIGURES                                        #
 ###############################################################################
@@ -156,24 +158,6 @@ bar_data_final <- rbind(final_df$Test_RMSE, final_df$Test_MAE)
 colnames(bar_data_final) <- final_df$Model
 rownames(bar_data_final) <- c("Test RMSE", "Test MAE")
 
-# Use distinct colours for each model
-model_colors <- c(
-  project_colors["OLS"],
-  project_colors["Ridge"],
-  project_colors["Lasso"],
-  project_colors["ElasticNet"],
-  project_colors["NeuralRidge"],
-  project_colors["NeuralLasso"],
-  project_colors["NeuralENet"]
-)
-# Reorder colours to match sorted order
-sorted_indices <- match(final_df$Model,
-                        c("OLS", "Ridge", "Lasso",
-                          paste0("Elastic Net (a=", best_alpha, ")"),
-                          "Neural Ridge", "Neural Lasso",
-                          paste0("Neural ENet (a=", best_alpha, ")")))
-sorted_colors <- model_colors[sorted_indices]
-
 bp <- barplot(
   bar_data_final,
   beside    = TRUE,
@@ -184,6 +168,8 @@ bp <- barplot(
   las       = 2,
   cex.names = 0.65
 )
+
+box(col = "grey80")
 
 legend("topright", inset = c(-0.18, 0),
        legend = c("Test RMSE", "Test MAE"),
@@ -259,7 +245,7 @@ legend("topleft",
 # Add R² annotation
 text(axis_range[1] + diff(axis_range) * 0.05,
      axis_range[2] - diff(axis_range) * 0.05,
-     labels = paste0("R² = ", round(scores_ols$R2, 3)),
+  labels = paste0("R² = ", round(best_score_row$Test_R2, 3)),
      adj = 0, cex = 0.9)
 
 dev.off()
