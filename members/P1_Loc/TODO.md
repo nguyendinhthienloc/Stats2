@@ -6,6 +6,22 @@ Chào Lộc, đây là hướng dẫn công việc của bạn:
 Hãy chắc chắn bạn đang ở nhánh của mình trước khi viết code:
 `git checkout feature/p1-loc-data-eda`
 
+## Final figure-quality pass (project status: approximately 90%)
+
+The analysis is correct, but the figures are not submission quality yet. Work
+in the R source files that generate them; do not edit exported PDFs manually.
+
+- [ ] Open `R_models/01_data_prep_eda.R` and improve all P1 figures:
+  `fig_p1_correlation.pdf`, `fig_p1_dist.pdf`, `fig_p1_boxplots.pdf`, and
+  `fig_p1_pairwise.pdf`.
+- [ ] Make variable labels, axis text, legends, margins, and panel spacing
+  readable at the size used in the report.
+- [ ] Use the shared colour-blind-friendly palette and consistent typography.
+- [ ] If shared plotting defaults are needed, implement them carefully in
+  `R_models/setup.R` so the other members can reuse them.
+- [ ] Re-run `R_models/01_data_prep_eda.R`, inspect every generated PDF, and
+  preserve the existing filenames and statistical results.
+
 **Nhiệm vụ chính:** Tiền xử lý dữ liệu & Khám phá dữ liệu (EDA)
 
 **Bạn cần chỉnh sửa các file sau:**

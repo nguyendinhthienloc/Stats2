@@ -40,7 +40,7 @@ cat("  Predictors:      ", ncol(x_train), "\n\n")
 # alpha = 1 tells glmnet to use L1 (Lasso) penalty.
 # We use the same foldid as Ridge for a fair comparison.
 
-lasso_fit <- fit_cv_glmnet(x_train, y_train, alpha = 1, foldid = foldid)
+lasso_fit <- fit_foldclean_glmnet(x_raw_train, y_train, alpha = 1, foldid = foldid)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3.  REPORT LAMBDA VALUES AND FEATURE SELECTION
@@ -85,7 +85,7 @@ cat("  SELECTED at lambda.1se:", paste(selected_names_1se, collapse = ", "), "\n
 # 4.  TRAINING METRICS
 # ─────────────────────────────────────────────────────────────────────────────
 
-y_pred_lasso_train <- predict(lasso_fit, newx = x_train, s = "lambda.min")
+y_pred_lasso_train <- predict(lasso_fit, newx = x_raw_train, s = "lambda.min")
 lasso_train_scores <- score_regression(y_train, as.vector(y_pred_lasso_train))
 
 cat("--- Lasso Training Performance ---\n")

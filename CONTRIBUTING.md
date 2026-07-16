@@ -36,15 +36,70 @@ We use individual branches for each member to prevent conflicts.
 2. **Commit:** Prefix with your role, e.g., `git commit -m "P2: add ridge CV plot"`
 3. **Push:** `git push origin feature/<your-branch>` (then open a Pull Request)
 
-## 🏃 Execution Order
-If not using `make all`, run scripts strictly in this order:
-1. `Rscript R_models/01_data_prep_eda.R` (Generates shared data)
-2. `Rscript R_models/02_ols.R`, `02_ridge.R`, `02_lasso.R`, `04_enet.R`, `04_neural.R` (Parallel)
-3. `Rscript R_models/02_comparison.R` (Needs OLS/Ridge/Lasso)
-4. `Rscript R_models/04_holdout.R` (Needs ALL fits)
-5. `cd report && latexmk -xelatex main.tex`
+## 🏃 Running the Analysis
+
+### Recommended: run the complete pipeline
+
+Use `R_models/00_run_all.R` for a full, reproducible run. It restores the
+shared configuration, creates output directories, runs all eight analysis
+scripts in dependency order, stops at the first failure, and writes
+`output/session_info.txt` when the pipeline succeeds.
+
+From a terminal opened at the project root:
+
+```bash
+Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
+Rscript R_models/00_run_all.R
+cd report && latexmk -xelatex main.tex
+```
+
+### Running from RStudio
+
+This repository does not currently include an `.Rproj` file. Open the folder
+that contains this repository in RStudio, then set the working directory to
+the project root through **Session > Set Working Directory > Choose
+Directory...**. The project root is the folder containing `README.md`,
+`renv.lock`, and the `R_models` directory.
+In the RStudio Console, run:
+
+```r
+if (!requireNamespace("renv", quietly = TRUE)) {
+  install.packages("renv", repos = "https://cloud.r-project.org")
+}
+renv::restore(prompt = FALSE)
+source("R_models/00_run_all.R", encoding = "UTF-8")
+```
+
+`Rscript -e "..."` is a terminal command; do not paste it at RStudio's `>`
+prompt. Use the R code above in the Console instead. Restart RStudio and run
+the last `source()` command again if package restoration changes the active
+library.
+
+### What the support scripts do
+
+- `R_models/setup.R` is shared configuration, not an analysis stage. Every
+  analysis script sources it automatically. It locates the project root,
+  configures the project package library, checks required packages, loads
+  common packages, and defines shared constants and helper functions.
+- `R_models/00_dependencies.R` is only a dependency declaration for `renv`
+  and editor tooling. It does not install packages or run the analysis.
+- `R_models/00_run_all.R` is the pipeline entry point. Do not run it after
+  separately running every individual script unless you intentionally want to
+  regenerate all outputs.
+
+### Running individual scripts
+
+Use individual scripts only while developing or debugging. First run
+`01_data_prep_eda.R`, then fit the model scripts, run `02_comparison.R` after
+OLS/Ridge/Lasso, and run `04_holdout.R` last because it needs every fitted
+model. Each analysis script sources `setup.R` automatically; do not run
+`setup.R` as a separate analysis stage.
 
 ## 📅 Task Tracker
+
+**Overall status: approximately 90%.** The statistical pipeline and report
+content are substantially complete, but the generated figures still require a
+source-level visual-quality pass before the submission is final.
 
 ### Phase 1: Foundation (Nguyễn Đình Thiên Lộc / P1)
 - [x] Run `01_data_prep_eda.R`, split data, generate `shared_data.RData`.
@@ -53,24 +108,37 @@ If not using `make all`, run scripts strictly in this order:
 
 ### Phase 2: Core Models (Trần Lê Anh Tuấn / P2 & Lê Minh Thuận / P3)
 - [x] **P2:** Run `02_ols.R` & `02_ridge.R`. Generate baselines, CV curves, coeff paths.
-- [ ] **P2:** Draft Sections 2.1 & 2.2 in LaTeX.
+- [x] **P2:** Draft Sections 2.1 & 2.2 in LaTeX.
 - [x] **P3:** Run `02_lasso.R` & `02_comparison.R`. Generate Lasso outputs and comparisons.
-- [ ] **P3:** Draft Sections 2.3, 2.4, 2.5 in LaTeX. Nominate **Core Model**.
+- [x] **P3:** Draft Sections 2.3, 2.4, 2.5 in LaTeX. Nominate **Core Model**.
 
 ### Phase 3: Math Proofs (Nguyễn Bảo Minh Triết / P4)
-- [ ] **P4:** Draft Section 3 (Ridge closed-form, Lasso optimality, Evidence connection).
+- [x] **P4:** Draft Section 3 (Ridge closed-form, Lasso optimality, Evidence connection).
 
 ### Phase 4: Elastic Net & Neural Features (Nguyễn Hồng Tấn Tài / P5)
 - [x] **P5:** Run `04_enet.R` & `04_neural.R`. Generate Elastic Net and ReLU feature metrics.
-- [ ] **P5:** Draft Section 4.1, 4.2, 4.3. Fill literature source map.
+- [x] **P5:** Draft Section 4.1, 4.2, 4.3. Fill literature source map.
 
 ### Phase 5: Holdout & Polish (Nguyễn Hồng Tấn Tài / P5)
 - [x] **P5:** Run `04_holdout.R` (use `y_test`). Generate final comparisons.
-- [ ] **P5:** Draft Sections 4.4, 4.5, 5, and Abstract.
+- [x] **P5:** Draft Sections 4.4, 4.5, 5, and Abstract.
 - [x] **All:** Verify the complete R pipeline runs cleanly via `R_models/00_run_all.R`.
-- [ ] **All:** Resolve the remaining report TODOs and complete the final report review.
+- [ ] **All:** Complete the final visual-quality review and resolve its findings.
+- [x] **All:** Prepare a draft submission folder with RMarkdown, BibTeX references, and replication README.
+
+### Phase 6: Figure Generation and Final Polish (All)
+- [ ] **P1:** Refactor EDA figure generation in `01_data_prep_eda.R`; coordinate reusable plotting defaults in `setup.R`.
+- [ ] **P2:** Refactor OLS and Ridge figure generation in `02_ols.R` and `02_ridge.R`.
+- [ ] **P3:** Refactor Lasso and comparison figure generation in `02_lasso.R` and `02_comparison.R`.
+- [ ] **P4:** Audit mathematical correctness and legibility, then send figure-specific feedback to each R-file owner.
+- [ ] **P5:** Refactor Elastic Net, neural-feature, and holdout figure generation in `04_enet.R`, `04_neural.R`, and `04_holdout.R`.
+- [ ] **All:** Re-run the full pipeline, compile the report, and inspect every figure at its final report size.
+
+For this phase, fix plots in the assigned R source files. Do not hand-edit
+generated PDFs, change asset filenames, or alter validated statistical results
+solely for appearance.
 
 **Latest verified run (2026-07-16):** All eight analysis scripts completed successfully.
 Lasso was selected using training CV and achieved the best holdout RMSE (4.2514).
-The 20-page English XeLaTeX report also builds with a clean final log, and all
-Unicode author names were verified in both the rendered page and PDF text layer.
+The XeLaTeX report builds successfully, but figure aesthetics remain the final
+major work item before submission.

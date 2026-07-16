@@ -32,12 +32,32 @@ if (!identical(normalizePath(getwd(), winslash = "/"), PROJECT_ROOT)) {
   setwd(PROJECT_ROOT)
 }
 
-# Prefer a project-local library when present. This keeps machine-specific
-# package repairs isolated from the user's global R library.
-project_library <- file.path(PROJECT_ROOT, ".Rlib")
-if (dir.exists(project_library)) {
-  .libPaths(c(project_library, .libPaths()))
+# Prefer the restored project library, but do not source renv/activate.R here.
+# The autoloader can be slow or fragile in editor sessions; this direct library
+# discovery keeps scripts reproducible across Windows, macOS, and Linux.
+project_library_root <- file.path(PROJECT_ROOT, "renv", "library")
+project_libraries <- if (dir.exists(project_library_root)) {
+  list.dirs(project_library_root, recursive = TRUE, full.names = TRUE)
+} else {
+  character(0)
 }
+
+project_library <- project_libraries[
+  file.exists(file.path(project_libraries, "renv", "DESCRIPTION"))
+]
+
+if (length(project_library) > 0) {
+  project_library <- project_library[[length(project_library)]]
+  .libPaths(c(project_library, .libPaths()))
+} else {
+  stop("Project renv library was not found. From the project root, run: ",
+       "Rscript -e \"if (!requireNamespace('renv', quietly = TRUE)) ",
+       "install.packages('renv', repos = 'https://cloud.r-project.org'); ",
+       "renv::restore(prompt = FALSE)\"",
+       call. = FALSE)
+}
+
+Sys.setenv(RENV_PROJECT = PROJECT_ROOT)
 
 log_line <- function(level, ..., .sep = "") {
   text <- paste0(..., collapse = .sep)
@@ -54,14 +74,12 @@ abort_run <- function(...) {
        call. = FALSE)
 }
 
-requirements_file <- file.path(PROJECT_ROOT, "requirements.txt")
-if (!file.exists(requirements_file)) {
-  abort_run("Dependency file not found: ", requirements_file)
+lockfile <- file.path(PROJECT_ROOT, "renv.lock")
+if (!file.exists(lockfile)) {
+  abort_run("renv lockfile not found: ", lockfile)
 }
 
-required_packages <- readLines(requirements_file, warn = FALSE)
-required_packages <- trimws(sub("#.*$", "", required_packages))
-required_packages <- required_packages[nzchar(required_packages)]
+required_packages <- c("glmnet", "xtable", "jsonlite", "rlang")
 
 # requireNamespace() catches broken or incompatible installs; checking only
 # installed.packages() incorrectly reports those packages as usable.
@@ -77,7 +95,8 @@ if (length(failed_packages) > 0) {
   details <- paste(sprintf("  - %s: %s", failed_packages,
                            package_errors[failed_packages]), collapse = "\n")
   abort_run("Required R packages are unavailable:\n", details,
-            "\nRun: Rscript R_models/install_requirements.R")
+            "\nRun from the project root: ",
+            "Rscript -e \"renv::restore(prompt = FALSE)\"")
 }
 
 suppressWarnings(suppressPackageStartupMessages({
@@ -191,7 +210,7 @@ save_table_tex <- function(df, filename, caption = "", label = "") {
   }
 
   sanitize_colnames <- function(x) {
-    gsub("_", "\\\\_", x, fixed = TRUE)
+    gsub("_", "\\_", x, fixed = TRUE)
   }
   
   # Create the xtable object
@@ -374,6 +393,232 @@ fit_cv_glmnet <- function(x, y, alpha, foldid, ...) {
   return(fit)
 }
 
+default_lambda_grid <- function() {
+  exp(seq(log(1e-4), log(1e3), length.out = 140L))
+}
+
+lambda_index <- function(lambda, s) {
+  if (is.character(s)) {
+    match.arg(s, c("lambda.min", "lambda.1se"))
+    return(s)
+  }
+  which.min(abs(lambda - as.numeric(s)))
+}
+
+foldclean_select_lambda <- function(fold_mse, lambda) {
+  cvm <- colMeans(fold_mse)
+  cvsd <- apply(fold_mse, 2, sd) / sqrt(nrow(fold_mse))
+  min_idx <- which.min(cvm)
+  threshold <- cvm[min_idx] + cvsd[min_idx]
+  eligible <- which(cvm <= threshold)
+  one_se_idx <- eligible[which.max(lambda[eligible])]
+
+  list(
+    cvm = cvm,
+    cvsd = cvsd,
+    lambda.min = lambda[min_idx],
+    lambda.1se = lambda[one_se_idx]
+  )
+}
+
+fit_foldclean_glmnet <- function(x_raw, y, alpha, foldid,
+                                 lambda = default_lambda_grid(), ...) {
+  x_raw <- as.matrix(x_raw)
+  y <- as.numeric(y)
+  lambda <- sort(lambda, decreasing = TRUE)
+  folds <- sort(unique(foldid))
+  fold_mse <- matrix(NA_real_, nrow = length(folds), ncol = length(lambda))
+
+  model_type <- ifelse(alpha == 0, "Ridge",
+                ifelse(alpha == 1, "Lasso",
+                       paste0("Elastic Net (alpha=", alpha, ")")))
+  cat("[fit_foldclean_glmnet] Fitting fold-clean", model_type, "...\n")
+
+  for (i in seq_along(folds)) {
+    val_idx <- which(foldid == folds[i])
+    train_idx <- which(foldid != folds[i])
+
+    fold_scaler <- fit_scaler(x_raw[train_idx, , drop = FALSE])
+    x_fold_train <- apply_scaler(x_raw[train_idx, , drop = FALSE], fold_scaler)
+    x_fold_val <- apply_scaler(x_raw[val_idx, , drop = FALSE], fold_scaler)
+
+    fold_fit <- glmnet(
+      x = x_fold_train,
+      y = y[train_idx],
+      family = "gaussian",
+      alpha = alpha,
+      lambda = lambda,
+      standardize = FALSE,
+      intercept = TRUE,
+      ...
+    )
+    pred <- predict(fold_fit, newx = x_fold_val, s = lambda)
+    fold_mse[i, ] <- colMeans((y[val_idx] - pred)^2)
+  }
+
+  selected <- foldclean_select_lambda(fold_mse, lambda)
+  final_scaler <- fit_scaler(x_raw)
+  x_final <- apply_scaler(x_raw, final_scaler)
+  final_fit <- glmnet(
+    x = x_final,
+    y = y,
+    family = "gaussian",
+    alpha = alpha,
+    lambda = lambda,
+    standardize = FALSE,
+    intercept = TRUE,
+    ...
+  )
+
+  fit <- list(
+    alpha = alpha,
+    lambda = lambda,
+    cvm = selected$cvm,
+    cvsd = selected$cvsd,
+    lambda.min = selected$lambda.min,
+    lambda.1se = selected$lambda.1se,
+    fold_mse = fold_mse,
+    scaler = final_scaler,
+    glmnet.fit = final_fit,
+    transform = "scaled",
+    feature_names = colnames(x_final)
+  )
+  class(fit) <- "foldclean_glmnet"
+
+  cat("  lambda.min =", round(fit$lambda.min, 6),
+      " | lambda.1se =", round(fit$lambda.1se, 6), "\n")
+  return(fit)
+}
+
+fit_foldclean_neural_glmnet <- function(x_raw, y, foldid, A, bias, alpha,
+                                        lambda = default_lambda_grid(), ...) {
+  x_raw <- as.matrix(x_raw)
+  y <- as.numeric(y)
+  lambda <- sort(lambda, decreasing = TRUE)
+  folds <- sort(unique(foldid))
+  fold_mse <- matrix(NA_real_, nrow = length(folds), ncol = length(lambda))
+  relu <- function(z) pmax(z, 0)
+
+  model_type <- ifelse(alpha == 0, "Neural Ridge",
+                ifelse(alpha == 1, "Neural Lasso",
+                       paste0("Neural Elastic Net (alpha=", alpha, ")")))
+  cat("[fit_foldclean_neural_glmnet] Fitting fold-clean", model_type, "...\n")
+
+  for (i in seq_along(folds)) {
+    val_idx <- which(foldid == folds[i])
+    train_idx <- which(foldid != folds[i])
+
+    x_fold_scaler <- fit_scaler(x_raw[train_idx, , drop = FALSE])
+    x_fold_train <- apply_scaler(x_raw[train_idx, , drop = FALSE], x_fold_scaler)
+    x_fold_val <- apply_scaler(x_raw[val_idx, , drop = FALSE], x_fold_scaler)
+
+    h_train_raw <- relu(x_fold_train %*% A +
+                          matrix(bias, nrow = nrow(x_fold_train),
+                                 ncol = ncol(A), byrow = TRUE))
+    h_val_raw <- relu(x_fold_val %*% A +
+                        matrix(bias, nrow = nrow(x_fold_val),
+                               ncol = ncol(A), byrow = TRUE))
+
+    h_fold_scaler <- fit_scaler(h_train_raw)
+    h_fold_train <- apply_scaler(h_train_raw, h_fold_scaler)
+    h_fold_val <- apply_scaler(h_val_raw, h_fold_scaler)
+
+    fold_fit <- glmnet(
+      x = h_fold_train,
+      y = y[train_idx],
+      family = "gaussian",
+      alpha = alpha,
+      lambda = lambda,
+      standardize = FALSE,
+      intercept = TRUE,
+      ...
+    )
+    pred <- predict(fold_fit, newx = h_fold_val, s = lambda)
+    fold_mse[i, ] <- colMeans((y[val_idx] - pred)^2)
+  }
+
+  selected <- foldclean_select_lambda(fold_mse, lambda)
+
+  x_final_scaler <- fit_scaler(x_raw)
+  x_final <- apply_scaler(x_raw, x_final_scaler)
+  h_final_raw <- relu(x_final %*% A +
+                        matrix(bias, nrow = nrow(x_final),
+                               ncol = ncol(A), byrow = TRUE))
+  h_final_scaler <- fit_scaler(h_final_raw)
+  h_final <- apply_scaler(h_final_raw, h_final_scaler)
+
+  final_fit <- glmnet(
+    x = h_final,
+    y = y,
+    family = "gaussian",
+    alpha = alpha,
+    lambda = lambda,
+    standardize = FALSE,
+    intercept = TRUE,
+    ...
+  )
+
+  fit <- list(
+    alpha = alpha,
+    lambda = lambda,
+    cvm = selected$cvm,
+    cvsd = selected$cvsd,
+    lambda.min = selected$lambda.min,
+    lambda.1se = selected$lambda.1se,
+    fold_mse = fold_mse,
+    x_scaler = x_final_scaler,
+    h_scaler = h_final_scaler,
+    A = A,
+    bias = bias,
+    glmnet.fit = final_fit,
+    transform = "neural",
+    feature_names = colnames(h_final)
+  )
+  class(fit) <- "foldclean_glmnet"
+
+  cat("  lambda.min =", round(fit$lambda.min, 6),
+      " | lambda.1se =", round(fit$lambda.1se, 6), "\n")
+  return(fit)
+}
+
+coef.foldclean_glmnet <- function(object, s = "lambda.min", ...) {
+  s_value <- if (is.character(s)) object[[s]] else s
+  coef(object$glmnet.fit, s = s_value, ...)
+}
+
+predict.foldclean_glmnet <- function(object, newx, s = "lambda.min", ...) {
+  s_value <- if (is.character(s)) object[[s]] else s
+  newx <- as.matrix(newx)
+
+  if (identical(object$transform, "scaled")) {
+    transformed <- apply_scaler(newx, object$scaler)
+  } else if (identical(object$transform, "neural")) {
+    relu <- function(z) pmax(z, 0)
+    x_scaled <- apply_scaler(newx, object$x_scaler)
+    h_raw <- relu(x_scaled %*% object$A +
+                    matrix(object$bias, nrow = nrow(x_scaled),
+                           ncol = ncol(object$A), byrow = TRUE))
+    transformed <- apply_scaler(h_raw, object$h_scaler)
+  } else {
+    abort_run("Unknown fold-clean transform: ", object$transform)
+  }
+
+  predict(object$glmnet.fit, newx = transformed, s = s_value, ...)
+}
+
+plot.foldclean_glmnet <- function(x, main = "Fold-clean CV Error vs log(lambda)", ...) {
+  upper <- x$cvm + x$cvsd
+  lower <- x$cvm - x$cvsd
+  plot(log(x$lambda), x$cvm, type = "b", pch = 16,
+       ylim = range(c(lower, upper), finite = TRUE),
+       xlab = expression(log(lambda)), ylab = "Cross-Validation MSE",
+       main = main, ...)
+  arrows(log(x$lambda), lower, log(x$lambda), upper,
+         angle = 90, code = 3, length = 0.03, col = "grey60")
+  abline(v = log(x$lambda.min), lty = 2, col = "red")
+  abline(v = log(x$lambda.1se), lty = 2, col = "blue")
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # score_regression(y_true, y_pred)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -474,4 +719,5 @@ safe_condition_numbers <- function(X, lambda = 0, tol = 1e-10) {
 log_info("setup.R loaded | project=", PROJECT_ROOT,
          " | group=", GROUP_NUMBER,
          " | R=", getRversion(),
+         " | renv=", as.character(packageVersion("renv")),
          " | glmnet=", as.character(packageVersion("glmnet")))

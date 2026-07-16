@@ -6,6 +6,22 @@ Chào Tài, đây là hướng dẫn công việc của bạn:
 Hãy chắc chắn bạn đang ở nhánh của mình trước khi viết code:
 `git checkout feature/p5-tai-enet-neural`
 
+## Final figure-quality pass (project status: approximately 90%)
+
+Return to the assigned R files and improve the figure-generation code. Do not
+manually edit output PDFs, rename assets, or change the locked holdout protocol.
+
+- [ ] Improve Elastic Net CV, path, and coefficient figures in
+  `R_models/04_enet.R`.
+- [ ] Improve neural Ridge/Lasso CV and active-feature figures in
+  `R_models/04_neural.R`.
+- [ ] Improve the holdout comparison and actual-versus-predicted figures in
+  `R_models/04_holdout.R` without using the holdout to retune any model.
+- [ ] Standardise colours, model ordering, typography, axis limits, legends,
+  and annotations across the Phase 4/5 figures.
+- [ ] Re-run all three assigned scripts, inspect every PDF at report scale, and
+  preserve the existing filenames, metrics, and locked analysis declaration.
+
 **Nhiệm vụ chính:** Elastic Net, Neural Features & Đánh giá Holdout
 
 **Bạn cần chỉnh sửa các file sau:**

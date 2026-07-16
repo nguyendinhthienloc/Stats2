@@ -127,26 +127,32 @@ cat("Using the same foldid (length =", length(foldid), ") for neural models\n\n"
 
 # 7a. Ridge on H_train
 cat("=== Neural Ridge ===\n")
-neural_ridge_fit <- fit_cv_glmnet(H_train, y_train, alpha = 0, foldid = foldid)
+neural_ridge_fit <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = 0
+)
 n_nz_ridge <- count_nonzero(neural_ridge_fit, s = "lambda.min")
 
 # 7b. Lasso on H_train
 cat("\n=== Neural Lasso ===\n")
-neural_lasso_fit <- fit_cv_glmnet(H_train, y_train, alpha = 1, foldid = foldid)
+neural_lasso_fit <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = 1
+)
 n_nz_lasso <- count_nonzero(neural_lasso_fit, s = "lambda.min")
 
 # 7c. Elastic Net on H_train (using best_alpha from 04b)
 cat("\n=== Neural Elastic Net (alpha =", best_alpha, ") ===\n")
-neural_enet_fit <- fit_cv_glmnet(H_train, y_train, alpha = best_alpha, foldid = foldid)
+neural_enet_fit <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = best_alpha
+)
 n_nz_enet <- count_nonzero(neural_enet_fit, s = "lambda.min")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 8.  TRAINING METRICS
 # ─────────────────────────────────────────────────────────────────────────────
 
-pred_nr <- predict(neural_ridge_fit, newx = H_train, s = "lambda.min")
-pred_nl <- predict(neural_lasso_fit, newx = H_train, s = "lambda.min")
-pred_ne <- predict(neural_enet_fit,  newx = H_train, s = "lambda.min")
+pred_nr <- predict(neural_ridge_fit, newx = x_raw_train, s = "lambda.min")
+pred_nl <- predict(neural_lasso_fit, newx = x_raw_train, s = "lambda.min")
+pred_ne <- predict(neural_enet_fit,  newx = x_raw_train, s = "lambda.min")
 
 scores_nr <- score_regression(y_train, as.vector(pred_nr))
 scores_nl <- score_regression(y_train, as.vector(pred_nl))

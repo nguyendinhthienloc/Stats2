@@ -54,14 +54,19 @@ for (k in seq_len(max(foldid))) {
   val_idx   <- which(foldid == k)
   train_idx <- which(foldid != k)
   
+  # Fit the scaler on the fold-training rows only, then validate on the held-out fold.
+  fold_scaler <- fit_scaler(x_raw_train[train_idx, , drop = FALSE])
+  x_cv_train <- apply_scaler(x_raw_train[train_idx, , drop = FALSE], fold_scaler)
+  x_cv_val <- apply_scaler(x_raw_train[val_idx, , drop = FALSE], fold_scaler)
+
   # Fit OLS on the training folds
-  ols_cv_df <- data.frame(y = y_train[train_idx], x_train[train_idx, , drop = FALSE])
+  ols_cv_df <- data.frame(y = y_train[train_idx], x_cv_train)
   ols_cv_model <- lm(y ~ ., data = ols_cv_df)
   
   # Predict on the validation fold
   ols_cv_pred[val_idx] <- predict(
     ols_cv_model,
-    newdata = data.frame(x_train[val_idx, , drop = FALSE])
+    newdata = data.frame(x_cv_val)
   )
 }
 

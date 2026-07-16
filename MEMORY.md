@@ -6,14 +6,15 @@
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Repo structure | ✅ Done | Makefile, directories ready |
-| `setup.R` | ✅ Done | Robust paths, namespace checks, local library support, and clear logs |
+| `setup.R` | ✅ Done | Robust paths, renv activation, namespace checks, and clear logs |
 | `01_data_prep_eda.R` | ✅ Done | Shared data and EDA regenerated on 2026-07-16 |
-| R Model Scripts | ✅ Done | Full eight-script pipeline verified via `00_run_all.R` |
+| R Model Scripts | 🚧 90% | Computations verified; source-level figure-generation polish remains |
+| LaTeX report | 🚧 90% | Builds cleanly; generated figures still need visual-quality review |
+| Math derivations | ✅ Done | Completed and checked against numeric training eigenvalues |
+| Submission folder | 🚧 Draft | Prepared, but not final until revised figures are regenerated and reviewed |
 | Final holdout | ✅ Done | Predeclared Lasso had the best RMSE: 4.2514 |
-| LaTeX report | 🚧 In Progress | Clean English XeLaTeX build and verified Unicode author names; substantive section TODOs remain |
-| Math derivations | ✅ Partial | P4 needs to complete |
 
-**Current Phase:** Phase 5 — report completion, interpretation, and final polish.
+**Current Phase:** Phase 6 — approximately 90% complete; refactor figure generation in the assigned R files, regenerate all plots, and perform final visual QA.
 
 ## Latest Verified Run (2026-07-16)
 - `Rscript R_models/00_run_all.R` completed all eight scripts successfully in dependency order.
@@ -33,7 +34,7 @@
 - **Predictors (14):** age, weight, height, adipos, neck, chest, abdom, hip, thigh, knee, ankle, biceps, forearm, wrist.
 
 ## Technical Details & Gotchas
-- **Reproducibility:** R package names are declared in `requirements.txt`; `R_models/install_requirements.R` repairs missing or unloadable packages in the ignored project-local `.Rlib`, while `setup.R` verifies namespaces before analysis scripts run. The current Windows/R 4.5.2 environment uses `glmnet` 4.1-10 because the installed 5.0 DLL was blocked by Windows Application Control. This remains lightweight dependency management rather than exact version pinning; use `renv.lock` if exact versions must be frozen.
+- **Reproducibility:** `renv.lock` freezes the verified R 4.5.2 package environment. The tracked `.Rprofile` and `renv/activate.R` select an ignored project library, `renv::restore()` reconstructs it, and `setup.R` verifies the two direct runtime dependencies (`glmnet` and `xtable`) before analysis scripts run. Archived course examples and generated submission files are excluded from dependency discovery through `.renvignore`. The working Windows environment locks `glmnet` 4.1-10 because the installed 5.0 DLL was blocked by Windows Application Control.
 - **Pipeline runner:** `R_models/00_run_all.R` executes the analysis in dependency order and reports timestamped `STEP`, `INFO`, and `ERROR` messages.
 - **LaTeX language support:** `report/main.tex` loads English Babel only. `preamble.sty` uses explicit Windows Times New Roman font files under XeLaTeX so Unicode author names are embedded correctly without adding a second document language or relying on MiKTeX's incomplete font-name database.
 - **Seeds:** `240201` (split), `240301` (CV folds), `240401` (random ReLU features).

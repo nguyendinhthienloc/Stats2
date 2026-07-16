@@ -139,6 +139,7 @@ foldid <- make_foldid(n = nrow(x_train), nfolds = 5L, seed = seeds$cv)
 # All downstream scripts will load this file.
 
 save(
+  x_raw_train, x_raw_test,
   x_train, x_test,
   y_train, y_test,
   foldid,
