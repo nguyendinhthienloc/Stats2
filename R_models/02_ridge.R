@@ -88,15 +88,14 @@ cat("  R²:  ", round(ridge_train_scores$R2,   4), "\n\n")
 # ─────────────────────────────────────────────────────────────────────────────
 # FIGURE 1:  CV ERROR PLOT
 # ─────────────────────────────────────────────────────────────────────────────
-# Shows how cross-validation error changes with log(lambda).
-# The two vertical dashed lines mark lambda.min and lambda.1se.
-
 cat("[02b_ridge] Generating CV error plot...\n")
 
 pdf("output/figures/fig_p2_ridge_cv.pdf", width = 8, height = 5)
-par(mar = c(5, 4, 3, 2))
+par(mar = c(5, 4, 4.5, 2))
 
-plot(ridge_fit, main = "Ridge: Cross-Validation Error vs log(lambda)")
+plot(ridge_fit, main = "", label = FALSE)
+
+title("Ridge: Cross-Validation Error vs log(lambda)", line = 3)
 
 dev.off()
 cat("[02b_ridge] Saved: output/figures/fig_p2_ridge_cv.pdf\n")
@@ -104,19 +103,22 @@ cat("[02b_ridge] Saved: output/figures/fig_p2_ridge_cv.pdf\n")
 # ─────────────────────────────────────────────────────────────────────────────
 # FIGURE 2:  COEFFICIENT PATH PLOT
 # ─────────────────────────────────────────────────────────────────────────────
-# Shows how each coefficient evolves as lambda increases (left to right).
-# All coefficients shrink towards zero as lambda grows.
-
 cat("[02b_ridge] Generating coefficient path plot...\n")
 
 pdf("output/figures/fig_p2_ridge_path.pdf", width = 8, height = 5)
-par(mar = c(5, 4, 3, 6))   # extra right margin for labels
+# Tăng lề trên và lề phải để hiển thị nhãn biến đẹp hơn
+par(mar = c(5, 4, 4.5, 6))
 
-# glmnet object is stored inside the cv.glmnet object as $glmnet.fit
-plot(ridge_fit$glmnet.fit, xvar = "lambda",
-     main = "Ridge: Coefficient Paths")
+# Thêm tham số label = FALSE (hoặc loại bỏ hàng số active bằng cách chỉnh trong plot)
+# Đối với plot.glmnet, ta dùng label = TRUE để hiện tên biến ở rìa phải, 
+# nhưng muốn tắt hàng số phía trên ta có thể vẽ đè tiêu đề trống trước.
+plot(ridge_fit$glmnet.fit, xvar = "lambda", label = TRUE, main = "")
+
 abline(v = log(ridge_fit$lambda.min), lty = 2, col = "red")
 abline(v = log(ridge_fit$lambda.1se), lty = 2, col = "blue")
+
+title("Ridge: Coefficient Paths", line = 3)
+
 legend("topright",
        legend = c("lambda.min", "lambda.1se"),
        lty = 2, col = c("red", "blue"), bty = "n", cex = 0.8)
@@ -130,7 +132,6 @@ cat("[02b_ridge] Saved: output/figures/fig_p2_ridge_path.pdf\n")
 
 cat("[02b_ridge] Generating coefficient bar chart...\n")
 
-# Exclude intercept for the bar chart
 coef_no_int <- ridge_coefs[-1]
 
 pdf("output/figures/fig_p2_ridge_coef.pdf", width = 8, height = 5)
