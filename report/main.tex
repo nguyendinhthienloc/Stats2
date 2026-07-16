@@ -1,9 +1,11 @@
 % =============================================================================
+% !TeX program = xelatex
 % main.tex — ASESII 24A02 Project-Based Quiz 1: Ridge, Lasso, Elastic Net
-% Compile: latexmk -pdf main.tex
+% Compile: latexmk -xelatex main.tex
 % =============================================================================
 \documentclass[11pt,a4paper]{article}
 \usepackage{preamble}
+\usepackage[english]{babel}
 
 % ---- Title -----------------------------------------------------------------
 \title{%
@@ -13,10 +15,10 @@
 \author{%
     \textbf{Group 01:} \\[4pt]
     Nguyễn Đình Thiên Lộc (24125093) \quad
-    Nguyễn Anh Tuấn (24125107) \\[2pt]
-    Trần Văn Thuận (24125105) \quad
-    Nguyễn Minh Triết (24125047) \quad
-    Trần Văn Tài (24125078)%
+    Trần Lê Anh Tuấn (24125107) \\[2pt]
+    Lê Minh Thuận (24125105) \quad
+    Nguyễn Bảo Minh Triết (24125047) \\[2pt]
+    Nguyễn Hồng Tấn Tài (24125078)%
 }
 \date{\today}
 
@@ -24,7 +26,9 @@
 \begin{document}
 
 \maketitle
+\begingroup
 \tableofcontents
+\endgroup
 \newpage
 
 % ---- Front matter ----------------------------------------------------------
@@ -33,10 +37,10 @@
 
 % ---- Main body (Problems 1–5) ----------------------------------------------
 \input{sections/01_prediction_design}    % Problem 1
-\input{sections/02_ols_ridge_lasso}      % Problem 2 & 3
-\input{sections/03_math_mechanisms}      % Problem 4
-\input{sections/04_elastic_net}          % Problem 5
-\input{sections/05_report_quality}       % Report quality
+\input{sections/02_ols_ridge_lasso}      % Problem 2
+\input{sections/03_math_mechanisms}      % Problem 3
+\input{sections/04_elastic_net}          % Problem 4
+\input{sections/05_report_quality}       % Problem 5
 
 % ---- References ------------------------------------------------------------
 \newpage

@@ -4,22 +4,17 @@
 \section*{Abstract}
 \addcontentsline{toc}{section}{Abstract}
 
-% TODO: Write a concise abstract (max 150 words) covering:
-%   1. The prediction problem (predict brozek body-fat percentage from 14 anthropometric predictors)
-%   2. Methods used (OLS, Ridge, Lasso, Elastic Net, random ReLU features)
-%   3. Main quantitative evidence (e.g., best CV-RMSE, selected model)
-%   4. Final recommendation and key takeaway
-
-\textit{%
-This report investigates regularised regression methods for predicting body-fat
-percentage (brozek) from anthropometric measurements in the \texttt{fat.csv}
-dataset ($n = 252$, $p = 14$ candidate predictors).  After excluding
-leakage-prone variables, we compare Ordinary Least Squares (OLS), Ridge, Lasso,
-and Elastic Net regression using 5-fold cross-validation.  We further explore
-fixed random ReLU feature expansions to bridge classical penalisation with
-neural-network concepts.
-% TODO: Add quantitative results (CV-RMSE values, chosen model, holdout performance).
-% TODO: State final recommendation.
-}
+We predict Brozek body-fat percentage from 14 anthropometric measurements for
+252 adult men.  Outcome-derived variables were excluded, preprocessing used
+training-only statistics, and OLS, Ridge, Lasso, Elastic Net, and penalised
+models on 200 fixed random ReLU features were compared with one shared
+five-fold split.  Lasso at $\lambda_{\min}=0.0954$ had the lowest training
+cross-validated RMSE among the original-predictor models (4.241), retained nine
+slopes, and was declared for deployment before the holdout responses were
+examined.  On the 51-subject holdout set it remained best, with RMSE 4.251,
+MAE 3.524, and $R^2=0.683$.  Elastic Net was close (RMSE 4.274), whereas the
+fixed ReLU expansions did not improve prediction.  We therefore recommend the
+predeclared Lasso for this population, while treating its selected variables as
+predictive rather than causal evidence.
 
 \bigskip

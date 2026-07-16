@@ -14,30 +14,76 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # 0.  LOAD REQUIRED PACKAGES
 # ─────────────────────────────────────────────────────────────────────────────
-# Check that required packages are installed.
-# The package list lives in requirements.txt so dependencies are declared in one
-# obvious place, similar to Python projects. Installation is handled separately
-# by R_models/install_requirements.R so sourcing setup.R has no network side effects.
-requirements_file <- "requirements.txt"
-if (file.exists(requirements_file)) {
-  required_packages <- readLines(requirements_file, warn = FALSE)
-  required_packages <- trimws(sub("#.*$", "", required_packages))
-  required_packages <- required_packages[nzchar(required_packages)]
-} else {
-  required_packages <- c("glmnet", "xtable", "tidyverse", "broom", "knitr", "corrplot")
+# Resolve paths from this file instead of assuming a particular working directory.
+setup_source <- tryCatch(sys.frame(1)$ofile, error = function(e) NULL)
+if (is.null(setup_source) || !nzchar(setup_source)) {
+  setup_source <- if (file.exists("R_models/setup.R")) {
+    "R_models/setup.R"
+  } else {
+    "setup.R"
+  }
 }
 
-new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
-if (length(new_packages) > 0) {
-  stop("[setup] Missing required packages: ", paste(new_packages, collapse = ", "),
-       "\n  Install them first with: Rscript R_models/install_requirements.R",
+SETUP_FILE <- normalizePath(setup_source, winslash = "/", mustWork = TRUE)
+PROJECT_ROOT <- normalizePath(file.path(dirname(SETUP_FILE), ".."),
+                              winslash = "/", mustWork = TRUE)
+
+if (!identical(normalizePath(getwd(), winslash = "/"), PROJECT_ROOT)) {
+  setwd(PROJECT_ROOT)
+}
+
+# Prefer a project-local library when present. This keeps machine-specific
+# package repairs isolated from the user's global R library.
+project_library <- file.path(PROJECT_ROOT, ".Rlib")
+if (dir.exists(project_library)) {
+  .libPaths(c(project_library, .libPaths()))
+}
+
+log_line <- function(level, ..., .sep = "") {
+  text <- paste0(..., collapse = .sep)
+  cat(sprintf(">>> [%s] %-5s %s\n", format(Sys.time(), "%H:%M:%S"), level, text))
+}
+
+log_step <- function(...) log_line("STEP", ...)
+log_info <- function(...) log_line("INFO", ...)
+log_warn <- function(...) log_line("WARN", ...)
+
+abort_run <- function(...) {
+  text <- paste(..., collapse = "")
+  stop(sprintf(">>> [%s] ERROR %s", format(Sys.time(), "%H:%M:%S"), text),
        call. = FALSE)
 }
 
-suppressPackageStartupMessages({
+requirements_file <- file.path(PROJECT_ROOT, "requirements.txt")
+if (!file.exists(requirements_file)) {
+  abort_run("Dependency file not found: ", requirements_file)
+}
+
+required_packages <- readLines(requirements_file, warn = FALSE)
+required_packages <- trimws(sub("#.*$", "", required_packages))
+required_packages <- required_packages[nzchar(required_packages)]
+
+# requireNamespace() catches broken or incompatible installs; checking only
+# installed.packages() incorrectly reports those packages as usable.
+package_errors <- vapply(required_packages, function(package) {
+  tryCatch({
+    suppressWarnings(loadNamespace(package))
+    ""
+  }, error = function(e) conditionMessage(e))
+}, character(1))
+
+failed_packages <- names(package_errors)[nzchar(package_errors)]
+if (length(failed_packages) > 0) {
+  details <- paste(sprintf("  - %s: %s", failed_packages,
+                           package_errors[failed_packages]), collapse = "\n")
+  abort_run("Required R packages are unavailable:\n", details,
+            "\nRun: Rscript R_models/install_requirements.R")
+}
+
+suppressWarnings(suppressPackageStartupMessages({
   library(glmnet)    # Ridge, Lasso, Elastic Net via cv.glmnet()
-  library(xtable)    # Convert data frames → LaTeX tables
-})
+  library(xtable)    # Convert data frames to LaTeX tables
+}))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1.  GROUP INFORMATION
@@ -117,7 +163,7 @@ project_colors <- c(
 ensure_dirs <- function() {
   dir.create("output/figures", recursive = TRUE, showWarnings = FALSE)
   dir.create("output/tables",  recursive = TRUE, showWarnings = FALSE)
-  cat("[setup] Output directories verified: output/figures/, output/tables/\n")
+  log_info("Output directories ready: output/figures, output/tables")
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -136,6 +182,17 @@ ensure_dirs <- function() {
 
 save_table_tex <- function(df, filename, caption = "", label = "") {
   filepath <- file.path("output", "tables", filename)
+  table_scale <- if (ncol(df) >= 7L) {
+    0.88
+  } else if (ncol(df) >= 6L) {
+    0.92
+  } else {
+    NULL
+  }
+
+  sanitize_colnames <- function(x) {
+    gsub("_", "\\\\_", x, fixed = TRUE)
+  }
   
   # Create the xtable object
   tbl <- xtable::xtable(df, caption = caption, label = label)
@@ -147,7 +204,9 @@ save_table_tex <- function(df, filename, caption = "", label = "") {
         booktabs        = TRUE,          # professional horizontal rules
         include.rownames = TRUE,         # keep row names
         caption.placement = "top",       # caption above the table
-        sanitize.text.function = identity  # don't escape special chars
+        sanitize.text.function = identity, # preserve intentional cell math
+        sanitize.colnames.function = sanitize_colnames,
+        scalebox = table_scale
   )
   
   cat("[save_table_tex] Written:", filepath, "\n")
@@ -209,16 +268,29 @@ split_rows <- function(n, train_frac = 0.80, seed) {
 # IMPORTANT: The scaler is fitted on training data ONLY to avoid data leakage.
 # Returns : A list with $center (means) and $scale (std devs).
 
-fit_scaler <- function(X_train) {
+fit_scaler <- function(X_train, tol = 1e-12) {
+  X_train <- as.matrix(X_train)
   centers <- colMeans(X_train)
-  # apply(X, 2, sd) computes the standard deviation of each COLUMN
-  scales  <- apply(X_train, 2, sd)
-  
-  # Safety: if a column has zero variance, set scale to 1 to avoid division by 0
-  scales[scales == 0] <- 1
-  
-  cat("[fit_scaler] Fitted scaler on", ncol(X_train), "columns\n")
-  return(list(center = centers, scale = scales))
+  scales <- apply(X_train, 2, sd)
+  keep <- is.finite(scales) & scales > tol
+
+  if (!any(keep)) {
+    abort_run("No nonconstant training predictor remains after scaling checks")
+  }
+
+  dropped <- colnames(X_train)[!keep]
+  log_info("Scaler fitted on ", sum(keep), "/", ncol(X_train), " columns")
+  if (length(dropped) > 0) {
+    log_warn("Dropped constant/non-finite training columns: ",
+             paste(dropped, collapse = ", "))
+  }
+
+  list(
+    center = centers[keep],
+    scale = scales[keep],
+    keep = keep,
+    dropped = dropped
+  )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -229,6 +301,7 @@ fit_scaler <- function(X_train) {
 # Returns : A scaled matrix.
 
 apply_scaler <- function(X, scaler) {
+  X <- as.matrix(X)[, scaler$keep, drop = FALSE]
   # scale() is a built-in R function that subtracts center and divides by scale
   X_scaled <- scale(X, center = scaler$center, scale = scaler$scale)
   # Remove the attributes that scale() attaches (they clutter downstream code)
@@ -245,11 +318,14 @@ apply_scaler <- function(X, scaler) {
 #           we ensure fair comparison — every model sees the same folds.
 # Args    :
 #   n      — number of training observations
-#   nfolds — number of folds (default 10)
+#   nfolds — number of folds (default 5, as required by the project rubric)
 #   seed   — random seed
 # Returns : An integer vector of length n, each element in {1, 2, ..., nfolds}.
 
-make_foldid <- function(n, nfolds = 10L, seed) {
+make_foldid <- function(n, nfolds = 5L, seed) {
+  if (nfolds < 3L || nfolds > n) {
+    abort_run("Cross-validation requires 3 <= nfolds <= n")
+  }
   set.seed(seed)
   # rep_len repeats 1:nfolds until we have n values, then sample() shuffles them
   foldid <- sample(rep_len(seq_len(nfolds), length.out = n))
@@ -282,10 +358,14 @@ fit_cv_glmnet <- function(x, y, alpha, foldid, ...) {
   cat("[fit_cv_glmnet] Fitting", model_type, "...\n")
   
   fit <- cv.glmnet(
-    x      = x,
-    y      = y,
-    alpha  = alpha,
-    foldid = foldid,
+    x           = x,
+    y           = y,
+    family      = "gaussian",
+    alpha       = alpha,
+    foldid      = foldid,
+    standardize = FALSE,
+    intercept   = TRUE,
+    type.measure = "mse",
     ...
   )
   
@@ -306,6 +386,11 @@ fit_cv_glmnet <- function(x, y, alpha, foldid, ...) {
 # RMSE penalises large errors more heavily than MAE because of the squaring.
 
 score_regression <- function(y_true, y_pred) {
+  y_true <- as.numeric(y_true)
+  y_pred <- as.numeric(y_pred)
+  if (length(y_true) != length(y_pred) || any(!is.finite(c(y_true, y_pred)))) {
+    abort_run("Regression metrics require equal-length finite vectors")
+  }
   residuals <- y_true - y_pred
   
   rmse <- sqrt(mean(residuals^2))
@@ -331,10 +416,10 @@ score_regression <- function(y_true, y_pred) {
 # coef() on a glmnet object returns a sparse matrix.  The first row is the
 # intercept, so we drop it with [-1, ].
 
-count_nonzero <- function(cv_fit, s = "lambda.min") {
+count_nonzero <- function(cv_fit, s = "lambda.min", tol = 1e-8) {
   coefs <- coef(cv_fit, s = s)
   # Drop intercept (row 1), count entries != 0
-  nonzero <- sum(coefs[-1, ] != 0)
+  nonzero <- sum(abs(coefs[-1, ]) > tol)
   cat("[count_nonzero] At", s, ":", nonzero, "non-zero coefficients\n")
   return(nonzero)
 }
@@ -356,31 +441,37 @@ count_nonzero <- function(cv_fit, s = "lambda.min") {
 #   lambda — the Ridge penalty parameter
 # Returns : A named list with $ols_cond and $ridge_cond.
 
-safe_condition_numbers <- function(X, lambda = 0) {
-  # X'X  (cross-product matrix)
-  XtX <- crossprod(X)   # same as t(X) %*% X but faster
-  
-  # Eigenvalues of X'X (all should be non-negative for a real symmetric matrix)
-  eig_vals <- eigen(XtX, symmetric = TRUE, only.values = TRUE)$values
-  
-  # Condition number of X'X = max eigenvalue / min eigenvalue
-  ols_cond <- max(eig_vals) / min(eig_vals)
-  
-  # Ridge adds lambda * I to X'X, which shifts every eigenvalue by +lambda
-  ridge_eig <- eig_vals + lambda
-  ridge_cond <- max(ridge_eig) / min(ridge_eig)
+safe_condition_numbers <- function(X, lambda = 0, tol = 1e-10) {
+  # glmnet's Gaussian objective uses G = X'X / n, so lambda must be compared
+  # with eigenvalues on that same scale.
+  G <- crossprod(X) / nrow(X)
+  eig_vals <- eigen(G, symmetric = TRUE, only.values = TRUE)$values
+  eig_vals <- pmax(eig_vals, 0)
+
+  largest <- max(eig_vals)
+  smallest <- min(eig_vals)
+  cutoff <- tol * max(1, largest)
+  ols_cond <- if (smallest <= cutoff) Inf else largest / smallest
+  ridge_cond <- (largest + lambda) / (smallest + lambda)
   
   cat("[safe_condition_numbers]\n")
   cat("  OLS   condition number:", format(ols_cond, big.mark = ","), "\n")
   cat("  Ridge condition number:", format(ridge_cond, big.mark = ","),
       " (lambda =", round(lambda, 6), ")\n")
   
-  return(list(ols_cond = ols_cond, ridge_cond = ridge_cond))
+  return(list(
+    ols_cond = ols_cond,
+    ridge_cond = ridge_cond,
+    eigen_min = smallest,
+    eigen_max = largest,
+    tolerance = cutoff
+  ))
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DONE — this file is ready to be sourced
 # ─────────────────────────────────────────────────────────────────────────────
-cat("================================================================\n")
-cat("  setup.R loaded successfully  |  Group:", GROUP_NUMBER, "\n")
-cat("================================================================\n")
+log_info("setup.R loaded | project=", PROJECT_ROOT,
+         " | group=", GROUP_NUMBER,
+         " | R=", getRversion(),
+         " | glmnet=", as.character(packageVersion("glmnet")))

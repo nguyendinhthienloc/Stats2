@@ -13,7 +13,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 02_ols.R ==========\n\n")

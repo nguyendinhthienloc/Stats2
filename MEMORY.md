@@ -6,13 +6,20 @@
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Repo structure | ✅ Done | Makefile, directories ready |
-| `setup.R` | ✅ Done | Helpers ready |
-| `01_data_prep_eda.R` | ✅ Done | Shared data and EDA generated |
-| R Model Scripts | ✅ Scaffolded | P2/P3/P5 need to execute |
-| LaTeX report | 🚧 In Progress | P1 section done, needs more content |
+| `setup.R` | ✅ Done | Robust paths, namespace checks, local library support, and clear logs |
+| `01_data_prep_eda.R` | ✅ Done | Shared data and EDA regenerated on 2026-07-16 |
+| R Model Scripts | ✅ Done | Full eight-script pipeline verified via `00_run_all.R` |
+| Final holdout | ✅ Done | Predeclared Lasso had the best RMSE: 4.2514 |
+| LaTeX report | 🚧 In Progress | Clean English XeLaTeX build and verified Unicode author names; substantive section TODOs remain |
 | Math derivations | ✅ Partial | P4 needs to complete |
 
-**Current Phase:** Phase 2 — Core Models (Tuan/P2 and Thuan/P3 are up next).
+**Current Phase:** Phase 5 — report completion, interpretation, and final polish.
+
+## Latest Verified Run (2026-07-16)
+- `Rscript R_models/00_run_all.R` completed all eight scripts successfully in dependency order.
+- Expected model files, LaTeX tables, and PDF figures were regenerated and verified as non-empty.
+- Final holdout ranking was led by the predeclared Lasso: RMSE 4.2514, MAE 3.5237, $R^2$ 0.6834.
+- `y_test` remains used only in `04_holdout.R`.
 
 ## Key Decisions
 1. **Separate Workflow:** R scripts + LaTeX compiled via `latexmk` (not RMarkdown).
@@ -26,11 +33,14 @@
 - **Predictors (14):** age, weight, height, adipos, neck, chest, abdom, hip, thigh, knee, ankle, biceps, forearm, wrist.
 
 ## Technical Details & Gotchas
-- **Reproducibility:** R package names are declared in `requirements.txt`; `R_models/install_requirements.R` installs missing packages from that list, while `setup.R` verifies that they are available before analysis scripts run. This is lightweight dependency declaration, not exact version pinning. Use `renv.lock` later if exact package versions must be frozen.
+- **Reproducibility:** R package names are declared in `requirements.txt`; `R_models/install_requirements.R` repairs missing or unloadable packages in the ignored project-local `.Rlib`, while `setup.R` verifies namespaces before analysis scripts run. The current Windows/R 4.5.2 environment uses `glmnet` 4.1-10 because the installed 5.0 DLL was blocked by Windows Application Control. This remains lightweight dependency management rather than exact version pinning; use `renv.lock` if exact versions must be frozen.
+- **Pipeline runner:** `R_models/00_run_all.R` executes the analysis in dependency order and reports timestamped `STEP`, `INFO`, and `ERROR` messages.
+- **LaTeX language support:** `report/main.tex` loads English Babel only. `preamble.sty` uses explicit Windows Times New Roman font files under XeLaTeX so Unicode author names are embedded correctly without adding a second document language or relying on MiKTeX's incomplete font-name database.
 - **Seeds:** `240201` (split), `240301` (CV folds), `240401` (random ReLU features).
+- **Cross-validation:** One shared five-fold `foldid` is reused by OLS comparison, Ridge, Lasso, Elastic Net, and all random-feature models.
 - **`glmnet` standardize:** Set `standardize=FALSE` since `fit_scaler()` is used manually.
-- **Condition number:** `safe_condition_numbers()` may return `Inf` if `X'X` is singular.
-- **ReLU features:** `relu(x_train %*% A + bias)` may yield all-zero columns.
+- **Condition number:** `safe_condition_numbers()` evaluates $G=X^TX/n$ on the same scale as the `glmnet` Gaussian objective and may return `Inf` when its smallest eigenvalue is numerically zero.
+- **ReLU features:** $A_{jm}\sim N(0,1/p)$ and $c_m\sim N(0,0.5^2)$ are generated once; constant hidden features are detected using `H_train` only and removed from both matrices.
 
 ## Script Dependency Graph
 ```

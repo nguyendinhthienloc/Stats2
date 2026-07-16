@@ -16,7 +16,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 02_comparison.R ==========\n\n")
@@ -45,8 +46,8 @@ cat("[02d_comparison] Loaded shared_data, ols_fit, ridge_fit, lasso_fit\n\n")
 
 cat("--- Computing OLS CV RMSE ---\n")
 
-# Compute OLS CV RMSE by hand: for each fold, hold it out, fit on the rest
-ols_cv_errors <- numeric(max(foldid))
+# Compute one out-of-fold prediction for every training observation.
+ols_cv_pred <- rep(NA_real_, length(y_train))
 
 for (k in seq_len(max(foldid))) {
   # Indices for this fold
@@ -58,14 +59,13 @@ for (k in seq_len(max(foldid))) {
   ols_cv_model <- lm(y ~ ., data = ols_cv_df)
   
   # Predict on the validation fold
-  ols_cv_pred <- predict(ols_cv_model,
-                         newdata = data.frame(x_train[val_idx, , drop = FALSE]))
-  
-  # Compute MSE for this fold
-  ols_cv_errors[k] <- mean((y_train[val_idx] - ols_cv_pred)^2)
+  ols_cv_pred[val_idx] <- predict(
+    ols_cv_model,
+    newdata = data.frame(x_train[val_idx, , drop = FALSE])
+  )
 }
 
-ols_cv_rmse <- sqrt(mean(ols_cv_errors))
+ols_cv_rmse <- sqrt(mean((y_train - ols_cv_pred)^2))
 cat("  OLS CV RMSE:", round(ols_cv_rmse, 4), "\n")
 
 # Ridge CV RMSE at lambda.min
@@ -76,9 +76,18 @@ ridge_cv_rmse <- sqrt(ridge_fit$cvm[ridge_cv_idx])
 lasso_cv_idx  <- which(lasso_fit$lambda == lasso_fit$lambda.min)
 lasso_cv_rmse <- sqrt(lasso_fit$cvm[lasso_cv_idx])
 
-# Assemble the comparison table
+ols_slopes <- unname(coef(ols_fit)[-1])
+ridge_slopes <- as.vector(coef(ridge_fit, s = "lambda.min"))[-1]
+lasso_slopes <- as.vector(coef(lasso_fit, s = "lambda.min"))[-1]
+
+# Assemble every quantity required for the controlled comparison.
 comparison_df <- data.frame(
   Model        = c("OLS", "Ridge", "Lasso"),
+  Tuning       = c(
+    "None",
+    sprintf("lambda.min=%.4f", ridge_fit$lambda.min),
+    sprintf("lambda.min=%.4f", lasso_fit$lambda.min)
+  ),
   Train_RMSE   = round(c(ols_train_scores$RMSE,
                           ridge_train_scores$RMSE,
                           lasso_train_scores$RMSE), 4),
@@ -88,6 +97,15 @@ comparison_df <- data.frame(
   CV_RMSE      = round(c(ols_cv_rmse,
                           ridge_cv_rmse,
                           lasso_cv_rmse), 4),
+  L1_Norm      = round(c(sum(abs(ols_slopes)),
+                         sum(abs(ridge_slopes)),
+                         sum(abs(lasso_slopes))), 4),
+  L2_Norm      = round(c(sqrt(sum(ols_slopes^2)),
+                         sqrt(sum(ridge_slopes^2)),
+                         sqrt(sum(lasso_slopes^2))), 4),
+  Nonzero      = c(sum(abs(ols_slopes) > 1e-8),
+                   sum(abs(ridge_slopes) > 1e-8),
+                   sum(abs(lasso_slopes) > 1e-8)),
   stringsAsFactors = FALSE
 )
 
@@ -97,18 +115,15 @@ print(comparison_df)
 # ─────────────────────────────────────────────────────────────────────────────
 # 3.  NOMINATE CORE MODEL
 # ─────────────────────────────────────────────────────────────────────────────
-# TODO: After reviewing the comparison table, fill in your justification
-#       for which model you nominate as the "core" model.
-#
-# Criteria to consider:
-#   - Lowest CV RMSE (best generalisation)
-#   - Simplicity / interpretability (fewer features = Lasso advantage)
-#   - Numerical stability (Ridge advantage over OLS)
-#
-# Placeholder:
-core_model_name <- "Ridge"   # TODO: Change if needed after analysis
+# Lock the core model using training CV only. Ties are resolved in favor of
+# fewer nonzero slopes, making the rule reproducible and interpretable.
+best_cv <- min(comparison_df$CV_RMSE)
+eligible <- which(comparison_df$CV_RMSE == best_cv)
+core_row <- eligible[which.min(comparison_df$Nonzero[eligible])]
+core_model_name <- comparison_df$Model[core_row]
+core_model_rule <- "Lowest shared-fold CV RMSE; ties use fewer nonzero slopes"
 cat("\nNominated core model:", core_model_name, "\n")
-cat("  TODO: Write your justification in the LaTeX report.\n\n")
+cat("  Rule:", core_model_rule, "\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4.  PERTURBATION / BOOTSTRAP STABILITY ANALYSIS
@@ -121,7 +136,12 @@ cat("  TODO: Write your justification in the LaTeX report.\n\n")
 # the L2 penalty smooths the solution) and OLS to be the least stable
 # (especially if predictors are correlated).
 
+perturbation_prediction <- paste(
+  "Ridge coefficients should vary less than OLS, while lasso should",
+  "show variable-selection instability among correlated predictors."
+)
 cat("--- Perturbation Analysis (B = 50 bootstrap resamples) ---\n")
+cat("  Predeclared prediction:", perturbation_prediction, "\n")
 
 B <- 50L   # number of bootstrap resamples
 p <- ncol(x_train)
@@ -135,7 +155,8 @@ colnames(ols_boot_coefs)   <- predictors
 colnames(ridge_boot_coefs) <- predictors
 colnames(lasso_boot_coefs) <- predictors
 
-set.seed(seeds$split)   # reproducibility for the bootstrap
+bootstrap_seed <- seeds$cv + 1L
+set.seed(bootstrap_seed)
 
 for (b in seq_len(B)) {
   if (b %% 10 == 0) cat("  Bootstrap iteration:", b, "/", B, "\n")
@@ -152,13 +173,15 @@ for (b in seq_len(B)) {
   ols_boot_coefs[b, ] <- coef(ols_boot_fit)[-1]  # exclude intercept
   
   # Ridge (use same lambda.min, don't re-CV)
-  ridge_boot_fit <- glmnet(x_boot, y_boot, alpha = 0)
+  ridge_boot_fit <- glmnet(x_boot, y_boot, alpha = 0,
+                           family = "gaussian", standardize = FALSE)
   ridge_boot_coefs[b, ] <- as.vector(
     coef(ridge_boot_fit, s = ridge_fit$lambda.min)[-1, ]
   )
   
   # Lasso (use same lambda.min, don't re-CV)
-  lasso_boot_fit <- glmnet(x_boot, y_boot, alpha = 1)
+  lasso_boot_fit <- glmnet(x_boot, y_boot, alpha = 1,
+                           family = "gaussian", standardize = FALSE)
   lasso_boot_coefs[b, ] <- as.vector(
     coef(lasso_boot_fit, s = lasso_fit$lambda.min)[-1, ]
   )
@@ -168,11 +191,15 @@ for (b in seq_len(B)) {
 ols_stability   <- apply(ols_boot_coefs,   2, sd)
 ridge_stability <- apply(ridge_boot_coefs, 2, sd)
 lasso_stability <- apply(lasso_boot_coefs, 2, sd)
+lasso_selection_frequency <- colMeans(abs(lasso_boot_coefs) > 1e-8)
 
 cat("\nMean coefficient SD across predictors:\n")
 cat("  OLS:  ", round(mean(ols_stability),   4), "\n")
 cat("  Ridge:", round(mean(ridge_stability),  4), "\n")
 cat("  Lasso:", round(mean(lasso_stability),  4), "\n\n")
+cat("Lasso bootstrap selection frequencies:\n")
+print(round(sort(lasso_selection_frequency, decreasing = TRUE), 3))
+cat("\n")
 
 ###############################################################################
 #                              FIGURES                                        #
@@ -249,6 +276,25 @@ legend("topright", inset = c(-0.18, 0),
 dev.off()
 cat("[02d_comparison] Saved: output/figures/fig_p2_perturbation.pdf\n")
 
+cat("[02d_comparison] Generating lasso selection-frequency plot...\n")
+
+pdf("output/figures/fig_p2_lasso_stability.pdf", width = 9, height = 5)
+par(mar = c(7, 4, 3, 2))
+ordered_frequency <- sort(lasso_selection_frequency, decreasing = TRUE)
+barplot(
+  ordered_frequency,
+  col = project_colors["Lasso"],
+  border = NA,
+  ylim = c(0, 1),
+  main = paste("Lasso Selection Frequency Across", B, "Bootstrap Resamples"),
+  ylab = "Selection Frequency",
+  las = 2,
+  cex.names = 0.75
+)
+abline(h = 0.5, col = project_colors["neutral"], lty = 2)
+dev.off()
+cat("[02d_comparison] Saved: output/figures/fig_p2_lasso_stability.pdf\n")
+
 ###############################################################################
 #                              TABLES                                         #
 ###############################################################################
@@ -263,6 +309,32 @@ save_table_tex(
   caption  = "Comparison of OLS, Ridge, and Lasso Regression",
   label    = "tab:model_comparison"
 )
+
+lasso_stability_df <- data.frame(
+  Predictor = names(lasso_selection_frequency),
+  Selection_Frequency = round(as.numeric(lasso_selection_frequency), 3),
+  Coefficient_SD = round(as.numeric(lasso_stability), 4),
+  stringsAsFactors = FALSE
+)
+lasso_stability_df <- lasso_stability_df[
+  order(-lasso_stability_df$Selection_Frequency),
+]
+rownames(lasso_stability_df) <- NULL
+
+save_table_tex(
+  df = lasso_stability_df,
+  filename = "tab_p2_lasso_stability.tex",
+  caption = paste0("Lasso Bootstrap Stability (B = ", B, ")"),
+  label = "tab:lasso_stability"
+)
+
+save(comparison_df, core_model_name, core_model_rule,
+     perturbation_prediction, bootstrap_seed,
+     ols_cv_pred, ols_cv_rmse,
+     ols_stability, ridge_stability, lasso_stability,
+     lasso_selection_frequency,
+     file = "output/comparison.RData")
+cat("[02d_comparison] Saved: output/comparison.RData\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DONE

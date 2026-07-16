@@ -1,9 +1,36 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{5}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Johnson(1996)]{Johnson1996}
+Roger~W. Johnson.
+\newblock Fitting percentage of body fat to simple body measurements.
+\newblock \emph{Journal of Statistics Education}, 4\penalty0 (1):\penalty0
+  1--8, 1996.
+\newblock \doi{10.1080/10691898.1996.11910505}.
+
+\bibitem[Krogh and Hertz(1991)]{Krogh1991}
+Anders Krogh and John~A. Hertz.
+\newblock A simple weight decay can improve generalization.
+\newblock \emph{Advances in Neural Information Processing Systems}, 4:\penalty0
+  950--957, 1991.
+
+\bibitem[Loshchilov and Hutter(2019)]{LoshchilovHutter2019}
+Ilya Loshchilov and Frank Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock In \emph{International Conference on Learning Representations}, 2019.
+\newblock URL \url{https://openreview.net/forum?id=Bkg6RiCqY7}.
+
+\bibitem[Srivastava et~al.(2014)Srivastava, Hinton, Krizhevsky, Sutskever, and
+  Salakhutdinov]{Srivastava2014}
+Nitish Srivastava, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, and Ruslan
+  Salakhutdinov.
+\newblock Dropout: A simple way to prevent neural networks from overfitting.
+\newblock \emph{Journal of Machine Learning Research}, 15\penalty0
+  (56):\penalty0 1929--1958, 2014.
 
 \bibitem[Zou and Hastie(2005)]{ZouHastie2005}
 Hui Zou and Trevor Hastie.

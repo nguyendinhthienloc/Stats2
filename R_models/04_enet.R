@@ -23,7 +23,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 04_enet.R ==========\n\n")
@@ -82,9 +83,9 @@ for (alpha in alpha_grid) {
   # Add row to summary
   enet_summary <- rbind(enet_summary, data.frame(
     Alpha      = alpha,
-    Lambda_min = round(fit$lambda.min, 6),
-    CV_MSE     = round(cv_mse, 4),
-    CV_RMSE    = round(sqrt(cv_mse), 4),
+    Lambda_min = fit$lambda.min,
+    CV_MSE     = cv_mse,
+    CV_RMSE    = sqrt(cv_mse),
     Nonzero    = n_nz,
     stringsAsFactors = FALSE
   ))
@@ -102,8 +103,8 @@ best_alpha <- enet_summary$Alpha[best_row]
 best_fit   <- enet_fits[[as.character(best_alpha)]]
 
 cat("=== Best Alpha:", best_alpha, "===\n")
-cat("  CV MSE: ", enet_summary$CV_MSE[best_row], "\n")
-cat("  CV RMSE:", enet_summary$CV_RMSE[best_row], "\n")
+cat("  CV MSE: ", round(enet_summary$CV_MSE[best_row], 4), "\n")
+cat("  CV RMSE:", round(enet_summary$CV_RMSE[best_row], 4), "\n")
 cat("  Nonzero:", enet_summary$Nonzero[best_row], "\n\n")
 
 # Extract best coefficients
@@ -111,7 +112,10 @@ best_coefs <- as.vector(coef(best_fit, s = "lambda.min"))
 best_coef_names <- c("(Intercept)", predictors)
 names(best_coefs) <- best_coef_names
 
-print(enet_summary)
+print(transform(enet_summary,
+                Lambda_min = round(Lambda_min, 6),
+                CV_MSE = round(CV_MSE, 4),
+                CV_RMSE = round(CV_RMSE, 4)))
 cat("\n")
 
 ###############################################################################
@@ -196,6 +200,23 @@ abline(h = 0, col = "grey40", lty = 2)
 dev.off()
 cat("[04b_enet] Saved: output/figures/fig_p4_enet_coef.pdf\n")
 
+# ─────────────────────────────────────────────────────────────────────────────
+# FIGURE 3:  COEFFICIENT PATH FOR THE SELECTED ALPHA
+# ─────────────────────────────────────────────────────────────────────────────
+
+cat("[04b_enet] Generating selected elastic net coefficient path...\n")
+
+pdf("output/figures/fig_p4_enet_path.pdf", width = 8, height = 5)
+par(mar = c(5, 4, 3, 6))
+plot(best_fit$glmnet.fit, xvar = "lambda",
+     main = paste0("Elastic Net Paths (alpha = ", best_alpha, ")"))
+abline(v = log(best_fit$lambda.min), lty = 2, col = "red")
+abline(v = log(best_fit$lambda.1se), lty = 2, col = "blue")
+legend("topright", legend = c("lambda.min", "lambda.1se"),
+       lty = 2, col = c("red", "blue"), bty = "n", cex = 0.8)
+dev.off()
+cat("[04b_enet] Saved: output/figures/fig_p4_enet_path.pdf\n")
+
 ###############################################################################
 #                              TABLES                                         #
 ###############################################################################
@@ -204,8 +225,15 @@ cat("[04b_enet] Saved: output/figures/fig_p4_enet_coef.pdf\n")
 # TABLE 1:  ALPHA COMPARISON
 # ─────────────────────────────────────────────────────────────────────────────
 
+enet_summary_table <- transform(
+  enet_summary,
+  Lambda_min = round(Lambda_min, 6),
+  CV_MSE = round(CV_MSE, 4),
+  CV_RMSE = round(CV_RMSE, 4)
+)
+
 save_table_tex(
-  df       = enet_summary,
+  df       = enet_summary_table,
   filename = "tab_p4_enet_alpha.tex",
   caption  = "Elastic Net: CV Performance Across Alpha Values",
   label    = "tab:enet_alpha"
@@ -233,7 +261,7 @@ save_table_tex(
 # SAVE ELASTIC NET FITS
 # ─────────────────────────────────────────────────────────────────────────────
 
-save(enet_fits, enet_summary, best_alpha, best_fit,
+save(enet_fits, enet_summary, best_alpha, best_fit, best_coefs,
      file = "output/enet_fits.RData")
 cat("[04b_enet] Saved: output/enet_fits.RData\n")
 

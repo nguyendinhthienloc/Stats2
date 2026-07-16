@@ -5,176 +5,172 @@
 \section{Elastic Net and Neural-Feature Bridge}
 \label{sec:elastic-net}
 
-% ---- 4.1 Research Question and Source Map -----------------------------------
 \subsection{Research Question and Source Map}
 \label{sec:research-question}
 
-% TODO: Pick ONE research direction to investigate:
-%   (a) Weight decay as L2 regularisation in neural networks
-%   (b) L1 penalty → sparse weights in neural networks
-%   (c) Pruning as post-training sparsification
-%   (d) Dropout as implicit regularisation
-%
-% State your question clearly, e.g.:
-% ``How does L2 weight decay in SGD relate to Ridge regression, and what are
-%   the differences in the stochastic vs.\ batch setting?''
-
-\textit{TODO: State research question here.}
+\textbf{Research question.}  When does an $\ell_2$ penalty on neural-network
+weights behave like classical Ridge regression, and why must that connection be
+qualified for adaptive optimisation and distinguished from dropout?  The first
+source below is a primary research paper not cited in the project brief.
 
 \begin{table}[H]
 \centering
-\caption{Source map linking claims to evidence.}
+\small
+\caption{Source map linking methodological claims to primary evidence.}
 \label{tab:source-map}
-\begin{tabularx}{\textwidth}{X l X X}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}p{0.22\textwidth}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X}
 \toprule
-\textbf{Claim} &
-\textbf{Source} &
-\textbf{Establishes} &
-\textbf{Does Not Establish} \\
+\textbf{Claim} & \textbf{Exact Source and Locator} &
+\textbf{What It Establishes} & \textbf{What It Does Not Establish} \\
 \midrule
-% TODO: Fill in at least 3 rows.
-%
-% Example row:
-% L2 weight decay is equivalent to Ridge regression in batch GD &
-% \citet{Krogh1991} &
-% Equivalence holds for batch gradient descent with fixed learning rate &
-% Does NOT hold for Adam or other adaptive optimisers \\[4pt]
-%
-\textit{TODO: Claim 1} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\[4pt]
-\textit{TODO: Claim 2} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\[4pt]
-\textit{TODO: Claim 3} & \textit{TODO} & \textit{TODO} & \textit{TODO} \\
+A quadratic weight penalty yields a decay term in gradient learning. &
+\citet{Krogh1991}, Section 1, Equations (1)--(2). &
+Adds $\lambda\sum_iw_i^2/2$ to a neural-network loss and derives the
+$-\lambda w_i$ update term. &
+Does not analyse Adam or prove that every modern ``weight decay''
+implementation is equivalent. \\[4pt]
+$\ell_2$ regularisation and weight decay separate under adaptive updates. &
+\citet{LoshchilovHutter2019}, abstract and Section 2. &
+Shows equivalence for standard SGD after learning-rate rescaling and
+inequivalence for adaptive gradient methods; motivates decoupled AdamW. &
+Does not make the present frozen-feature experiment a trained neural network. \\[4pt]
+Dropout randomly masks units during training and uses the unthinned network at
+test time. &
+\citet{Srivastava2014}, Section 2 and Figure 2. &
+Defines stochastic activation masking and the corresponding test-time scaling. &
+Does not establish permanent sparsity or deterministic pruning of learned
+weights. \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-% ---- 4.2 Elastic Net on Original Predictors ---------------------------------
 \subsection{Elastic Net on Original Predictors}
 \label{sec:enet-original}
 
 The Elastic Net \citep{ZouHastie2005} combines $\ell_1$ and $\ell_2$ penalties:
 \[
-    \hat{\bbeta}^{\mathrm{ENet}}
-    = \argmin_{\bbeta}
-      \left\{
-          \frac{1}{2n} \norm{\by - \bX\bbeta}_2^2
-          + \lambda\!\left[
-              \alpha \norm{\bbeta}_1
-              + \frac{1 - \alpha}{2} \norm{\bbeta}_2^2
-          \right]
-      \right\},
-    \quad \alpha \in [0, 1].
+ \hat{\bbeta}^{\mathrm{ENet}}
+ =\argmin_{\bbeta}\left\{
+ \frac{1}{2n}\norm{\by-\bX\bbeta}_2^2
+ +\lambda\left[\alpha\norm{\bbeta}_1
+ +\frac{1-\alpha}{2}\norm{\bbeta}_2^2\right]\right\}.
 \]
+Using the shared folds, $\lambda$ was tuned separately for
+$\alpha\in\{0.10,0.25,0.50,0.75,0.90\}$.  The pair with the smallest CV MSE
+was $\alpha=0.90$, $\lambda_{\min}=0.1061$, with CV RMSE 4.242 and nine
+nonzero slopes.
 
-% -- Alpha comparison plot
-\includefigure{0.75\textwidth}{fig_enet_alpha_comparison}%
-    {Elastic Net CV error across different $\alpha$ values.}%
-    {fig:enet-alpha}
+\includefigure{0.75\textwidth}{fig_p4_enet_cv}%
+  {Elastic Net shared-fold CV performance across candidate $\alpha$ values.}%
+  {fig:enet-alpha}
 
-% -- Elastic Net coefficient plot
-\includefigure{0.75\textwidth}{fig_p4_enet_coef}%
-    {Elastic Net coefficient estimates at optimal $(\alpha, \lambda)$.}%
-    {fig:enet-coef}
+\includefigure{0.75\textwidth}{fig_p4_enet_path}%
+  {Elastic Net coefficient path for the selected $\alpha=0.90$.}%
+  {fig:enet-path}
 
-% TODO: Report the best (alpha, lambda) combination from CV.
-%       Interpret how Elastic Net balances Ridge's grouping effect with
-%       Lasso's sparsity.
+\includefigure{0.72\textwidth}{fig_p4_enet_coef}%
+  {Elastic Net coefficients at the selected $(\alpha,\lambda)$.}%
+  {fig:enet-coef}
 
-% ---- 4.3 Fixed ReLU Features -----------------------------------------------
+\input{../output/tables/tab_p4_enet_alpha}
+\input{../output/tables/tab_p4_enet_coef}
+
+The selected $\alpha$ lies close to Lasso, and its active set and CV error are
+accordingly similar.  Its nonzero $\ell_2$ component still shares shrinkage
+across correlated predictors, while the dominant $\ell_1$ component preserves
+sparsity; it therefore lies between Ridge's dense solution and Lasso's exact
+thresholding.
+
 \subsection{Fixed ReLU Features}
 \label{sec:relu-features}
 
-To bridge regularised regression with neural-network concepts, we generate
-$M = 200$ random features via:
+With random-feature seed \texttt{240401}, the standardised predictors are
+mapped once to $M=200$ features
 \[
-    h_m(\bx) = \max\!\bigl(\bm{w}_m^\top \bx + b_m,\; 0\bigr),
-    \qquad m = 1, \dots, M,
+ h_m(\bx)=\max\{\bm a_m^\top\bx+c_m,0\},\qquad
+ a_{jm}\sim N(0,1/p),\quad c_m\sim N(0,0.5^2).
 \]
-where $\bm{w}_m \sim \mathcal{N}(\bm{0}, \bm{I}_p)$ and
-$b_m \sim \mathcal{N}(0, 1)$ are \textbf{fixed} (not learned).
-Only the output-layer coefficients $\bbeta \in \R^M$ are learned via
-Ridge/Lasso/Elastic Net on the transformed design matrix
-$\bm{H} \in \R^{n \times M}$.
+The same sampled matrix $A$ and bias vector $\bm c$ are applied to training and
+test predictors.  One constant hidden feature is detected from $H_{\mathrm{train}}$
+alone and removed from both matrices; centring and scaling of the remaining
+hidden features are also learned on training rows only.  The random hidden
+weights and biases are fixed.  Only the output intercept and slopes are fitted,
+with $\lambda$ (and the preselected candidate $\alpha$ values) chosen by the
+shared training folds.
 
-% -- Neural model CV plot
-\includefigure{0.75\textwidth}{fig_neural_cv}%
-    {CV error of Ridge/Lasso/Elastic Net on fixed ReLU features ($M = 200$).}%
-    {fig:neural-cv}
+\includefigure{0.72\textwidth}{fig_p4_neural_ridge_cv}%
+  {Shared-fold CV curve for Ridge on the fixed ReLU features.}%
+  {fig:neural-ridge-cv}
 
-% TODO: Compare the performance of models trained on original $p = 14$
-%       predictors vs.\ the $M = 200$ ReLU features.
-%       Discuss: Does the feature expansion help? Why or why not?
+\includefigure{0.72\textwidth}{fig_p4_neural_lasso_cv}%
+  {Shared-fold CV curve for Lasso on the fixed ReLU features.}%
+  {fig:neural-lasso-cv}
 
-% ---- 4.4 Locked Declaration and Final Holdout --------------------------------
+\includefigure{0.72\textwidth}{fig_p4_neural_active}%
+  {Active output weights for the three fixed-feature models.}%
+  {fig:neural-active}
+
+\input{../output/tables/tab_p4_neural_summary}
+
+The nonlinear expansion does not improve shared-fold prediction.  Neural Ridge
+has CV RMSE 4.784 with all 199 usable features active; Neural Lasso and Neural
+Elastic Net reduce this to about 4.390 with 31 active features, but remain worse
+than the original-predictor Lasso and Elastic Net (about 4.242).  With only 201
+training cases, the 199-dimensional random representation adds variance and
+depends on a single frozen draw rather than learning task-specific features.
+
 \subsection{Locked Declaration and Final Holdout}
 \label{sec:holdout}
 
-\bigskip
 \noindent
 \fbox{\parbox{0.95\textwidth}{%
-\textbf{Locked Model Declaration} \\[4pt]
-\begin{tabular}{@{}ll@{}}
-    \textbf{Feature set:}    & \textit{TODO: original 14 / ReLU 200 / other} \\
-    \textbf{Method:}         & \textit{TODO: Ridge / Lasso / Elastic Net} \\
-    \textbf{Tuning:}         & \textit{TODO: $\alpha = \ldots$, $\lambda = \ldots$} \\
-    \textbf{Justification:}  & \textit{TODO: brief reason} \\
-\end{tabular}\\[4pt]
-\textit{This declaration was made before examining holdout results.}
-}}
-\bigskip
+\textbf{Locked Analysis Declaration (before any \texttt{y\_test} metric)}\\[4pt]
+Training-only centring/scaling is applied unchanged to test predictors.
+Candidate specifications are OLS; Ridge at $\lambda_{\min}=0.627974$; Lasso at
+$\lambda_{\min}=0.095447$; Elastic Net at $\alpha=0.90$ and
+$\lambda_{\min}=0.106052$; and the fixed-feature models using seed 240401 and
+$M=200$.  Based on training CV, the deployment model is the
+\textbf{original-predictor Lasso}.  The locked primary metrics are RMSE and MAE,
+with $R^2$ supplementary.}}
 
-% -- Holdout comparison table
-\begin{table}[H]
-\centering
-\caption{Final holdout performance: RMSE and $R^2$ on the test set.}
-\label{tab:holdout}
-% TODO: Uncomment once generated:
-% \input{../output/tables/tab_holdout_comparison}
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
-    \texttt{tab\_holdout\_comparison.tex} — run the R pipeline to generate.
-\vspace{0.8cm}}}
-\end{table}
+\input{../output/tables/tab_p4_holdout}
 
-% -- Actual vs predicted plot
-\includefigure{0.65\textwidth}{fig_p4_actual_vs_pred}%
-    {Actual vs.\ predicted \texttt{brozek} on the holdout test set.}%
-    {fig:actual-vs-predicted}
+\includefigure{0.72\textwidth}{fig_p4_holdout_compare}%
+  {RMSE and MAE for all candidates in the one final holdout evaluation.}%
+  {fig:holdout-comparison}
 
-% TODO: State whether the holdout results support the pre-declared model choice.
-%       Discuss any discrepancies.
+\includefigure{0.62\textwidth}{fig_p4_actual_vs_pred}%
+  {Actual versus predicted \texttt{brozek} for the predeclared Lasso on the holdout set.}%
+  {fig:actual-vs-predicted}
 
-% ---- 4.5 Deep-Learning Connection and Limitations ---------------------------
+The holdout evidence supports the declaration: Lasso ranks first with RMSE
+4.251, MAE 3.524, and $R^2=0.683$.  Elastic Net is close (RMSE 4.274), but no
+model was retuned or replaced after viewing these results.  The frozen ReLU
+models rank below every original-predictor candidate; their best holdout RMSE
+is 4.757 for Neural Ridge.
+
 \subsection{Deep-Learning Connection and Limitations}
 \label{sec:dl-connection}
 
-% TODO: Discuss the following, citing sources from Table~\ref{tab:source-map}:
-%
-% 1. Weight decay vs.\ L2 penalty:
-%    - In batch GD, weight decay ≡ L2 regularisation \citep{Krogh1991}.
-%    - In adaptive optimisers (Adam), decoupled weight decay differs
-%      \citep{GoodfellowBengioCourville2016}.
-%
-% 2. L1 penalty → sparse weights:
-%    - Lasso encourages sparsity; analogous to L1-regularised neural networks.
-%
-% 3. Pruning:
-%    - Post-training removal of small weights \citep{HanPoolTranDally2015}.
-%    - Different from L1: pruning is a discrete, post-hoc operation.
-%
-% 4. Dropout:
-%    - Randomly zeroing activations during training \citep{Srivastava2014}.
-%    - Provides an ensemble-like regularisation effect.
-%
-% Distinguish clearly between these four concepts.
+For a fixed matrix $H$, an $\ell_2$ penalty on the learned output slopes is
+exactly Ridge regression.  In an adaptively optimised neural network, however,
+adding an $\ell_2$ term to the loss need not equal multiplicatively decaying the
+weights; the update geometry depends on the optimiser
+\citep{LoshchilovHutter2019}.  A zero output slope here removes one fixed hidden
+feature from this scalar predictor, but it does not make the input-to-hidden
+matrix $A$ sparse.  Dropout instead samples temporary activation masks during
+training and uses a scaled unmasked network at test time
+\citep{Srivastava2014}; this is not permanent pruning.  Most importantly, our
+single hidden layer is frozen, so the experiment does not establish a result
+about end-to-end training or a fully trained deep network.
 
-\textit{TODO: Write the deep-learning connection discussion here.}
-
-\paragraph{Limitations.}
-% TODO: Discuss at least TWO limitations, e.g.:
-%   (a) Fixed ReLU features are not optimised; a trained network would learn
-%       better representations.
-%   (b) Weight decay equivalence breaks down for adaptive optimisers.
-%   (c) L1 penalty in NNs is rarely used in practice due to optimisation
-%       difficulties.
-%   (d) Our dataset (n=252) is far too small for deep learning to show benefit.
-
-\textit{TODO: Discuss $\geq 2$ limitations.}
+The experiment has at least three limitations.  First, it uses only one random
+feature seed, so the apparent ranking may change with another draw.  Second,
+$n_{\mathrm{train}}=201$ is small relative to 200 proposed hidden features,
+making a flexible nonlinear representation difficult to estimate reliably.
+Third, the hidden weights are not learned and only one width and bias scale are
+studied.  These restrictions make the result a controlled regularisation
+comparison, not a general assessment of neural networks.

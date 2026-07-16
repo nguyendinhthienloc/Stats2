@@ -1,0 +1,7 @@
+LOCKED ANALYSIS DECLARATION
+Created before any y_test metric was computed.
+Preprocessing: training-only centering/scaling; same transform applied to test predictors.
+Candidates: OLS; ridge lambda.min=0.627974; lasso lambda.min=0.095447; elastic net alpha=0.90, lambda.min=0.106052.
+Random features: seed=240401; M=200; A~N(0,1/p); c~N(0,0.5^2); constant columns handled from H_train only.
+Predeclared deployment model: Lasso
+Holdout metrics: RMSE and MAE (R2 reported as supplementary context).

@@ -19,7 +19,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 02_lasso.R ==========\n\n")
@@ -56,22 +57,29 @@ n_nonzero_1se <- count_nonzero(lasso_fit, s = "lambda.1se")
 cat("  Nonzero at lambda.min:", n_nonzero_min, "out of", ncol(x_train), "\n")
 cat("  Nonzero at lambda.1se:", n_nonzero_1se, "out of", ncol(x_train), "\n\n")
 
-# Extract coefficients at lambda.min
+# Extract coefficients at both required tuning rules
 lasso_coefs <- as.vector(coef(lasso_fit, s = "lambda.min"))
+lasso_coefs_1se <- as.vector(coef(lasso_fit, s = "lambda.1se"))
 lasso_coef_names <- c("(Intercept)", predictors)
 names(lasso_coefs) <- lasso_coef_names
+names(lasso_coefs_1se) <- lasso_coef_names
 
 cat("Lasso Coefficients at lambda.min:\n")
 print(round(lasso_coefs, 4))
+cat("\nLasso Coefficients at lambda.1se:\n")
+print(round(lasso_coefs_1se, 4))
 
 # Identify selected (non-zero) features
 selected_mask   <- lasso_coefs[-1] != 0   # exclude intercept
+selected_mask_1se <- abs(lasso_coefs_1se[-1]) > 1e-8
 selected_names  <- predictors[selected_mask]
+selected_names_1se <- predictors[selected_mask_1se]
 eliminated_names <- predictors[!selected_mask]
 
 cat("\n--- Feature Selection ---\n")
 cat("  SELECTED features:   ", paste(selected_names, collapse = ", "), "\n")
 cat("  ELIMINATED features: ", paste(eliminated_names, collapse = ", "), "\n\n")
+cat("  SELECTED at lambda.1se:", paste(selected_names_1se, collapse = ", "), "\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4.  TRAINING METRICS
@@ -198,16 +206,18 @@ save_table_tex(
 # ─────────────────────────────────────────────────────────────────────────────
 
 lasso_coef_df <- data.frame(
-  Predictor   = names(lasso_coefs),
-  Coefficient = round(lasso_coefs, 4),
-  Status      = c("—", ifelse(selected_mask, "Selected", "Eliminated"))
+  Predictor       = names(lasso_coefs),
+  Coef_lambda_min = round(lasso_coefs, 4),
+  Coef_lambda_1se = round(lasso_coefs_1se, 4),
+  At_lambda_min   = c("Intercept", ifelse(selected_mask, "Selected", "Zero")),
+  At_lambda_1se   = c("Intercept", ifelse(selected_mask_1se, "Selected", "Zero"))
 )
 rownames(lasso_coef_df) <- NULL
 
 save_table_tex(
   df       = lasso_coef_df,
   filename = "tab_p2_lasso_coef.tex",
-  caption  = "Lasso Regression Coefficients at $\\lambda_{\\min}$",
+  caption  = "Lasso Coefficients and Selection at Both Tuning Rules",
   label    = "tab:lasso_coef"
 )
 
@@ -215,21 +225,20 @@ save_table_tex(
 # TABLE 3:  SELECTED FEATURES SUMMARY
 # ─────────────────────────────────────────────────────────────────────────────
 
-selected_coefs <- lasso_coefs[-1][selected_mask]
-
 selected_df <- data.frame(
-  Feature     = names(selected_coefs),
-  Coefficient = round(selected_coefs, 4),
-  Abs_Coef    = round(abs(selected_coefs), 4)
+  Rule = c("lambda.min", "lambda.1se"),
+  Nonzero = c(n_nonzero_min, n_nonzero_1se),
+  Selected_Features = c(
+    paste(selected_names, collapse = ", "),
+    paste(selected_names_1se, collapse = ", ")
+  ),
+  stringsAsFactors = FALSE
 )
-# Sort by absolute coefficient (most important first)
-selected_df <- selected_df[order(-selected_df$Abs_Coef), ]
-rownames(selected_df) <- NULL
 
 save_table_tex(
   df       = selected_df,
   filename = "tab_p2_lasso_sel.tex",
-  caption  = "Lasso: Selected Features Ranked by Absolute Coefficient",
+  caption  = "Lasso Selected Features Under Both Tuning Rules",
   label    = "tab:lasso_selected"
 )
 
@@ -237,7 +246,8 @@ save_table_tex(
 # SAVE LASSO FIT
 # ─────────────────────────────────────────────────────────────────────────────
 
-save(lasso_fit, lasso_train_scores, selected_names, eliminated_names,
+save(lasso_fit, lasso_train_scores, lasso_coefs, lasso_coefs_1se,
+     selected_names, selected_names_1se, eliminated_names,
      file = "output/lasso_fit.RData")
 cat("[02c_lasso] Saved: output/lasso_fit.RData\n")
 

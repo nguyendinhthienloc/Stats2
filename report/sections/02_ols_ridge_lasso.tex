@@ -11,29 +11,28 @@
 Ordinary Least Squares provides the unpenalised baseline:
 \[
     \hat{\bbeta}^{\mathrm{OLS}}
-    = \argmin_{\bbeta \in \R^p} \norm{\by - \bX \bbeta}_2^2
-    = (\bX^\top \bX)^{-1} \bX^\top \by.
+    = \argmin_{\bbeta \in \R^p} \frac{1}{2n}\norm{\by - \bX \bbeta}_2^2.
 \]
 
-% -- OLS coefficient table
-\begin{table}[H]
-\centering
-\caption{OLS coefficient estimates on the training set.}
-\label{tab:ols-coef}
-% TODO: Uncomment once generated:
-% \input{../output/tables/tab_p2_ols_coef}
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
-    \texttt{tab\_ols\_coef.tex} — run the R pipeline to generate.
-\vspace{0.8cm}}}
-\end{table}
+\input{../output/tables/tab_p2_ols_coef}
 
-% -- OLS diagnostic plots
-\includefigure{0.75\textwidth}{fig_ols_diagnostics}%
-    {OLS diagnostic plots: residuals vs.\ fitted values and Q-Q plot.}%
-    {fig:ols-diagnostics}
+\includefigure{0.72\textwidth}{fig_p2_ols_resid}%
+    {OLS residuals versus fitted values, with a LOESS trend.}%
+    {fig:ols-residuals}
 
-% TODO: Interpret OLS coefficients. Note any coefficients with unexpected signs
-%       or inflated standard errors due to multicollinearity.
+\includefigure{0.60\textwidth}{fig_p2_ols_qq}%
+    {Normal Q-Q plot of the OLS residuals.}%
+    {fig:ols-qq}
+
+With standardised predictors, each slope is the change in body-fat percentage
+points for a one-training-SD increase, holding the other measurements fixed.
+\texttt{abdom} has the dominant positive slope (9.47), while \texttt{weight}
+($-1.33$), \texttt{adipos} ($-1.32$), and \texttt{hip} ($-1.37$) have
+counterintuitive negative partial slopes.  These signs should not be read
+causally: they occur after conditioning on strongly correlated size measures.
+OLS has training RMSE 3.884 and shared-fold CV RMSE 4.406.  The residual and
+Q-Q plots show the fit diagnostics without using the holdout data; visible tail
+departures also caution against relying only on Gaussian-error summaries.
 
 % ---- 2.2 Ridge Regression --------------------------------------------------
 \subsection{Ridge Regression (P2 — Tuấn)}
@@ -44,8 +43,8 @@ Ridge regression adds an $\ell_2$ penalty to the OLS objective:
     \hat{\bbeta}^{\mathrm{Ridge}}
     = \argmin_{\bbeta \in \R^p}
       \left\{
-          \norm{\by - \bX \bbeta}_2^2
-          + \lambda \norm{\bbeta}_2^2
+          \frac{1}{2n}\norm{\by - \bX \bbeta}_2^2
+          + \frac{\lambda}{2} \norm{\bbeta}_2^2
       \right\}.
 \]
 
@@ -60,29 +59,27 @@ Ridge regression adds an $\ell_2$ penalty to the OLS objective:
     {fig:ridge-path}
 
 % -- Ridge coefficient bar chart
-\includefigure{0.7\textwidth}{fig_p2_ridge_coef_bar}%
+\includefigure{0.7\textwidth}{fig_p2_ridge_coef}%
     {Ridge coefficient estimates at $\lambda_{\min}$ vs.\ $\lambda_{1\mathrm{se}}$.}%
     {fig:ridge-coef-bar}
 
 \paragraph{Tuning results.}
-% TODO: Report the selected lambda values:
-% $\lambda_{\min} = \ldots$, $\lambda_{1\mathrm{se}} = \ldots$.
+Shared-fold CV selected $\lambda_{\min}=0.6280$ (CV MSE 19.86, RMSE
+4.457) and $\lambda_{1\mathrm{se}}=4.0367$ (CV MSE 23.38, RMSE 4.835).
+The minimum rule targets the lowest estimated prediction error; the one-SE rule
+accepts some estimated error for stronger shrinkage.
 
-% -- Condition numbers
-\begin{table}[H]
-\centering
-\caption{Condition number of $\bX^\top\bX$ vs.\ $\bX^\top\bX + \lambda\bm{I}$
-         for selected $\lambda$ values.}
-\label{tab:condition-numbers}
-% TODO: Uncomment once generated:
-% \input{../output/tables/tab_p2_cond}
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
-    \texttt{tab\_condition\_numbers.tex} — run the R pipeline to generate.
-\vspace{0.8cm}}}
-\end{table}
+\input{../output/tables/tab_p2_ridge_lambda}
+\input{../output/tables/tab_p2_ridge_coef}
+\input{../output/tables/tab_p2_cond}
 
-% TODO: Interpret ridge shrinkage. How do coefficients change compared to OLS?
-%       Does the condition number improve substantially?
+Ridge retains all 14 slopes but redistributes signal among correlated
+measurements.  For example, \texttt{abdom} shrinks from 9.47 under OLS to 5.00
+at $\lambda_{\min}$ and 2.15 at $\lambda_{1\mathrm{se}}$, while correlated
+size measures receive smaller, more similar contributions.  On the
+$G=\bX^\top\bX/n$ scale, adding $\lambda_{\min}I$ reduces the condition number
+from 3166.75 to 15.17, a 208.7-fold improvement.  No Ridge slope is described
+as an exact variable-selection result.
 
 % ---- 2.3 Lasso Regression --------------------------------------------------
 \subsection{Lasso Regression (P3 — Thuận)}
@@ -109,37 +106,24 @@ automatic feature selection:
     {Lasso coefficient path: coefficients vs.\ $\log\lambda$.}%
     {fig:lasso-path}
 
-% -- Selected features table
-\begin{table}[H]
-\centering
-\caption{Lasso-selected features and their coefficient estimates.}
-\label{tab:lasso-selected}
-% TODO: Uncomment once generated:
-% \input{../output/tables/tab_p2_lasso_sel}
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
-    \texttt{tab\_lasso\_selected.tex} — run the R pipeline to generate.
-\vspace{0.8cm}}}
-\end{table}
+\input{../output/tables/tab_p2_lasso_lambda}
+\input{../output/tables/tab_p2_lasso_sel}
+\input{../output/tables/tab_p2_lasso_coef}
 
-% TODO: Report lambda_min, lambda_1se, and the number of nonzero coefficients
-%       at each. Interpret which features are retained and which are zeroed out.
-%       Compare feature selection behaviour to Ridge.
+At $\lambda_{\min}=0.0954$, the Lasso CV MSE is 17.99 (RMSE 4.241) and
+nine slopes are nonzero: \texttt{age}, \texttt{weight}, \texttt{height},
+\texttt{neck}, \texttt{abdom}, \texttt{hip}, \texttt{thigh},
+\texttt{forearm}, and \texttt{wrist}.  At
+$\lambda_{1\mathrm{se}}=0.7390$, only \texttt{age}, \texttt{height}, and
+\texttt{abdom} remain and CV MSE rises to 20.39 (RMSE 4.516).  Unlike Ridge,
+the $\ell_1$ optimality condition sets other slopes exactly to zero.  The
+selection identifies predictive conditional associations, not causal effects.
 
 % ---- 2.4 Training-Based Comparison -----------------------------------------
 \subsection{Training-Based Comparison and Core Model (P3 — Thuận)}
 \label{sec:comparison}
 
-% -- Comparison table
-\begin{table}[H]
-\centering
-\caption{Training CV performance comparison across OLS, Ridge, and Lasso.}
-\label{tab:model-comparison}
-% TODO: Uncomment once generated:
-% \input{../output/tables/tab_p2_comparison}
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
-    \texttt{tab\_model\_comparison.tex} — run the R pipeline to generate.
-\vspace{0.8cm}}}
-\end{table}
+\input{../output/tables/tab_p2_comparison}
 
 % -- Comparison bar chart
 \includefigure{0.7\textwidth}{fig_p2_comparison}%
@@ -150,26 +134,40 @@ automatic feature selection:
 \noindent
 \fbox{\parbox{0.95\textwidth}{%
 \textbf{Core Model Declaration (pre-holdout):}\\[4pt]
-% TODO: State your nominated core model BEFORE seeing holdout results.
-% Example: ``Based on 5-fold CV results, we nominate \textbf{Lasso at
-% $\lambda_{1\mathrm{se}}$} as our core model because \ldots''
-\textit{TODO: Declare and justify core model choice here.}
+Based only on the shared five-fold training comparison, we nominate
+\textbf{Lasso at $\lambda_{\min}=0.0954$}.  It has the lowest CV RMSE (4.241
+versus 4.406 for OLS and 4.457 for Ridge) and reduces the model from 14 to nine
+nonzero slopes.  This declaration precedes all holdout scoring.
 }}
+
+The $\lambda_{\min}$ rule answers which candidate minimises estimated
+prediction error, whereas $\lambda_{1\mathrm{se}}$ asks for the most strongly
+regularised model statistically close to that minimum.  Sparsity improves
+deployment and communication but is not itself evidence of better prediction;
+the CV error and active-set size therefore appear separately in the comparison.
 
 % ---- 2.5 Perturbation / Stability Check ------------------------------------
 \subsection{Perturbation or Stability Check (P3 — Thuận)}
 \label{sec:perturbation}
 
 \paragraph{Prediction before check.}
-% TODO: State what you expect to observe before running the perturbation analysis.
-\textit{TODO: State prediction.}
+Before resampling, we predicted that Ridge coefficients would vary less than
+OLS coefficients, while Lasso would show selection instability among highly
+correlated measurements.
 
 % -- Perturbation plot
 \includefigure{0.75\textwidth}{fig_p2_perturbation}%
     {Coefficient stability under predictor perturbation or bootstrap resampling.}%
     {fig:perturbation}
 
-% TODO: Describe the perturbation method (e.g., bootstrap resampling of
-%       coefficients, adding noise to predictors, leave-one-out sensitivity).
-%       Report whether the core model's coefficients and predictions are stable.
-%       Compare stability of Ridge vs.\ Lasso under perturbation.
+Using bootstrap seed \texttt{240302}, we drew $B=50$ training resamples and
+refit the methods without consulting the holdout set.  The plot reports slope
+standard deviations, and the Lasso table records selection frequencies.
+Ridge is markedly more stable for the most collinear size variables: the
+bootstrap SD for \texttt{weight} is 0.50 under Ridge versus 6.47 under OLS and
+1.08 under Lasso.  Lasso consistently selects \texttt{abdom} and \texttt{wrist}
+(frequency 1.00) and \texttt{forearm} (0.98), but alternates among
+\texttt{weight} (0.46), \texttt{hip} (0.48), and \texttt{chest} (0.26), as
+predicted for correlated predictors.
+
+\input{../output/tables/tab_p2_lasso_stability}

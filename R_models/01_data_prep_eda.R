@@ -17,7 +17,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # source() executes setup.R so we inherit config, seeds, and helper fns.
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()   # create output/figures/ and output/tables/ if missing
 
 cat("\n========== 01_data_prep_eda.R ==========\n\n")
@@ -130,7 +131,7 @@ cat("  Column SDs   (should be ~1):", round(apply(x_train, 2, sd), 4)[1:3], "...
 # We create ONE set of fold IDs and share it across all models.
 # This ensures fair comparison: every model is evaluated on the same folds.
 
-foldid <- make_foldid(n = nrow(x_train), nfolds = 10L, seed = seeds$cv)
+foldid <- make_foldid(n = nrow(x_train), nfolds = 5L, seed = seeds$cv)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 9.  SAVE SHARED DATA

@@ -25,7 +25,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 04_neural.R ==========\n\n")
@@ -69,13 +70,11 @@ set.seed(seeds$features)
 A <- matrix(rnorm(p * M, mean = 0, sd = 1 / sqrt(p)),
             nrow = p, ncol = M)
 
-# bias: 1 × M vector
-#    Entries drawn from Uniform(0, 2*pi)
-bias <- matrix(runif(M, min = 0, max = 2 * pi),
-               nrow = 1, ncol = M)
+# bias: length-M vector with the rubric's c_m ~ N(0, 0.5^2) distribution
+bias <- rnorm(M, mean = 0, sd = 0.5)
 
 cat("  A matrix:   ", nrow(A), "x", ncol(A), "\n")
-cat("  bias vector:", ncol(bias), "values in [0, 2*pi]\n\n")
+cat("  bias vector:", length(bias), "draws from N(0, 0.5^2)\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4.  COMPUTE RANDOM FEATURES
@@ -109,7 +108,9 @@ cat("H_test  dimensions:", nrow(H_test_raw),  "x", ncol(H_test_raw),  "\n\n")
 h_scaler <- fit_scaler(H_train_raw)
 H_train  <- apply_scaler(H_train_raw, h_scaler)
 H_test   <- apply_scaler(H_test_raw,  h_scaler)
+constant_feature_indices <- which(!h_scaler$keep)
 
+cat("Neural features retained:", ncol(H_train), "of", M, "\n")
 cat("Neural features scaled (H_train mean ≈ 0, sd ≈ 1)\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -264,7 +265,7 @@ save_table_tex(
 # 04_holdout.R will need H_test to make predictions.
 
 save(neural_ridge_fit, neural_lasso_fit, neural_enet_fit,
-     A, bias, H_train, H_test, h_scaler,
+     A, bias, M, constant_feature_indices, H_train, H_test, h_scaler,
      neural_summary,
      file = "output/neural_fits.RData")
 cat("[04c_neural] Saved: output/neural_fits.RData\n")

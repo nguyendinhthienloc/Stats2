@@ -3,6 +3,15 @@
 % =============================================================================
 \ProvidesPackage{preamble}[2025/07/14 ASESII Quiz 1 Report Style]
 
+% ---- Engine and Unicode ----------------------------------------------------
+\RequirePackage{iftex}
+\ifXeTeX\else
+  \PackageError{preamble}{XeLaTeX is required}
+    {Compile with `latexmk -xelatex main.tex'. pdfLaTeX cannot typeset the
+     Unicode Vietnamese author names used in this report.}
+\fi
+\RequirePackage{fontspec}
+
 % ---- Layout ----------------------------------------------------------------
 \RequirePackage[margin=1in]{geometry}
 \RequirePackage{setspace}
@@ -11,13 +20,22 @@
 % ---- Mathematics -----------------------------------------------------------
 \RequirePackage{amsmath}
 \RequirePackage{amssymb}
-\RequirePackage{amsthm}
 \RequirePackage{mathtools}
 \RequirePackage{bm}
 
 % ---- Font (Times-like, professional) ---------------------------------------
 \RequirePackage{newtxtext}
 \RequirePackage{newtxmath}
+\setmainfont{times}[
+    Path          = C:/Windows/Fonts/,
+    Extension     = .ttf,
+    UprightFont   = *,
+    BoldFont      = timesbd,
+    ItalicFont    = timesi,
+    BoldItalicFont= timesbi
+]
+\let\openbox\relax
+\RequirePackage{amsthm}
 
 
 % ---- Tables ----------------------------------------------------------------
@@ -71,8 +89,9 @@
 % ---- Miscellaneous ---------------------------------------------------------
 \RequirePackage{enumitem}         % better list control
 \RequirePackage{microtype}        % microtypographic enhancements
-\RequirePackage{parskip}          % paragraph spacing instead of indent
 \RequirePackage{fancybox}         % \shadowbox, \doublebox, etc.
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
 
 % ---- Custom math commands --------------------------------------------------
 \newcommand{\bx}{\bm{x}}

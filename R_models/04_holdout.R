@@ -29,7 +29,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 04_holdout.R ==========\n\n")
@@ -46,10 +47,40 @@ load("output/shared_data.RData")
 load("output/ols_fit.RData")
 load("output/ridge_fit.RData")
 load("output/lasso_fit.RData")
+load("output/comparison.RData")
 load("output/enet_fits.RData")
 load("output/neural_fits.RData")
 
 cat("[04d_holdout] Loaded all shared data and model fits\n")
+
+# Lock the deployment choice using training CV only, before evaluating y_test.
+lock_candidates <- rbind(
+  comparison_df[, c("Model", "CV_RMSE")],
+  data.frame(
+    Model = paste0("Elastic Net (a=", best_alpha, ")"),
+    CV_RMSE = sqrt(min(enet_summary$CV_MSE))
+  ),
+  neural_summary[, c("Model", "CV_RMSE")]
+)
+locked_deployment_model <- lock_candidates$Model[
+  which.min(lock_candidates$CV_RMSE)
+]
+
+locked_analysis <- c(
+  "LOCKED ANALYSIS DECLARATION",
+  "Created before any y_test metric was computed.",
+  "Preprocessing: training-only centering/scaling; same transform applied to test predictors.",
+  sprintf("Candidates: OLS; ridge lambda.min=%.6f; lasso lambda.min=%.6f; elastic net alpha=%.2f, lambda.min=%.6f.",
+          ridge_fit$lambda.min, lasso_fit$lambda.min,
+          best_alpha, best_fit$lambda.min),
+  sprintf("Random features: seed=%d; M=%d; A~N(0,1/p); c~N(0,0.5^2); constant columns handled from H_train only.",
+          seeds$features, M),
+  paste0("Predeclared deployment model: ", locked_deployment_model),
+  "Holdout metrics: RMSE and MAE (R2 reported as supplementary context)."
+)
+writeLines(locked_analysis, "output/locked_analysis.txt")
+cat(paste0("  ", locked_analysis, collapse = "\n"), "\n")
+cat("  Saved: output/locked_analysis.txt\n")
 cat("  Test set size:", length(y_test), "observations\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -123,6 +154,7 @@ final_df <- data.frame(
                        scores_ne$R2), 4),
   stringsAsFactors = FALSE
 )
+final_df$Predeclared <- final_df$Model == locked_deployment_model
 
 # Sort by Test RMSE (best first)
 final_df <- final_df[order(final_df$Test_RMSE), ]
@@ -138,6 +170,9 @@ cat("╚════════════════════════
 best_model_name <- final_df$Model[1]
 cat("*** BEST MODEL:", best_model_name,
     "(Test RMSE =", final_df$Test_RMSE[1], ") ***\n\n")
+lock_supported <- identical(best_model_name, locked_deployment_model)
+cat("Predeclared deployment model:", locked_deployment_model, "\n")
+cat("Holdout supports predeclared choice:", lock_supported, "\n\n")
 
 ###############################################################################
 #                              FIGURES                                        #
@@ -256,10 +291,11 @@ legend("topleft",
        col    = c(project_colors["OLS"], project_colors["Lasso"], project_colors["Ridge"]),
        bty    = "n", cex = 0.8)
 
-# Add R² annotation
+# Add R² annotation for the model actually shown
+best_scores <- score_regression(y_test, best_pred)
 text(axis_range[1] + diff(axis_range) * 0.05,
      axis_range[2] - diff(axis_range) * 0.05,
-     labels = paste0("R² = ", round(scores_ols$R2, 3)),
+     labels = paste0("R² = ", round(best_scores$R2, 3)),
      adj = 0, cex = 0.9)
 
 dev.off()
@@ -279,6 +315,11 @@ save_table_tex(
   caption  = "Final Holdout Test-Set Performance (Sorted by RMSE)",
   label    = "tab:final_holdout"
 )
+
+save(final_df, locked_deployment_model, locked_analysis, lock_supported,
+     best_model_name,
+     file = "output/holdout_results.RData")
+cat("[04d_holdout] Saved: output/holdout_results.RData\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DONE

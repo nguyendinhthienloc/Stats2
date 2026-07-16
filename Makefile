@@ -8,7 +8,7 @@
 #   make report   — Compile LaTeX to PDF only (assumes outputs exist)
 #   make clean    — Remove generated files
 #
-# Prerequisites: R, Rscript, latexmk, pdflatex (or xelatex) on PATH
+# Prerequisites: R, Rscript, latexmk, and xelatex on PATH
 # =============================================================================
 
 # Directories
@@ -78,7 +78,7 @@ $(OUT_DIR)/lasso_fit.RData: $(LASSO) $(SETUP) $(SHARED_DATA)
 	Rscript $(LASSO)
 
 # Comparison (depends on all three model fits)
-$(FIG_DIR)/fig_p2_comparison.pdf: $(COMPARE) $(SETUP) $(SHARED_DATA) \
+$(OUT_DIR)/comparison.RData: $(COMPARE) $(SETUP) $(SHARED_DATA) \
     $(OUT_DIR)/ols_fit.RData $(OUT_DIR)/ridge_fit.RData $(OUT_DIR)/lasso_fit.RData
 	@echo "=== Running Model Comparison ==="
 	Rscript $(COMPARE)
@@ -96,14 +96,14 @@ $(OUT_DIR)/neural_fits.RData: $(NEURAL) $(SETUP) $(SHARED_DATA)
 # Final Holdout (depends on everything)
 $(TAB_DIR)/tab_p4_holdout.tex: $(HOLDOUT) $(SETUP) $(SHARED_DATA) \
     $(OUT_DIR)/ols_fit.RData $(OUT_DIR)/ridge_fit.RData $(OUT_DIR)/lasso_fit.RData \
-    $(OUT_DIR)/enet_fits.RData $(OUT_DIR)/neural_fits.RData
+    $(OUT_DIR)/enet_fits.RData $(OUT_DIR)/neural_fits.RData $(OUT_DIR)/comparison.RData
 	@echo "=== Running Final Holdout Evaluation ==="
 	Rscript $(HOLDOUT)
 
 models: $(OUT_DIR)/ols_fit.RData \
         $(OUT_DIR)/ridge_fit.RData \
         $(OUT_DIR)/lasso_fit.RData \
-        $(FIG_DIR)/fig_p2_comparison.pdf \
+        $(OUT_DIR)/comparison.RData \
         $(OUT_DIR)/enet_fits.RData \
         $(OUT_DIR)/neural_fits.RData \
         $(TAB_DIR)/tab_p4_holdout.tex

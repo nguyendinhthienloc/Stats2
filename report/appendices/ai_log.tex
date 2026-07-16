@@ -4,15 +4,11 @@
 \section{AI Usage Log}
 \label{sec:ai-log}
 
-This appendix documents all instances where AI tools (e.g., ChatGPT, GitHub
-Copilot, Gemini) were used during the preparation of this report.  The full
-log is maintained in \texttt{Group01\_AI\_Log.csv}.
+This appendix records the AI-assisted work performed during the preparation
+of this report. Team members remain responsible for reviewing the code,
+statistical reasoning, and written conclusions.
 
-% TODO: If you have a CSV, you can convert it to a LaTeX table using R_models/Python
-%       or import it with the csvsimple package.  Alternatively, maintain the
-%       log directly below.
-
-\begin{longtable}{c l p{3.5cm} p{3.5cm} p{3cm}}
+\begin{longtable}{c l >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}p{3cm}}
 \toprule
 \textbf{\#} &
 \textbf{Date} &
@@ -21,28 +17,22 @@ log is maintained in \texttt{Group01\_AI\_Log.csv}.
 \textbf{Human Verification} \\
 \midrule
 \endhead
-% --- Rows below: fill in as you use AI tools ---
 1 &
-\textit{TODO} &
-\textit{TODO: Describe the prompt} &
-\textit{TODO: What was the output used for?} &
-\textit{TODO: How was it verified?} \\[4pt]
+2026-07-16 &
+Codex: diagnose \texttt{setup.R}, package loading, and pipeline failures &
+Portable project setup, local R library support, and clearer stage logs &
+Parsed every R script and ran the complete eight-stage pipeline \\[4pt]
 2 &
-\textit{TODO} &
-\textit{TODO} &
-\textit{TODO} &
-\textit{TODO} \\[4pt]
+2026-07-16 &
+Codex: audit the R analysis against the quiz specification &
+Five-fold CV, model summaries, perturbation analysis, neural features, and locked holdout evaluation &
+Compared generated artifacts with the specification and checked the final metrics \\[4pt]
 3 &
-\textit{TODO} &
-\textit{TODO} &
-\textit{TODO} &
-\textit{TODO} \\
+2026-07-16 &
+Codex: repair Unicode typesetting and LaTeX build diagnostics &
+Author names, table layout, package ordering, and build instructions &
+Compiled with XeLaTeX and inspected the final log and rendered PDF \\
 \bottomrule
 \caption{AI usage log for Group 01.}
 \label{tab:ai-log}
 \end{longtable}
-
-% Alternative: Verbatim input of CSV file (uncomment if preferred)
-% \begin{lstlisting}[caption={Raw AI log (CSV format).}, language={}]
-% \input{../Group01_AI_Log.csv}
-% \end{lstlisting}
