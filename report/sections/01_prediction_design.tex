@@ -1,0 +1,114 @@
+% =============================================================================
+% 01_prediction_design.tex — Problem 1: Prediction Design and Leakage Control
+% =============================================================================
+\section{Prediction Design and Leakage Control}
+\label{sec:prediction-design}
+
+% ---- 1.1 Target and Predictors ---------------------------------------------
+\subsection{Target and Predictors}
+\label{sec:target-predictors}
+
+The \texttt{fat.csv} dataset contains $n = 252$ observations and 18 variables
+describing body composition and anthropometric measurements of adult males
+\citep{Johnson1996}.  The unit of observation is one adult male subject's body
+measurement record, and the objective is to predict that subject's Brozek
+body-fat percentage from measurements available without a body-fat calculation.
+The response variable is \texttt{brozek}, the body-fat percentage estimated via
+Brozek's equation.
+
+After inspection, the following variables are \textbf{excluded} from the
+predictor set to prevent data leakage:
+%
+\begin{itemize}
+    \item \texttt{siri} — an alternative body-fat estimate; including it would
+          constitute a near-perfect proxy for the response. Both Siri and Brozek equations are derived directly from body density, making them fundamentally the same measure.
+    \item \texttt{density} — body density is the direct input to both the Brozek
+          and Siri formulas (e.g., $\text{Brozek} = 457 / \text{density} - 414.2$). Using it makes prediction trivially deterministic.
+    \item \texttt{free} — fat-free weight is algebraically derived from body fat
+          and total weight ($\text{free} = \text{weight} \times (1 - \text{body fat \%} / 100)$), creating a circular dependency and data leakage.
+\end{itemize}
+
+This leaves $p = 14$ candidate predictors (age, weight, height, adipos, neck,
+chest, abdom, hip, thigh, knee, ankle, biceps, forearm, wrist).
+
+\paragraph{Summary statistics.}
+Table~\ref{tab:summary_stats} reports the descriptive statistics for all
+retained predictors computed on the \emph{training set only}.
+
+\input{../output/tables/tab_p1_summary}
+
+% ---- 1.2 Split and Train-Only Preprocessing --------------------------------
+\subsection{Split and Train-Only Preprocessing}
+\label{sec:split-preprocess}
+
+The data are split into exactly 201 training observations and 51 held-out test
+observations using a reproducible 80/20 split.  Inspection before splitting
+found zero missing values, so no imputation or row deletion was required; if a
+future file contains missing values, its handling must be learned from the
+training data only.
+
+The exact fixed random seed used for this split was \texttt{240201}.
+
+\paragraph{Standardisation.}
+All predictors are centred and scaled using the \emph{training-set} mean and
+standard deviation.  The same transformation is then applied to the test set to
+prevent information leakage from the test data into the modelling pipeline.
+Formally, for each predictor $j$:
+\[
+    \tilde{x}_{ij}
+    = \frac{x_{ij} - \bar{x}_j^{\mathrm{train}}}
+           {s_j^{\mathrm{train}}},
+    \qquad i = 1, \dots, n.
+\]
+
+\paragraph{Cross-validation.}
+We use $K = 5$-fold cross-validation (CV) throughout.  With CV seed
+\texttt{240301}, one \texttt{foldid} is assigned on the 201 training rows (fold
+sizes 41, 40, 40, 40, and 40) and reused for OLS, Ridge, Lasso, every Elastic
+Net $\alpha$, and every random-feature model.
+
+To strictly prevent data leakage, the test set labels are completely held out from model training and tuning. All standardisation is computed exclusively on the training set. We do not standardise within each CV fold since the primary pipeline standardises the entire training block prior to CV, which ensures the same preprocessing statistics are applied consistently across all folds.
+
+% ---- 1.3 Training-Data Exploration -----------------------------------------
+\subsection{Training-Data Exploration}
+\label{sec:eda}
+
+% -- Correlation heatmap
+\includefigure{0.85\textwidth}{fig_p1_correlation}%
+    {Pearson correlation heatmap of training-set predictors and response.}%
+    {fig:corr-heatmap}
+
+The heatmap reveals that several anthropometric measurements are highly
+correlated.  For example, training correlations are 0.945 between \texttt{hip}
+and \texttt{weight} and 0.894 between \texttt{chest} and \texttt{weight};
+\texttt{abdom} also has correlation 0.811 with \texttt{brozek}.  Such
+collinearity can make OLS coefficients unstable and motivates regularisation.
+
+% -- Response distribution
+\includefigure{0.65\textwidth}{fig_p1_dist}%
+    {Distribution of the response variable \texttt{brozek} in the training set.}%
+    {fig:response-dist}
+
+The distribution of the response variable \texttt{brozek} in the training set is roughly symmetric and bell-shaped, peaking around the mean of 18.67\%. It does not exhibit severe skewness, suggesting that no transformation of the response is strictly necessary for linear modelling.
+
+% -- Boxplots of predictors
+\includefigure{0.85\textwidth}{fig_p1_boxplots}%
+    {Side-by-side boxplots of standardised predictors (training set).}%
+    {fig:boxplots}
+
+The side-by-side boxplots show several possible anomalies.  In particular,
+original row 39 is in the training set and has \texttt{hip}=147.7, about 6.75
+training standard deviations above the training mean.  It is retained rather
+than silently removed, so its possible leverage is visible in the subsequent
+diagnostics and stability analysis.
+
+% -- Pairwise scatter
+\includefigure{0.95\textwidth}{fig_p1_pairwise}%
+    {Pairwise scatter plots of selected predictors against \texttt{brozek}.}%
+    {fig:pairwise}
+
+The pairwise scatter plots show a generally linear and positive association between the response and the top four correlated predictors (\texttt{abdom}, \texttt{adipos}, \texttt{chest}, and \texttt{hip}). The relationships appear linear without obvious curvilinear patterns, supporting the use of linear models without polynomial transformations. The substantial multicollinearity between these top predictors strongly motivates the use of penalised models like Ridge and Lasso to regularise their coefficient estimates.
+
+Since several body measurements are highly correlated, can regularised
+regression improve prediction stability and identify which measurements are
+most useful for predicting \texttt{brozek}?

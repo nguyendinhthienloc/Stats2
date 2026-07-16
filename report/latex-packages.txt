@@ -1,0 +1,32 @@
+Required LaTeX engine/tools:
+latexmk
+xelatex
+
+Required LaTeX packages used by report/main.tex and report/preamble.sty:
+amsmath
+amssymb
+amsthm
+babel
+bm
+booktabs
+enumitem
+fancybox
+fancyhdr
+float
+fontspec
+geometry
+graphicx
+hyperref
+iftex
+listings
+longtable
+mathtools
+microtype
+multirow
+natbib
+newtx
+setspace
+subcaption
+tabularx
+tex-gyre
+xcolor

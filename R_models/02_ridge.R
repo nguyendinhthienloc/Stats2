@@ -19,7 +19,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 02_ridge.R ==========\n\n")
@@ -39,7 +40,7 @@ cat("  Predictors:      ", ncol(x_train), "\n\n")
 # alpha = 0 tells glmnet to use L2 (Ridge) penalty.
 # cv.glmnet performs K-fold CV (using our shared foldid) to pick lambda.
 
-ridge_fit <- fit_cv_glmnet(x_train, y_train, alpha = 0, foldid = foldid)
+ridge_fit <- fit_foldclean_glmnet(x_raw_train, y_train, alpha = 0, foldid = foldid)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3.  REPORT LAMBDA VALUES
@@ -52,13 +53,17 @@ cat("\n--- Ridge Lambda Selection ---\n")
 cat("  lambda.min:", round(ridge_fit$lambda.min, 6), "\n")
 cat("  lambda.1se:", round(ridge_fit$lambda.1se, 6), "\n\n")
 
-# Extract coefficients at lambda.min
+# Extract coefficients at both required tuning rules
 ridge_coefs <- as.vector(coef(ridge_fit, s = "lambda.min"))
+ridge_coefs_1se <- as.vector(coef(ridge_fit, s = "lambda.1se"))
 ridge_coef_names <- c("(Intercept)", predictors)
 names(ridge_coefs) <- ridge_coef_names
+names(ridge_coefs_1se) <- ridge_coef_names
 
 cat("Ridge Coefficients at lambda.min:\n")
 print(round(ridge_coefs, 4))
+cat("\nRidge Coefficients at lambda.1se:\n")
+print(round(ridge_coefs_1se, 4))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4.  CONDITION NUMBERS
@@ -73,7 +78,7 @@ cond <- safe_condition_numbers(x_train, lambda = ridge_fit$lambda.min)
 # 5.  TRAINING METRICS
 # ─────────────────────────────────────────────────────────────────────────────
 
-y_pred_ridge_train <- predict(ridge_fit, newx = x_train, s = "lambda.min")
+y_pred_ridge_train <- predict(ridge_fit, newx = x_raw_train, s = "lambda.min")
 ridge_train_scores <- score_regression(y_train, as.vector(y_pred_ridge_train))
 
 cat("\n--- Ridge Training Performance ---\n")
@@ -180,15 +185,16 @@ save_table_tex(
 # ─────────────────────────────────────────────────────────────────────────────
 
 ridge_coef_df <- data.frame(
-  Predictor   = names(ridge_coefs),
-  Coefficient = round(ridge_coefs, 4)
+  Predictor       = names(ridge_coefs),
+  Coef_lambda_min = round(ridge_coefs, 4),
+  Coef_lambda_1se = round(ridge_coefs_1se, 4)
 )
 rownames(ridge_coef_df) <- NULL
 
 save_table_tex(
   df       = ridge_coef_df,
   filename = "tab_p2_ridge_coef.tex",
-  caption  = "Ridge Regression Coefficients at $\\lambda_{\\min}$",
+  caption  = "Ridge Regression Coefficients at $\\lambda_{\\min}$ and $\\lambda_{1\\mathrm{se}}$",
   label    = "tab:ridge_coef"
 )
 
@@ -197,7 +203,7 @@ save_table_tex(
 # ─────────────────────────────────────────────────────────────────────────────
 
 cond_df <- data.frame(
-  Matrix     = c("X'X  (OLS)", "X'X + lambda*I  (Ridge)"),
+  Matrix     = c("G = X'X/n", "G + lambda*I"),
   Condition_Number = format(c(cond$ols_cond, cond$ridge_cond),
                             big.mark = ",", digits = 4),
   Improvement = c("—",
@@ -215,7 +221,8 @@ save_table_tex(
 # SAVE RIDGE FIT
 # ─────────────────────────────────────────────────────────────────────────────
 
-save(ridge_fit, ridge_train_scores, cond, file = "output/ridge_fit.RData")
+save(ridge_fit, ridge_train_scores, ridge_coefs, ridge_coefs_1se, cond,
+     file = "output/ridge_fit.RData")
 cat("[02b_ridge] Saved: output/ridge_fit.RData\n")
 
 # ─────────────────────────────────────────────────────────────────────────────

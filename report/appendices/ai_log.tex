@@ -1,0 +1,38 @@
+% =============================================================================
+% ai_log.tex — Appendix: AI Usage Log
+% =============================================================================
+\section{AI Usage Log}
+\label{sec:ai-log}
+
+This appendix records the AI-assisted work performed during the preparation
+of this report. Team members remain responsible for reviewing the code,
+statistical reasoning, and written conclusions.
+
+\begin{longtable}{c l >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}p{3cm}}
+\toprule
+\textbf{\#} &
+\textbf{Date} &
+\textbf{AI Tool \& Prompt Summary} &
+\textbf{Output Used For} &
+\textbf{Human Verification} \\
+\midrule
+\endhead
+1 &
+2026-07-16 &
+Codex: diagnose \texttt{setup.R}, package loading, and pipeline failures &
+Portable project setup, local R library support, and clearer stage logs &
+Parsed every R script and ran the complete eight-stage pipeline \\[4pt]
+2 &
+2026-07-16 &
+Codex: audit the R analysis against the quiz specification &
+Five-fold CV, model summaries, perturbation analysis, neural features, and locked holdout evaluation &
+Compared generated artifacts with the specification and checked the final metrics \\[4pt]
+3 &
+2026-07-16 &
+Codex: repair Unicode typesetting and LaTeX build diagnostics &
+Author names, table layout, package ordering, and build instructions &
+Compiled with XeLaTeX and inspected the final log and rendered PDF \\
+\bottomrule
+\caption{AI usage log for Group 01.}
+\label{tab:ai-log}
+\end{longtable}

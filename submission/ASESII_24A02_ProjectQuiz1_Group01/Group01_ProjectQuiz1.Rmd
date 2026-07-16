@@ -1,0 +1,577 @@
+---
+title: "ASESII 24A02 Project-Based Quiz 1"
+subtitle: "Ridge, Lasso, and Regularization for Neural Features"
+author: "Group 01: Nguyễn Đình Thiên Lộc (24125093), Trần Lê Anh Tuấn (24125107), Lê Minh Thuận (24125105), Nguyễn Bảo Minh Triết (24125047), Nguyễn Hồng Tấn Tài (24125078)"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+    latex_engine: xelatex
+    fig_crop: false
+  html_document:
+    toc: true
+    toc_depth: 3
+bibliography: references.bib
+link-citations: true
+params:
+  group_number: 1
+fontsize: 11pt
+geometry: margin=1in
+---
+
+# Authorship and contribution statement {-}
+
+We confirm that every group member can explain the submitted analysis. AI use is reported in `Group01_AI_Log.csv` (recorded in the AI Usage Log), and the group checked every AI-assisted item used in this report.
+
+| Student | ID | Main contributions | Verification performed |
+|---|---|---|---|
+| Nguyễn Đình Thiên Lộc | 24125093 | P1 — project configuration, data preprocessing, exploratory data analysis, data leakage prevention, and drafting the Prediction Design section. | Verified the exclusion of linearly dependent predictors and confirmed no test-set information leaked into the standardisation pipeline. |
+| Trần Lê Anh Tuấn | 24125107 | P2 — OLS baseline, Ridge estimation, cross-validation curves, coefficient paths, and conditioning diagnostics. | Checked the shared-fold OLS and Ridge results, both tuning rules, generated tables, and diagnostic figures. |
+| Lê Minh Thuận | 24125105 | P2 — Lasso estimation, controlled model comparison, core-model declaration, and bootstrap stability analysis. | Confirmed the Lasso active sets, shared-fold errors, pre-holdout selection rule, and bootstrap summaries. |
+| Nguyễn Bảo Minh Triết | 24125047 | P3 — Ridge normal-equation and conditioning derivations, Lasso subgradient conditions, and evidence connection. | Re-derived the stated results under the same `glmnet` scaling and checked them against the numerical eigenvalues. |
+| Nguyễn Hồng Tấn Tài | 24125078 | P4--P5 — Elastic Net, fixed ReLU features, locked holdout evaluation, integration, abstract, and reproducibility record. | Verified the frozen feature map, training-only hidden-feature handling, locked declaration, final metrics, and report build. |
+
+# Abstract {-}
+
+We predict Brozek body-fat percentage from 14 anthropometric measurements for
+252 adult men.  Outcome-derived variables were excluded, preprocessing used
+training-only statistics, and OLS, Ridge, Lasso, Elastic Net, and penalised
+models on 200 fixed random ReLU features were compared with one shared
+five-fold split.  Lasso at $\lambda_{\min}=0.0954$ had the lowest training
+cross-validated RMSE among the original-predictor models (4.241), retained nine
+slopes, and was declared for deployment before the holdout responses were
+examined.  On the 51-subject holdout set it remained best, with RMSE 4.251,
+MAE 3.524, and $R^2=0.683$.  Elastic Net was close (RMSE 4.274), whereas the
+fixed ReLU expansions did not improve prediction.  We therefore recommend the
+predeclared Lasso for this population, while treating its selected variables as
+predictive rather than causal evidence.
+
+# Reproducible setup {-}
+
+```{r setup, message=FALSE, warning=FALSE}
+required_packages <- c("tidyverse", "glmnet", "broom", "knitr")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages)) {
+  stop("Install the required packages before rendering: ",
+       paste(missing_packages, collapse = ", "))
+}
+
+library(tidyverse)
+library(glmnet)
+library(broom)
+library(knitr)
+
+group_number <- as.integer(params$group_number)
+if (length(group_number) != 1L || is.na(group_number) || group_number < 1L) {
+  stop("Set params$group_number to your assigned positive group number.")
+}
+
+seeds <- list(
+  split = 240200L + group_number,
+  cv = 240300L + group_number,
+  features = 240400L + group_number
+)
+```
+
+## Shared helper functions {-}
+
+```{r helpers}
+find_exam_data <- function(filename) {
+  input <- knitr::current_input(dir = TRUE)
+  input_dir <- if (length(input) && nzchar(input)) dirname(input) else getwd()
+  candidates <- c(
+    file.path(input_dir, "data", filename),
+    file.path(input_dir, "..", "data", filename),
+    file.path(getwd(), "data", filename)
+  )
+  existing <- candidates[file.exists(candidates)]
+  if (!length(existing)) stop("Cannot locate ", filename, " by a relative path.")
+  hits <- unique(normalizePath(existing, winslash = "/", mustWork = TRUE))
+  if (length(hits) > 1L && length(unique(unname(tools::md5sum(hits)))) > 1L) {
+    stop("Multiple nonidentical copies of ", filename, " were found.")
+  }
+  hits[[1L]]
+}
+
+split_rows <- function(n, train_prop = 0.80, seed) {
+  stopifnot(n >= 10L, train_prop > 0, train_prop < 1)
+  set.seed(seed)
+  train <- sort(sample.int(n, floor(train_prop * n), replace = FALSE))
+  list(train = train, test = setdiff(seq_len(n), train))
+}
+
+fit_scaler <- function(x, tol = 1e-12) {
+  x <- as.matrix(x)
+  center <- colMeans(x)
+  centered <- sweep(x, 2L, center, "-")
+  scale <- sqrt(colMeans(centered^2))
+  keep <- is.finite(scale) & scale > tol
+  if (!any(keep)) stop("No nonconstant training predictor remains.")
+  list(
+    center = center[keep],
+    scale = scale[keep],
+    keep = keep,
+    dropped = colnames(x)[!keep]
+  )
+}
+
+apply_scaler <- function(x, prep) {
+  x <- as.matrix(x)[, prep$keep, drop = FALSE]
+  x <- sweep(x, 2L, prep$center, "-")
+  sweep(x, 2L, prep$scale, "/")
+}
+
+make_foldid <- function(n, k = 5L, seed) {
+  if (k < 3L || k > n) stop("Require 3 <= k <= number of training rows.")
+  set.seed(seed)
+  sample(rep(seq_len(k), length.out = n))
+}
+
+fit_cv_glmnet <- function(x, y, alpha, foldid) {
+  glmnet::cv.glmnet(
+    x = x,
+    y = y,
+    family = "gaussian",
+    alpha = alpha,
+    foldid = foldid,
+    standardize = FALSE,
+    intercept = TRUE,
+    type.measure = "mse"
+  )
+}
+
+score_regression <- function(y, prediction) {
+  y <- as.numeric(y)
+  prediction <- as.numeric(prediction)
+  if (length(y) != length(prediction) || any(!is.finite(c(y, prediction)))) {
+    stop("Metrics require equal-length finite vectors.")
+  }
+  residuals <- y - prediction
+  rss <- sum(residuals^2)
+  tss <- sum((y - mean(y))^2)
+  r2 <- 1 - rss/tss
+  c(RMSE = sqrt(mean(residuals^2)),
+    MAE = mean(abs(residuals)),
+    R2 = r2)
+}
+
+count_nonzero <- function(fit, s = "lambda.min", tol = 1e-8) {
+  b <- as.matrix(stats::coef(fit, s = s))
+  slopes <- b[rownames(b) != "(Intercept)", 1L]
+  sum(abs(slopes) > tol)
+}
+
+safe_condition_numbers <- function(x, lambda, tol = 1e-10) {
+  eigenvalues <- eigen(
+    crossprod(x) / nrow(x),
+    symmetric = TRUE,
+    only.values = TRUE
+  )$values
+  largest <- max(eigenvalues)
+  smallest <- max(min(eigenvalues), 0)
+  cutoff <- tol * max(1, largest)
+  c(
+    gram = if (smallest <= cutoff) Inf else largest / smallest,
+    ridge = (largest + lambda) / (smallest + lambda)
+  )
+}
+```
+
+# Problem 1. Prediction design and leakage control
+
+## 1A. Target and predictors
+
+```{r data-configuration}
+config <- list(
+  file = "fat.csv",
+  response = "brozek",
+  excluded = c("brozek", "siri", "density", "free")
+)
+
+data_path <- find_exam_data(config$file)
+data_raw <- read.csv(data_path, check.names = FALSE)
+predictors <- setdiff(names(data_raw), config$excluded)
+analysis_data <- data_raw[, c(config$response, predictors), drop = FALSE]
+
+if (anyNA(analysis_data)) stop("Declare a training-only missing-value plan.")
+if (!all(vapply(analysis_data, is.numeric, logical(1)))) {
+  stop("The assigned response and predictors must be numeric.")
+}
+```
+
+The units of observation are adult male subjects. The response variable is `brozek` (body fat percentage derived from density). Predictors `siri`, `density`, and `free` are excluded to prevent data leakage because they are algebraic transformations or near-perfect proxies of the body fat calculation, which would make prediction trivially deterministic or circular. This leaves 14 anthropometric measurements as candidate predictors.
+
+## 1B. Split and preprocessing plan
+
+```{r split-and-scale}
+split <- split_rows(nrow(analysis_data), train_prop = 0.80, seed = seeds$split)
+train_id <- split$train
+test_id <- split$test
+
+x_raw <- as.matrix(analysis_data[, predictors, drop = FALSE])
+y_raw <- analysis_data[[config$response]]
+
+x_prep <- fit_scaler(x_raw[train_id, , drop = FALSE])
+x_train <- apply_scaler(x_raw[train_id, , drop = FALSE], x_prep)
+x_test <- apply_scaler(x_raw[test_id, , drop = FALSE], x_prep)
+y_train <- y_raw[train_id]
+y_test <- y_raw[test_id]
+
+foldid <- make_foldid(nrow(x_train), k = 5L, seed = seeds$cv)
+```
+
+The data split uses seed `240201`, yielding $n_{\mathrm{train}} = 201$ and $n_{\mathrm{test}} = 51$. Center/scale parameters are computed only from the training set and applied to the test set, preventing leakage. K=5 cross-validation folds are assigned using seed `240301` and reused across all models for consistency.
+
+## 1C. Training-data exploration
+
+```{r training-eda, fig.width=8, fig.height=6}
+# Response distribution
+hist(y_train, breaks = 15, col = "gray80", border = "white",
+     main = "Distribution of brozek (Training Set)", xlab = "Body Fat % (brozek)")
+
+# Heatmap
+cor_mat <- cor(analysis_data[train_id, ])
+image(1:ncol(cor_mat), 1:ncol(cor_mat), cor_mat[, ncol(cor_mat):1],
+      col = colorRampPalette(c("#2166ac", "#f7f7f7", "#b2182b"))(100),
+      axes = FALSE, main = "Correlation Heatmap (Training Set)", xlab = "", ylab = "")
+axis(1, at = 1:ncol(cor_mat), labels = colnames(cor_mat), las = 2, cex.axis = 0.7)
+axis(2, at = 1:ncol(cor_mat), labels = rev(colnames(cor_mat)), las = 2, cex.axis = 0.7)
+
+# Anomaly check
+boxplot(x_train, las = 2, main = "Standardised Predictors (Training Set)")
+```
+
+The training response `brozek` is roughly symmetric and bell-shaped. Multicollinearity is severe among size variables, such as `hip` and `weight` ($r = 0.945$) and `chest` and `weight` ($r = 0.894$). One notable anomaly is original row 39, which exhibits `hip` = 147.7, over 6.7 training standard deviations above the mean. We ask: can regularised regression improve prediction stability and identify which measurements are most useful for predicting body fat?
+
+# Problem 2. OLS, ridge, and lasso
+
+## 2A. OLS baseline
+
+```{r ols, fig.width=8, fig.height=4}
+ols_fit <- lm(y ~ ., data = data.frame(y = y_train, x_train))
+y_pred_ols_train <- predict(ols_fit, newdata = data.frame(x_train))
+ols_train_scores <- score_regression(y_train, y_pred_ols_train)
+
+# K-fold CV for OLS
+ols_cv_errs <- numeric(5)
+for (i in 1:5) {
+  val_idx <- which(foldid == i)
+  trn_idx <- which(foldid != i)
+  fold_fit <- lm(y ~ ., data = data.frame(y = y_train[trn_idx], x_train[trn_idx, , drop = FALSE]))
+  pred_val <- predict(fold_fit, newdata = data.frame(x_train[val_idx, , drop = FALSE]))
+  ols_cv_errs[i] <- mean((y_train[val_idx] - pred_val)^2)
+}
+ols_cv_rmse <- sqrt(mean(ols_cv_errs))
+
+# Diagnostic Plot
+plot(fitted(ols_fit), residuals(ols_fit), pch = 16, col = "gray40",
+     main = "OLS: Residuals vs Fitted", xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, lty = 2, col = "red")
+lines(lowess(fitted(ols_fit), residuals(ols_fit)), col = "blue", lwd = 2)
+
+cat("OLS Train RMSE:", ols_train_scores[["RMSE"]], "\n")
+cat("OLS CV RMSE:", ols_cv_rmse, "\n")
+```
+
+Under OLS, the partial slopes for highly collinear predictors are large and counterintuitive (e.g. `abdom` is 9.47, whereas `weight`, `adipos`, and `hip` are negative). OLS yields a training RMSE of 3.884 and a CV RMSE of 4.406. Residual and Q-Q plots suggest tail departures from Gaussian assumptions but show no severe non-linearity.
+
+## 2B. Ridge
+
+```{r ridge, fig.width=8, fig.height=4}
+ridge_fit <- fit_cv_glmnet(x_train, y_train, alpha = 0, foldid = foldid)
+
+# Plot CV curve
+plot(ridge_fit, main = "Ridge Cross-Validation Curve")
+
+# Plot coefficient path
+ridge_path <- glmnet(x_train, y_train, alpha = 0, standardize = FALSE)
+plot(ridge_path, xvar = "lambda", main = "Ridge Coefficient Path")
+
+cat("Ridge lambda.min:", ridge_fit$lambda.min, "\n")
+cat("Ridge lambda.1se:", ridge_fit$lambda.1se, "\n")
+```
+
+Ridge regression selects $\lambda_{\min} = 0.6280$ and $\lambda_{1\mathrm{se}} = 4.0367$. Ridge shrinks all slopes toward zero but retains all 14 variables. It redistributes the signal among collinear predictors; `abdom` drops from 9.47 to 5.00 at $\lambda_{\min}$ and 2.15 at $\lambda_{1\mathrm{se}}$. Adding $\lambda_{\min} \mathbf{I}$ reduces the condition number of the design from 3166.75 to 15.17, rendering the system stable.
+
+## 2C. Lasso
+
+```{r lasso, fig.width=8, fig.height=4}
+lasso_fit <- fit_cv_glmnet(x_train, y_train, alpha = 1, foldid = foldid)
+
+# Plot CV curve
+plot(lasso_fit, main = "Lasso Cross-Validation Curve")
+
+# Plot coefficient path
+lasso_path <- glmnet(x_train, y_train, alpha = 1, standardize = FALSE)
+plot(lasso_path, xvar = "lambda", main = "Lasso Coefficient Path")
+
+cat("Lasso lambda.min:", lasso_fit$lambda.min, "\n")
+cat("Lasso lambda.1se:", lasso_fit$lambda.1se, "\n")
+```
+
+At $\lambda_{\min} = 0.0954$, K=5 cross-validation selects 9 active predictors (`age`, `weight`, `height`, `neck`, `abdom`, `hip`, `thigh`, `forearm`, `wrist`) with a CV RMSE of 4.241. At $\lambda_{1\mathrm{se}} = 0.7390$, only `age`, `height`, and `abdom` remain active.
+
+## 2D. Training-based comparison and locked core model
+
+```{r core-comparison}
+# Table construction
+ols_coef <- coef(ols_fit)[-1]
+ols_norm_l1 <- sum(abs(ols_coef))
+ols_norm_l2 <- sqrt(sum(ols_coef^2))
+
+ridge_coef <- as.matrix(coef(ridge_fit, s = "lambda.min"))[-1, 1]
+ridge_norm_l1 <- sum(abs(ridge_coef))
+ridge_norm_l2 <- sqrt(sum(ridge_coef^2))
+
+lasso_coef <- as.matrix(coef(lasso_fit, s = "lambda.min"))[-1, 1]
+lasso_norm_l1 <- sum(abs(lasso_coef))
+lasso_norm_l2 <- sqrt(sum(lasso_coef^2))
+
+comparison_df <- data.frame(
+  Model = c("OLS", "Ridge (lambda.min)", "Lasso (lambda.min)"),
+  Tuning = c("None", paste0("lambda=", round(ridge_fit$lambda.min, 4)), paste0("lambda=", round(lasso_fit$lambda.min, 4))),
+  CV_RMSE = c(ols_cv_rmse, sqrt(ridge_fit$cvm[ridge_fit$lambda == ridge_fit$lambda.min]), sqrt(lasso_fit$cvm[lasso_fit$lambda == lasso_fit$lambda.min])),
+  L1_Norm = c(ols_norm_l1, ridge_norm_l1, lasso_norm_l1),
+  L2_Norm = c(ols_norm_l2, ridge_norm_l2, lasso_norm_l2),
+  Nonzero = c(14, 14, sum(abs(lasso_coef) > 1e-8))
+)
+kable(comparison_df, digits = 4, caption = "Training-based Model Comparison")
+```
+
+**Core model nominated before holdout evaluation:** Lasso at $\lambda_{\min} = 0.0954$. It achieves the lowest cross-validated RMSE (4.241) while selecting a sparse subset of 9 predictors, improving interpretability.
+
+## 2E. Perturbation or stability check
+
+**Prediction before running the check:** We predict that Ridge coefficients will remain stable under perturbation due to the $L_2$ penalty, while Lasso will select different variables among highly correlated sets across resamples.
+
+```{r perturbation, fig.width=8, fig.height=4}
+set.seed(240302L)
+B <- 50
+lasso_sel <- matrix(0, nrow = B, ncol = ncol(x_train))
+colnames(lasso_sel) <- colnames(x_train)
+ridge_coefs_boot <- matrix(0, nrow = B, ncol = ncol(x_train))
+ols_coefs_boot <- matrix(0, nrow = B, ncol = ncol(x_train))
+
+for (b in 1:B) {
+  boot_idx <- sample(nrow(x_train), replace = TRUE)
+  x_b <- x_train[boot_idx, ]
+  y_b <- y_train[boot_idx]
+  
+  # Fits
+  fit_ols_b <- lm(y ~ ., data = data.frame(y = y_b, x_b))
+  ols_coefs_boot[b, ] <- coef(fit_ols_b)[-1]
+  
+  fit_ridge_b <- glmnet(x_b, y_b, alpha = 0, lambda = ridge_fit$lambda.min, standardize = FALSE)
+  ridge_coefs_boot[b, ] <- as.matrix(coef(fit_ridge_b))[-1, 1]
+  
+  fit_lasso_b <- glmnet(x_b, y_b, alpha = 1, lambda = lasso_fit$lambda.min, standardize = FALSE)
+  lasso_coef_b <- as.matrix(coef(fit_lasso_b))[-1, 1]
+  lasso_sel[b, ] <- abs(lasso_coef_b) > 1e-8
+}
+
+# Selection frequencies
+freqs <- colMeans(lasso_sel)
+barplot(sort(freqs, decreasing = TRUE), las = 2, main = "Lasso Variable Selection Frequency (B=50)")
+```
+
+**Observed result and explanation:** Lasso consistently selects `abdom` and `wrist` (1.00) but exhibits high variability among size predictors (`weight` 0.46, `hip` 0.48, `chest` 0.26). Ridge bootstrap coefficient standard deviations are substantially smaller than OLS (e.g. for `weight`, SD is 0.50 under Ridge versus 6.47 under OLS), demonstrating the stabilizing effect of L2 regularization.
+
+# Problem 3. Mathematical mechanisms
+
+## 3A. Ridge and conditioning
+
+Starting from:
+$$Q_\lambda(\mathbf{b}) = \frac{1}{2n}\left\lVert \mathbf{y} - \mathbf{Xb} \right\rVert_2^2 + \frac{\lambda}{2}\left\lVert \mathbf{b} \right\rVert_2^2$$
+
+The gradient is:
+$$\nabla Q_\lambda(\mathbf{b}) = -\frac{1}{n}\mathbf{X}^\top(\mathbf{y} - \mathbf{Xb}) + \lambda \mathbf{b} = \mathbf{Gb} - \mathbf{z} + \lambda \mathbf{b}$$
+where $\mathbf{G} = \frac{1}{n}\mathbf{X}^\top\mathbf{X}$ and $\mathbf{z} = \frac{1}{n}\mathbf{X}^\top\mathbf{y}$. Setting the gradient to zero yields the normal equations:
+$$(\mathbf{G} + \lambda \mathbf{I}_p)\mathbf{b} = \mathbf{z}$$
+Since $\mathbf{G}$ is positive semidefinite, for any $\lambda > 0$, $(\mathbf{G} + \lambda \mathbf{I}_p)$ is positive definite and invertible, giving the unique minimizer:
+$$\hat{\mathbf{b}}_{\mathrm{ridge}} = (\mathbf{G} + \lambda \mathbf{I}_p)^{-1}\mathbf{z}$$
+
+```{r ridge-conditioning}
+cond_analysis <- safe_condition_numbers(x_train, lambda = ridge_fit$lambda.min)
+cat("Condition number of Gram matrix G:", cond_analysis["gram"], "\n")
+cat("Condition number of G + lambda I:", cond_analysis["ridge"], "\n")
+```
+
+The condition number drops from 3166.75 to 15.17 at $\lambda_{\min} = 0.6280$, which is a 208.7-fold reduction. Geometric interpretation: adding $\lambda \mathbf{I}$ scales the eigenvalues up, preventing division by near-zero eigenvalues.
+
+## 3B. Lasso optimality and soft thresholding
+
+The Lasso objective is:
+$$R_\lambda(\mathbf{b}) = \frac{1}{2n}\left\lVert \mathbf{y} - \mathbf{Xb} \right\rVert_2^2 + \lambda \left\lVert \mathbf{b} \right\rVert_1$$
+
+Since the L1 norm is non-differentiable at $b_j = 0$, we use subgradients. The subgradient condition for coordinate $j$ is:
+$$-\frac{1}{n}\mathbf{x}_j^\top(\mathbf{y} - \mathbf{Xb}) + \lambda s_j = 0$$
+where $s_j = \mathrm{sign}(b_j)$ if $b_j \ne 0$ and $s_j \in [-1, 1]$ if $b_j = 0$.
+
+When the columns of $\mathbf{X}$ are orthonormal ($\mathbf{G} = \mathbf{I}_p$), the coordinates decouple. For each $j$:
+$$-z_j + b_j + \lambda s_j = 0 \implies b_j = z_j - \lambda s_j$$
+- If $|z_j| \le \lambda$, then $b_j = 0$ is optimal since $s_j = z_j / \lambda \in [-1, 1]$.
+- If $z_j > \lambda$, then $b_j > 0$ and $s_j = 1$, giving $b_j = z_j - \lambda$.
+- If $z_j < -\lambda$, then $b_j < 0$ and $s_j = -1$, giving $b_j = z_j + \lambda$.
+
+Combining these yields the soft-thresholding rule:
+$$\hat{b}_j = \mathrm{sign}(z_j)(|z_j| - \lambda)_+$$
+
+Because the subgradient condition allows $b_j = 0$ over a range of values (whenever $|z_j| \le \lambda$), Lasso produces exact zeros. In contrast, the Ridge gradient condition is smooth and only yields $b_j = 0$ if the correlation is exactly zero.
+
+## 3C. Connect algebra to evidence
+
+The coefficient for `chest` illustrates this mechanism. OLS estimates a partial slope of $-0.08$. Ridge at $\lambda_{\min}$ shrinks and stabilizes it to $0.82$, keeping it active. Lasso sets the coefficient exactly to zero because the conditional correlation falls within the subgradient interval $[-\lambda, \lambda]$, removing it from the active set.
+
+# Problem 4. Elastic net and a neural-feature bridge
+
+## 4A. Research question and source map
+
+**Research direction:** weight decay, sparse weights, and dropout.
+
+| Claim | Exact primary source and locator | What it establishes | What it does not establish |
+|---|---|---|---|
+| A quadratic weight penalty yields a decay term in gradient learning. | Krogh and Hertz (1991), Section 1, Eq. (1)-(2). | Shows that L2 penalty adds a $-\lambda w_i$ term directly to standard SGD updates. | Does not analyze adaptive step optimizers (Adam) or demonstrate equivalence there. |
+| L2 regularization and weight decay decouple under adaptive updates. | Loshchilov and Hutter (2019), abstract and Section 2. | Shows L2 regularization is not equivalent to weight decay for Adam; motivates AdamW. | Does not make our frozen-feature model equivalent to an end-to-end trained network. |
+| Dropout randomly masks units during training and uses the unthinned network at test time. | Srivastava et al. (2014), Section 2 and Fig. 2. | Defines stochastic activation masking during training and scaling of weights at test time. | Does not establish permanent sparsity or pruning of learned weights. |
+
+## 4B. Elastic net on original predictors
+
+```{r original-elastic-net, fig.width=8, fig.height=4}
+alpha_grid <- c(0.10, 0.25, 0.50, 0.75, 0.90)
+enet_fits <- list()
+cv_mses <- numeric(length(alpha_grid))
+
+for (i in seq_along(alpha_grid)) {
+  enet_fits[[i]] <- fit_cv_glmnet(x_train, y_train, alpha = alpha_grid[i], foldid = foldid)
+  cv_mses[i] <- min(enet_fits[[i]]$cvm)
+}
+
+best_idx <- which.min(cv_mses)
+best_alpha <- alpha_grid[best_idx]
+best_enet <- enet_fits[[best_idx]]
+
+# Plot CV curve
+plot(best_enet, main = paste("Elastic Net CV Curve (alpha =", best_alpha, ")"))
+
+# Plot coefficient path
+enet_path <- glmnet(x_train, y_train, alpha = best_alpha, standardize = FALSE)
+plot(enet_path, xvar = "lambda", main = paste("Elastic Net Coeff Path (alpha =", best_alpha, ")"))
+
+cat("Selected alpha:", best_alpha, "\n")
+cat("Selected lambda.min:", best_enet$lambda.min, "\n")
+```
+
+The selected Elastic Net model has $lpha = 0.90$ and $\lambda_{\min} = 0.1061$, with K=5 CV RMSE of 4.242 and 9 active predictors. The active set is identical to Lasso. The small $\ell_2$ penalty contribution provides grouping for highly correlated predictors, while the dominant $\ell_1$ penalty enforces sparsity.
+
+## 4C. Fixed ReLU features
+
+```{r random-relu-features}
+set.seed(240401L)
+p <- ncol(x_train)
+M <- 200L
+A <- matrix(rnorm(p * M, mean = 0, sd = sqrt(1/p)), nrow = p, ncol = M)
+bias <- rnorm(M, mean = 0, sd = 0.5)
+
+# Generate features
+relu <- function(z) pmax(z, 0)
+H_train_raw <- relu(x_train %*% A + matrix(bias, nrow = nrow(x_train), ncol = M, byrow = TRUE))
+H_test_raw <- relu(x_test %*% A + matrix(bias, nrow = nrow(x_test), ncol = M, byrow = TRUE))
+
+# Remove constant columns
+train_vars <- apply(H_train_raw, 2, var)
+non_constant <- which(train_vars > 1e-12)
+
+H_train_nonconst <- H_train_raw[, non_constant, drop = FALSE]
+H_test_nonconst <- H_test_raw[, non_constant, drop = FALSE]
+
+# Scale features
+H_prep <- fit_scaler(H_train_nonconst)
+H_train <- apply_scaler(H_train_nonconst, H_prep)
+H_test <- apply_scaler(H_test_nonconst, H_prep)
+
+# Fit models
+neural_ridge <- fit_cv_glmnet(H_train, y_train, alpha = 0, foldid = foldid)
+neural_lasso <- fit_cv_glmnet(H_train, y_train, alpha = 1, foldid = foldid)
+neural_enet <- fit_cv_glmnet(H_train, y_train, alpha = 0.90, foldid = foldid)
+
+cat("Neural Ridge CV RMSE:", sqrt(min(neural_ridge$cvm)), "Active Features:", count_nonzero(neural_ridge), "\n")
+cat("Neural Lasso CV RMSE:", sqrt(min(neural_lasso$cvm)), "Active Features:", count_nonzero(neural_lasso), "\n")
+cat("Neural Elastic Net CV RMSE:", sqrt(min(neural_enet$cvm)), "Active Features:", count_nonzero(neural_enet), "\n")
+```
+
+The projection matrix $\mathbf{A}$ and offsets $\mathbf{c}$ are fixed randomly. The learned parameters are the output weights and bias. Constant features are removed using `H_train` information only. Neural Ridge has CV RMSE 4.784 with all 199 features active. Neural Lasso and Neural ENet select 31 features, achieving CV RMSEs of 4.390, which does not outperform the original predictor models.
+
+## 4D. Locked declaration and final holdout evaluation
+
+> **Locked before viewing `y_test`:** All centering/scaling parameters are fixed on training data only. Predeclared candidate models are OLS, Ridge (lambda.min=0.6280), Lasso (lambda.min=0.0954), and Elastic Net (alpha=0.90, lambda.min=0.1061). Feature seed is 240401, M=200. Nominated model for deployment is original-predictor Lasso. Metrics: RMSE and MAE.
+
+```{r final-holdout-evaluation}
+pred_ols <- predict(ols_fit, newdata = data.frame(x_test))
+pred_ridge <- predict(ridge_fit, newx = x_test, s = "lambda.min")
+pred_lasso <- predict(lasso_fit, newx = x_test, s = "lambda.min")
+pred_enet <- predict(best_enet, newx = x_test, s = "lambda.min")
+pred_nridge <- predict(neural_ridge, newx = H_test, s = "lambda.min")
+pred_nlasso <- predict(neural_lasso, newx = H_test, s = "lambda.min")
+pred_nenet <- predict(neural_enet, newx = H_test, s = "lambda.min")
+
+holdout_results <- rbind(
+  OLS = score_regression(y_test, pred_ols),
+  Ridge = score_regression(y_test, pred_ridge),
+  Lasso = score_regression(y_test, pred_lasso),
+  ENet = score_regression(y_test, pred_enet),
+  Neural_Ridge = score_regression(y_test, pred_nridge),
+  Neural_Lasso = score_regression(y_test, pred_nlasso),
+  Neural_ENet = score_regression(y_test, pred_nenet)
+)
+
+kable(holdout_results, digits = 4, caption = "Final Holdout Evaluation Results")
+```
+
+The holdout evidence supports the predeclared choice. Lasso ranks first on the test set with a test RMSE of 4.251, MAE of 3.524, and $R^2$ of 0.683. Elastic Net performs similarly (Test RMSE 4.271). The fixed random features models rank worst, with Neural Ridge yielding 4.761.
+
+## 4E. Deep-learning connection and limitations
+
+L2 output weight regularization matches classical Ridge regression. However, in adaptive training, L2 penalty differs from weight decay because gradient scaling operates coordinatewise. Zeroing output weights removes features but does not make the projection sparse. Dropout performs stochastic masking rather than permanent pruning. Our single hidden layer is frozen and does not represent an end-to-end deep neural network.
+
+Limitations include: (1) sensitivity to the random feature seed, as different initializations yield different projections; (2) $n_{\mathrm{train}}=201$ is too small for a 200-dimensional projection, causing high variance.
+
+# Problem 5. Report quality and reproducibility
+
+## 5A. Reproduction record
+
+The R Markdown file requires R, `tidyverse`, `glmnet`, `broom`, and `knitr`. It executes the reproducible split, training-only scaling, model fitting, cross-validation, and final holdout scoring self-contained from a clean workspace.
+
+## 5B. Recommendation and limitations
+
+We recommend the original-predictor Lasso at $\lambda_{\min} = 0.0954$. It achieves the best holdout RMSE (4.251) and MAE (3.524) while using only 9 variables. Limitations include the small size ($n=252$) and male-only demographics of the training population, making generalizability to other cohorts uncertain.
+
+## 5C. AI verification record
+
+| AI-assisted item | How it was checked | Evidence | Modification or rejection |
+|---|---|---|---|
+| R pipeline and leakage audit | Searched every script for holdout-response references and reran the pipeline. | Output files and logs. | Verified that y_test is locked and used only in holdout chunk. |
+| Mathematical derivations | Checked glmnet objective scaling and recomputed eigenvalues. | Eigenvalues $\mu_{\max}=8.943$, $\mu_{\min}=0.0028$. | Corrected the normal equations scaling factor. |
+| LaTeX and report audit | Compiled with XeLaTeX and inspected log file. | Clean PDF output. | Added settings to VS Code settings.json and .chktexrc to suppress linter warnings. |
+
+# Preflight and session information {-}
+
+```{r preflight}
+required_objects <- c(
+  "train_id", "test_id", "x_train", "x_test", "y_train", "y_test", "foldid"
+)
+missing_objects <- setdiff(required_objects, ls())
+if (length(missing_objects)) {
+  stop(
+    "Missing required objects: ",
+    paste(missing_objects, collapse = ", ")
+  )
+}
+stopifnot(length(intersect(train_id, test_id)) == 0L)
+```
+
+```{r session-info}
+sessionInfo()
+```

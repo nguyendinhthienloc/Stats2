@@ -1,0 +1,109 @@
+% =============================================================================
+% 03_math_mechanisms.tex — Problem 3: Mathematical Mechanisms (P4 — Triết)
+% =============================================================================
+\section{Mathematical Mechanisms}
+\label{sec:math}
+
+\subsection{Ridge Regression and Conditioning}
+\label{sec:ridge-math}
+
+Let $\bX\in\R^{n\times p}$ be the centred and scaled training design, let
+$\by\in\R^n$ be the centred training response, and define
+$G=\bX^\top\bX/n$ and $\bm{z}=\bX^\top\by/n$.  The intercept is handled
+separately and is not penalised.  Under the same scaling used by
+\texttt{glmnet}, the Ridge objective is
+\begin{equation}
+\label{eq:ridge-obj}
+ Q_\lambda(\bbeta)=
+ \frac{1}{2n}\norm{\by-\bX\bbeta}_2^2
+ +\frac{\lambda}{2}\norm{\bbeta}_2^2,
+ \qquad \lambda>0.
+\end{equation}
+Its gradient is
+\begin{align}
+ \nabla Q_\lambda(\bbeta)
+ &= -\frac{1}{n}\bX^\top(\by-\bX\bbeta)+\lambda\bbeta \\
+ &= G\bbeta-\bm{z}+\lambda\bbeta.
+\end{align}
+Setting this equal to zero gives the normal equations and solution
+\begin{equation}
+ (G+\lambda\bm{I}_p)\hat\bbeta=\bm{z},
+ \qquad
+ \boxed{\hat\bbeta^{\mathrm{Ridge}}_\lambda
+ =(G+\lambda\bm{I}_p)^{-1}\bm{z}}.
+\label{eq:ridge-solution}
+\end{equation}
+Because $G$ is positive semidefinite, $G+\lambda I_p$ is positive definite
+for every $\lambda>0$, so this minimiser is unique.
+
+If $\mu_{\max}\geq\cdots\geq\mu_{\min}\geq0$ are the eigenvalues of $G$,
+adding Ridge translates every eigenvalue by $\lambda$.  Hence
+\begin{equation}
+ \kappa_2(G+\lambda\bm I_p)
+ =\frac{\mu_{\max}+\lambda}{\mu_{\min}+\lambda}
+ \leq \kappa_2(G).
+\label{eq:ridge-condition}
+\end{equation}
+Geometrically, the objective gains curvature in every eigendirection;
+numerically, its flattest direction is moved away from zero.
+
+For the training design, $\mu_{\max}=8.942970$ and
+$\mu_{\min}=0.002824$, so $\kappa_2(G)=3166.75$.  At the fitted
+$\lambda_{\min}=0.627974$,
+\[
+ \frac{8.942970+0.627974}{0.002824+0.627974}=15.1727,
+\]
+matching Table~\ref{tab:condition_numbers}; the condition number falls by a
+factor of 208.7.
+
+\subsection{Lasso Optimality and Soft Thresholding}
+\label{sec:lasso-math}
+
+The Lasso objective on the same scale is
+\begin{equation}
+ R_\lambda(\bbeta)=
+ \frac{1}{2n}\norm{\by-\bX\bbeta}_2^2+\lambda\norm{\bbeta}_1.
+\label{eq:lasso-obj}
+\end{equation}
+Because $|\beta_j|$ is not differentiable at zero, coordinate $j$ satisfies
+\begin{equation}
+ -\frac{1}{n}\bx_j^\top(\by-\bX\hat\bbeta)
+ +\lambda\,\partial|\hat\beta_j|\ni0,
+\label{eq:lasso-subgradient}
+\end{equation}
+where $\partial|b|=\{\mathrm{sign}(b)\}$ for $b\ne0$ and
+$\partial|0|=[-1,1]$.  Writing $r=\by-\bX\hat\bbeta$, this is equivalent to
+\[
+\begin{cases}
+ n^{-1}\bx_j^\top r=\lambda\,\mathrm{sign}(\hat\beta_j),
+     & \hat\beta_j\ne0,\\
+ \left|n^{-1}\bx_j^\top r\right|\leq\lambda,
+     & \hat\beta_j=0.
+\end{cases}
+\]
+
+When $G=I_p$, the coordinates decouple.  Completing the square for coordinate
+$j$ gives the soft-thresholding rule
+\begin{equation}
+ \boxed{\hat\beta_j
+ =\mathrm{sign}(z_j)(|z_j|-\lambda)_+}.
+\label{eq:soft-threshold}
+\end{equation}
+Thus $|z_j|\leq\lambda$ produces an exact zero, while larger values are shrunk
+toward zero by $\lambda$.  The $\ell_1$ constraint has corners on coordinate
+axes, so a smooth loss contour can first touch a corner.  The $\ell_2$
+constraint is smooth and generally shrinks coefficients without landing
+exactly on an axis.
+
+\subsection{Connecting Algebra to Evidence}
+\label{sec:algebra-evidence}
+
+The fitted \texttt{chest} slope illustrates the different mechanisms.  OLS
+estimates $-0.08$; Ridge at $\lambda_{\min}$ redistributes signal among the
+correlated measurements and returns 0.82 but does not select the variable
+away; Lasso returns exactly zero.  The Lasso residual correlation for this
+coordinate can satisfy the interval condition in
+Equation~\ref{eq:lasso-subgradient}, whereas Ridge must satisfy the smooth
+system in Equation~\ref{eq:ridge-solution}.  Together with the observed
+condition-number reduction, this connects the algebra to the numerical
+evidence in Section~\ref{sec:ols-ridge-lasso}.

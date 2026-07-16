@@ -1,0 +1,44 @@
+% =============================================================================
+% 00_authorship.tex — Authorship and Contribution Statement
+% =============================================================================
+\section*{Authorship and Contribution Statement}
+\addcontentsline{toc}{section}{Authorship and Contribution Statement}
+
+We, the undersigned members of \textbf{Group 01}, confirm that every member is able
+to explain any part of this analysis when asked.  All members participated in
+the design, implementation, and review of this report.  Any AI-assisted work
+is documented in the AI Usage Log (Appendix~\ref{sec:ai-log}).
+
+\bigskip
+
+\begin{table}[H]
+\centering
+\caption{Individual contributions and verification responsibilities.}
+\label{tab:contributions}
+\begin{tabularx}{\textwidth}{l c >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Student} & \textbf{ID} & \textbf{Main Contributions} & \textbf{Verification Performed} \\
+\midrule
+Nguyễn Đình Thiên Lộc &
+    24125093 &
+    P1 — project configuration, data preprocessing, exploratory data analysis, data leakage prevention, and drafting the Prediction Design section. &
+    Verified the exclusion of linearly dependent predictors and confirmed no test-set information leaked into the standardisation pipeline. \\[6pt]
+Trần Lê Anh Tuấn &
+    24125107 &
+    P2 — OLS baseline, Ridge estimation, cross-validation curves, coefficient paths, and conditioning diagnostics. &
+    Checked the shared-fold OLS and Ridge results, both tuning rules, generated tables, and diagnostic figures. \\[6pt]
+Lê Minh Thuận &
+    24125105 &
+    P2 — Lasso estimation, controlled model comparison, core-model declaration, and bootstrap stability analysis. &
+    Confirmed the Lasso active sets, shared-fold errors, pre-holdout selection rule, and bootstrap summaries. \\[6pt]
+Nguyễn Bảo Minh Triết &
+    24125047 &
+    P3 — Ridge normal-equation and conditioning derivations, Lasso subgradient conditions, and evidence connection. &
+    Re-derived the stated results under the same \texttt{glmnet} scaling and checked them against the numerical eigenvalues. \\[6pt]
+Nguyễn Hồng Tấn Tài &
+    24125078 &
+    P4--P5 — Elastic Net, fixed ReLU features, locked holdout evaluation, integration, abstract, and reproducibility record. &
+    Verified the frozen feature map, training-only hidden-feature handling, locked declaration, final metrics, and report build. \\
+\bottomrule
+\end{tabularx}
+\end{table}

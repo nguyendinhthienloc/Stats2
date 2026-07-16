@@ -25,7 +25,8 @@
 # 0.  SOURCE SHARED SETUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("R_models/setup.R")
+setup_file <- if (file.exists("R_models/setup.R")) "R_models/setup.R" else "setup.R"
+source(setup_file)
 ensure_dirs()
 
 cat("\n========== 04_neural.R ==========\n\n")
@@ -69,13 +70,11 @@ set.seed(seeds$features)
 A <- matrix(rnorm(p * M, mean = 0, sd = 1 / sqrt(p)),
             nrow = p, ncol = M)
 
-# bias: 1 × M vector
-#    Entries drawn from Uniform(0, 2*pi)
-bias <- matrix(runif(M, min = 0, max = 2 * pi),
-               nrow = 1, ncol = M)
+# bias: length-M vector with the rubric's c_m ~ N(0, 0.5^2) distribution
+bias <- rnorm(M, mean = 0, sd = 0.5)
 
 cat("  A matrix:   ", nrow(A), "x", ncol(A), "\n")
-cat("  bias vector:", ncol(bias), "values in [0, 2*pi]\n\n")
+cat("  bias vector:", length(bias), "draws from N(0, 0.5^2)\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4.  COMPUTE RANDOM FEATURES
@@ -109,7 +108,9 @@ cat("H_test  dimensions:", nrow(H_test_raw),  "x", ncol(H_test_raw),  "\n\n")
 h_scaler <- fit_scaler(H_train_raw)
 H_train  <- apply_scaler(H_train_raw, h_scaler)
 H_test   <- apply_scaler(H_test_raw,  h_scaler)
+constant_feature_indices <- which(!h_scaler$keep)
 
+cat("Neural features retained:", ncol(H_train), "of", M, "\n")
 cat("Neural features scaled (H_train mean ≈ 0, sd ≈ 1)\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -126,26 +127,32 @@ cat("Using the same foldid (length =", length(foldid), ") for neural models\n\n"
 
 # 7a. Ridge on H_train
 cat("=== Neural Ridge ===\n")
-neural_ridge_fit <- fit_cv_glmnet(H_train, y_train, alpha = 0, foldid = foldid)
+neural_ridge_fit <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = 0
+)
 n_nz_ridge <- count_nonzero(neural_ridge_fit, s = "lambda.min")
 
 # 7b. Lasso on H_train
 cat("\n=== Neural Lasso ===\n")
-neural_lasso_fit <- fit_cv_glmnet(H_train, y_train, alpha = 1, foldid = foldid)
+neural_lasso_fit <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = 1
+)
 n_nz_lasso <- count_nonzero(neural_lasso_fit, s = "lambda.min")
 
 # 7c. Elastic Net on H_train (using best_alpha from 04b)
 cat("\n=== Neural Elastic Net (alpha =", best_alpha, ") ===\n")
-neural_enet_fit <- fit_cv_glmnet(H_train, y_train, alpha = best_alpha, foldid = foldid)
+neural_enet_fit <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = best_alpha
+)
 n_nz_enet <- count_nonzero(neural_enet_fit, s = "lambda.min")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 8.  TRAINING METRICS
 # ─────────────────────────────────────────────────────────────────────────────
 
-pred_nr <- predict(neural_ridge_fit, newx = H_train, s = "lambda.min")
-pred_nl <- predict(neural_lasso_fit, newx = H_train, s = "lambda.min")
-pred_ne <- predict(neural_enet_fit,  newx = H_train, s = "lambda.min")
+pred_nr <- predict(neural_ridge_fit, newx = x_raw_train, s = "lambda.min")
+pred_nl <- predict(neural_lasso_fit, newx = x_raw_train, s = "lambda.min")
+pred_ne <- predict(neural_enet_fit,  newx = x_raw_train, s = "lambda.min")
 
 scores_nr <- score_regression(y_train, as.vector(pred_nr))
 scores_nl <- score_regression(y_train, as.vector(pred_nl))
@@ -264,7 +271,7 @@ save_table_tex(
 # 04_holdout.R will need H_test to make predictions.
 
 save(neural_ridge_fit, neural_lasso_fit, neural_enet_fit,
-     A, bias, H_train, H_test, h_scaler,
+     A, bias, M, constant_feature_indices, H_train, H_test, h_scaler,
      neural_summary,
      file = "output/neural_fits.RData")
 cat("[04c_neural] Saved: output/neural_fits.RData\n")
