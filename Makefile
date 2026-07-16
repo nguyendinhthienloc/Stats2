@@ -57,7 +57,7 @@ help:
 # R environment
 # =============================================================================
 restore: $(RENV_LOCK)
-	Rscript -e "renv::restore(prompt = FALSE)"
+	Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
 
 # =============================================================================
 # Phase 1: Data preparation and EDA
@@ -125,7 +125,7 @@ report: $(PDF)
 $(PDF): $(RPT_DIR)/main.tex $(RPT_DIR)/preamble.sty $(RPT_DIR)/references.bib \
         $(wildcard $(RPT_DIR)/sections/*.tex) $(wildcard $(RPT_DIR)/appendices/*.tex)
 	@echo "=== Compiling LaTeX report ==="
-	cd $(RPT_DIR) && latexmk -xelatex -interaction=nonstopmode main.tex
+	cd $(RPT_DIR) && latexmk -C main.tex && latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex
 
 # =============================================================================
 # Clean

@@ -32,24 +32,32 @@ if (!identical(normalizePath(getwd(), winslash = "/"), PROJECT_ROOT)) {
   setwd(PROJECT_ROOT)
 }
 
-# R normally activates renv through the project-level .Rprofile. Explicitly
-# activate it here as well so scripts still use the locked project library when
-# that startup profile is bypassed.
-renv_activate <- file.path(PROJECT_ROOT, "renv", "activate.R")
-active_renv_project <- Sys.getenv("RENV_PROJECT", unset = "")
-renv_is_active <- nzchar(active_renv_project) && identical(
-  normalizePath(active_renv_project, winslash = "/", mustWork = FALSE),
-  PROJECT_ROOT
-)
-
-if (!renv_is_active) {
-  if (!file.exists(renv_activate)) {
-    stop("renv activation file not found: ", renv_activate,
-         "\nRestore the tracked renv files before running the analysis.",
-         call. = FALSE)
-  }
-  source(renv_activate)
+# Prefer the restored project library, but do not source renv/activate.R here.
+# The autoloader can be slow or fragile in editor sessions; this direct library
+# discovery keeps scripts reproducible across Windows, macOS, and Linux.
+project_library_root <- file.path(PROJECT_ROOT, "renv", "library")
+project_libraries <- if (dir.exists(project_library_root)) {
+  list.dirs(project_library_root, recursive = TRUE, full.names = TRUE)
+} else {
+  character(0)
 }
+
+project_library <- project_libraries[
+  file.exists(file.path(project_libraries, "renv", "DESCRIPTION"))
+]
+
+if (length(project_library) > 0) {
+  project_library <- project_library[[length(project_library)]]
+  .libPaths(c(project_library, .libPaths()))
+} else {
+  stop("Project renv library was not found. From the project root, run: ",
+       "Rscript -e \"if (!requireNamespace('renv', quietly = TRUE)) ",
+       "install.packages('renv', repos = 'https://cloud.r-project.org'); ",
+       "renv::restore(prompt = FALSE)\"",
+       call. = FALSE)
+}
+
+Sys.setenv(RENV_PROJECT = PROJECT_ROOT)
 
 log_line <- function(level, ..., .sep = "") {
   text <- paste0(..., collapse = .sep)
@@ -71,7 +79,7 @@ if (!file.exists(lockfile)) {
   abort_run("renv lockfile not found: ", lockfile)
 }
 
-required_packages <- c("glmnet", "xtable")
+required_packages <- c("glmnet", "xtable", "jsonlite", "rlang")
 
 # requireNamespace() catches broken or incompatible installs; checking only
 # installed.packages() incorrectly reports those packages as usable.

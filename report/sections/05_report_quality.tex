@@ -7,23 +7,26 @@
 \subsection{Reproduction Record}
 \label{sec:reproduction}
 
-The analysis requires R (the verified run used R 4.5.2).  Its two direct
-non-base dependencies, \texttt{glmnet} and \texttt{xtable}, and all transitive
-dependencies are version-pinned in \texttt{renv.lock}.  The tracked
-\texttt{.Rprofile} activates an isolated project library, which can be rebuilt
-with \texttt{renv::restore()}.  A MiKTeX or TeX Live installation must provide
-\texttt{latexmk} and XeLaTeX; pdfLaTeX is not a supported engine because the
-report contains Unicode Vietnamese names.
+The analysis requires R (the verified run used R 4.5.2).  Its direct
+non-base dependencies, including \texttt{glmnet}, \texttt{xtable},
+\texttt{jsonlite}, and \texttt{rlang}, and all transitive dependencies are
+version-pinned in \texttt{renv.lock}.  The tracked \texttt{.Rprofile} points R
+to the restored project library, which can be rebuilt with
+\texttt{renv::restore()}.  A MiKTeX or TeX Live installation must provide
+\texttt{latexmk}, XeLaTeX, and the packages listed in
+\texttt{report/latex-packages.txt}; pdfLaTeX is not a supported engine because
+the report contains Unicode Vietnamese names.
 
 From the project root, the following commands restore the exact locked package
 versions, run every analysis stage in dependency order, record
 \texttt{sessionInfo()}, and build the report.
 
 \begin{lstlisting}[language=bash, caption={Exact reproduction commands.}]
-Rscript -e "renv::restore(prompt = FALSE)"
+Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
 Rscript R_models/00_run_all.R
 cd report
-latexmk -xelatex -interaction=nonstopmode main.tex
+latexmk -C main.tex
+latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex
 \end{lstlisting}
 
 The runner executes, in order:

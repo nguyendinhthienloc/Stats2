@@ -179,7 +179,10 @@
       "Package": "glmnet",
       "Version": "5.0",
       "Source": "Repository",
-      "Priority": null,
+      "Type": "Package",
+      "Title": "Lasso and Elastic-Net Regularized Generalized Linear Models",
+      "Date": "2026-04-27",
+      "Authors@R": "c(person(\"Jerome\", \"Friedman\", role=c(\"aut\")), person(\"Trevor\", \"Hastie\", role=c(\"aut\", \"cre\"), email = \"hastie@stanford.edu\"), person(\"Rob\", \"Tibshirani\", role=c(\"aut\")), person(\"Balasubramanian\", \"Narasimhan\", role=c(\"aut\")), person(\"Kenneth\",\"Tay\",role=c(\"aut\")), person(\"Noah\", \"Simon\", role=c(\"aut\")), person(\"Junyang\", \"Qian\", role=c(\"ctb\")), person(\"James\", \"Yang\", role=c(\"aut\")), person(\"Jonathan\",\"Taylor\", role=c(\"aut\")))",
       "Depends": [
         "R (>= 3.6.0)",
         "Matrix (>= 1.0-6)"
@@ -192,10 +195,6 @@
         "survival",
         "Rcpp"
       ],
-      "LinkingTo": [
-        "RcppEigen",
-        "Rcpp"
-      ],
       "Suggests": [
         "knitr",
         "lars",
@@ -204,16 +203,21 @@
         "xfun",
         "rmarkdown"
       ],
-      "Enhances": [
-        null
-      ],
+      "SystemRequirements": "C++17",
+      "Description": "Extremely efficient procedures for fitting the entire lasso or elastic-net regularization path for linear regression, logistic and multinomial regression models, Poisson regression, Cox model,  multiple-response Gaussian, and the grouped multinomial regression; see <doi:10.18637/jss.v033.i01> and <doi:10.18637/jss.v039.i05>. There are two new and important additions. The family argument can be a GLM family object, which opens the door to any programmed family (<doi:10.18637/jss.v106.i01>). This comes with a modest computational cost, so when the built-in families suffice, they should be used instead.  The other novelty is the relax option, which refits each of the active sets in the path unpenalized. The algorithm uses cyclical coordinate descent in a path-wise fashion, as described in the papers cited.",
       "License": "GPL-2",
-      "License_is_FOSS": null,
-      "License_restricts_use": null,
-      "OS_type": null,
+      "VignetteBuilder": "knitr",
+      "Encoding": "UTF-8",
+      "URL": "https://glmnet.stanford.edu",
+      "RoxygenNote": "7.3.3",
+      "LinkingTo": [
+        "RcppEigen",
+        "Rcpp"
+      ],
       "NeedsCompilation": "yes",
-      "Repository": "CRAN",
-      "Type": "source"
+      "Author": "Jerome Friedman [aut], Trevor Hastie [aut, cre], Rob Tibshirani [aut], Balasubramanian Narasimhan [aut], Kenneth Tay [aut], Noah Simon [aut], Junyang Qian [ctb], James Yang [aut], Jonathan Taylor [aut]",
+      "Maintainer": "Trevor Hastie <hastie@stanford.edu>",
+      "Repository": "CRAN"
     },
     "iterators": {
       "Package": "iterators",
@@ -236,6 +240,36 @@
       "NeedsCompilation": "no",
       "Author": "Folashade Daniel [cre], Revolution Analytics [aut, cph], Steve Weston [aut]",
       "Maintainer": "Folashade Daniel <fdaniel@microsoft.com>",
+      "Repository": "CRAN"
+    },
+    "jsonlite": {
+      "Package": "jsonlite",
+      "Version": "2.0.0",
+      "Source": "Repository",
+      "Title": "A Simple and Robust JSON Parser and Generator for R",
+      "License": "MIT + file LICENSE",
+      "Depends": [
+        "methods"
+      ],
+      "Authors@R": "c( person(\"Jeroen\", \"Ooms\", role = c(\"aut\", \"cre\"), email = \"jeroenooms@gmail.com\", comment = c(ORCID = \"0000-0002-4035-0289\")), person(\"Duncan\", \"Temple Lang\", role = \"ctb\"), person(\"Lloyd\", \"Hilaiel\", role = \"cph\", comment=\"author of bundled libyajl\"))",
+      "URL": "https://jeroen.r-universe.dev/jsonlite https://arxiv.org/abs/1403.2805",
+      "BugReports": "https://github.com/jeroen/jsonlite/issues",
+      "Maintainer": "Jeroen Ooms <jeroenooms@gmail.com>",
+      "VignetteBuilder": "knitr, R.rsp",
+      "Description": "A reasonably fast JSON parser and generator, optimized for statistical  data and the web. Offers simple, flexible tools for working with JSON in R, and is particularly powerful for building pipelines and interacting with a web API.  The implementation is based on the mapping described in the vignette (Ooms, 2014). In addition to converting JSON data from/to R objects, 'jsonlite' contains  functions to stream, validate, and prettify JSON data. The unit tests included  with the package verify that all edge cases are encoded and decoded consistently  for use with dynamic data in systems and applications.",
+      "Suggests": [
+        "httr",
+        "vctrs",
+        "testthat",
+        "knitr",
+        "rmarkdown",
+        "R.rsp",
+        "sf"
+      ],
+      "RoxygenNote": "7.3.2",
+      "Encoding": "UTF-8",
+      "NeedsCompilation": "yes",
+      "Author": "Jeroen Ooms [aut, cre] (<https://orcid.org/0000-0002-4035-0289>), Duncan Temple Lang [ctb], Lloyd Hilaiel [cph] (author of bundled libyajl)",
       "Repository": "CRAN"
     },
     "lattice": {
@@ -330,6 +364,58 @@
       "NeedsCompilation": "no",
       "Author": "Kevin Ushey [aut, cre] (ORCID: <https://orcid.org/0000-0003-2880-7407>), Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Posit Software, PBC [cph, fnd]",
       "Maintainer": "Kevin Ushey <kevin@rstudio.com>",
+      "Repository": "CRAN"
+    },
+    "rlang": {
+      "Package": "rlang",
+      "Version": "1.3.0",
+      "Source": "Repository",
+      "Title": "Functions for Base Types and Core R and 'Tidyverse' Features",
+      "Authors@R": "c( person(\"Lionel\", \"Henry\", , \"lionel@posit.co\", role = c(\"aut\", \"cre\")), person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\"), person(\"mikefc\", , , \"mikefc@coolbutuseless.com\", role = \"cph\", comment = \"Hash implementation based on Mike's xxhashlite\"), person(\"Yann\", \"Collet\", role = \"cph\", comment = \"Author of the embedded xxHash library\"), person(\"Posit, PBC\", role = c(\"cph\", \"fnd\")) )",
+      "Description": "A toolbox for working with base types, core R features like the condition system, and core 'Tidyverse' features like tidy evaluation.",
+      "License": "MIT + file LICENSE",
+      "URL": "https://rlang.r-lib.org, https://github.com/r-lib/rlang",
+      "BugReports": "https://github.com/r-lib/rlang/issues",
+      "Depends": [
+        "R (>= 4.0.0)"
+      ],
+      "Imports": [
+        "utils"
+      ],
+      "Suggests": [
+        "cli (>= 3.1.0)",
+        "covr",
+        "crayon",
+        "desc",
+        "fs",
+        "glue",
+        "knitr",
+        "magrittr",
+        "methods",
+        "pillar",
+        "pkgload",
+        "rmarkdown",
+        "stats",
+        "testthat (>= 3.3.2)",
+        "tibble",
+        "usethis",
+        "vctrs (>= 0.2.3)",
+        "withr"
+      ],
+      "Enhances": [
+        "winch"
+      ],
+      "Biarch": "true",
+      "ByteCompile": "true",
+      "Config/build/compilation-database": "true",
+      "Config/Needs/website": "dplyr, tidyverse/tidytemplate",
+      "Config/roxygen2/version": "8.0.0",
+      "Config/testthat/edition": "3",
+      "Config/testthat/parallel": "true",
+      "Encoding": "UTF-8",
+      "NeedsCompilation": "yes",
+      "Author": "Lionel Henry [aut, cre], Hadley Wickham [aut], mikefc [cph] (Hash implementation based on Mike's xxhashlite), Yann Collet [cph] (Author of the embedded xxHash library), Posit, PBC [cph, fnd]",
+      "Maintainer": "Lionel Henry <lionel@posit.co>",
       "Repository": "CRAN"
     },
     "shape": {

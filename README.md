@@ -7,19 +7,33 @@ This project predicts body fat percentage (`brozek`) from the `fat.csv` dataset 
 
 ## Prerequisites
 - **R 4.5.x** (the lockfile was created with R 4.5.2)
-- **LaTeX** distribution with `latexmk`
+- **LaTeX** distribution with `latexmk` and XeLaTeX
 - **GNU Make** (optional, for automated builds)
 
 Restore the exact R package versions recorded in `renv.lock`:
 
 ```bash
-Rscript -e "renv::restore(prompt = FALSE)"
+Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
 ```
 
-The tracked `.Rprofile` activates the project library automatically. Analysis
-scripts also activate it through `R_models/setup.R` if the startup profile is
-bypassed, and stop with a clear restore command if a locked dependency is
-unavailable.
+The tracked `.Rprofile` adds the restored project library to `.libPaths()` for
+interactive tools such as VSCode-R. Analysis scripts also add the same library
+through `R_models/setup.R` and stop with a clear restore command if a dependency
+is unavailable.
+
+## LaTeX Setup
+The report must be compiled with XeLaTeX. pdfLaTeX is not supported because the
+report contains Unicode Vietnamese names.
+
+Recommended options:
+
+- **TeX Live full install:** includes the needed packages.
+- **MiKTeX:** enable automatic package installation, or install the packages
+  listed in `report/latex-packages.txt`.
+
+The report uses TeX-distribution fonts (`TeX Gyre Termes`) rather than local
+system fonts, so it should not depend on `C:/Windows/Fonts` or any one user's
+computer.
 
 ## Quick Start
 ```bash
@@ -33,6 +47,17 @@ make clean
 `make all` restores `renv.lock` before running the analysis. After intentionally
 adding or upgrading an R package, run `renv::snapshot()` and commit the updated
 lockfile; never commit the generated `renv/library/` directory.
+
+If GNU Make is not available, run the same workflow manually from the project
+root:
+
+```bash
+Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
+Rscript R_models/00_run_all.R
+cd report
+latexmk -C main.tex
+latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex
+```
 
 For step-by-step execution, see `CONTRIBUTING.md`.
 
