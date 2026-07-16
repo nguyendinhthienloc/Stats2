@@ -47,6 +47,10 @@ If not using `make all`, run scripts strictly in this order:
 
 ## 📅 Task Tracker
 
+**Overall status: approximately 90%.** The statistical pipeline and report
+content are substantially complete, but the generated figures still require a
+source-level visual-quality pass before the submission is final.
+
 ### Phase 1: Foundation (Nguyễn Đình Thiên Lộc / P1)
 - [x] Run `01_data_prep_eda.R`, split data, generate `shared_data.RData`.
 - [x] Generate EDA figures (`fig_p1_correlation.pdf`, etc.) and summary table.
@@ -69,10 +73,22 @@ If not using `make all`, run scripts strictly in this order:
 - [x] **P5:** Run `04_holdout.R` (use `y_test`). Generate final comparisons.
 - [x] **P5:** Draft Sections 4.4, 4.5, 5, and Abstract.
 - [x] **All:** Verify the complete R pipeline runs cleanly via `R_models/00_run_all.R`.
-- [x] **All:** Resolve the remaining report TODOs and complete the final report review.
-- [x] **All:** Package submission folder with RMarkdown, BibTeX references, and replication README.
+- [ ] **All:** Complete the final visual-quality review and resolve its findings.
+- [x] **All:** Prepare a draft submission folder with RMarkdown, BibTeX references, and replication README.
+
+### Phase 6: Figure Generation and Final Polish (All)
+- [ ] **P1:** Refactor EDA figure generation in `01_data_prep_eda.R`; coordinate reusable plotting defaults in `setup.R`.
+- [ ] **P2:** Refactor OLS and Ridge figure generation in `02_ols.R` and `02_ridge.R`.
+- [ ] **P3:** Refactor Lasso and comparison figure generation in `02_lasso.R` and `02_comparison.R`.
+- [ ] **P4:** Audit mathematical correctness and legibility, then send figure-specific feedback to each R-file owner.
+- [ ] **P5:** Refactor Elastic Net, neural-feature, and holdout figure generation in `04_enet.R`, `04_neural.R`, and `04_holdout.R`.
+- [ ] **All:** Re-run the full pipeline, compile the report, and inspect every figure at its final report size.
+
+For this phase, fix plots in the assigned R source files. Do not hand-edit
+generated PDFs, change asset filenames, or alter validated statistical results
+solely for appearance.
 
 **Latest verified run (2026-07-16):** All eight analysis scripts completed successfully.
 Lasso was selected using training CV and achieved the best holdout RMSE (4.2514).
-The 20-page English XeLaTeX report also builds with a clean final log, and all
-Unicode author names were verified in both the rendered page and PDF text layer.
+The XeLaTeX report builds successfully, but figure aesthetics remain the final
+major work item before submission.

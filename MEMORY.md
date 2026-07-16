@@ -8,13 +8,13 @@
 | Repo structure | ✅ Done | Makefile, directories ready |
 | `setup.R` | ✅ Done | Robust paths, renv activation, namespace checks, and clear logs |
 | `01_data_prep_eda.R` | ✅ Done | Shared data and EDA regenerated on 2026-07-16 |
-| R Model Scripts | ✅ Done | Full eight-script pipeline verified via `00_run_all.R` |
-| LaTeX report | ✅ Done | Clean English XeLaTeX build with fixed TOC and refined title page aesthetics |
+| R Model Scripts | 🚧 90% | Computations verified; source-level figure-generation polish remains |
+| LaTeX report | 🚧 90% | Builds cleanly; generated figures still need visual-quality review |
 | Math derivations | ✅ Done | Completed and checked against numeric training eigenvalues |
-| Submission folder | ✅ Done | Prepared `Group01_ProjectQuiz1.Rmd`, references, and replication README |
+| Submission folder | 🚧 Draft | Prepared, but not final until revised figures are regenerated and reviewed |
 | Final holdout | ✅ Done | Predeclared Lasso had the best RMSE: 4.2514 |
 
-**Current Phase:** Phase 5 — completed and ready for submission packaging.
+**Current Phase:** Phase 6 — approximately 90% complete; refactor figure generation in the assigned R files, regenerate all plots, and perform final visual QA.
 
 ## Latest Verified Run (2026-07-16)
 - `Rscript R_models/00_run_all.R` completed all eight scripts successfully in dependency order.
