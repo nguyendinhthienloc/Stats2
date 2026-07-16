@@ -7,6 +7,7 @@
 *.RData
 .Rproj.user/
 Rplots.pdf
+.Rlib/
 
 # ==========================
 # Generated output (reproducible)
@@ -32,11 +33,24 @@ report/*.lof
 report/*.lot
 report/*.synctex.gz
 report/*.run.xml
+report/*.xdv
 report/*.nav
 report/*.snm
 report/*.vrb
 report/sections/*.aux
 report/appendices/*.aux
+
+# ==========================
+# Temporary / scratch
+# ==========================
+tmp/
+*.tmp
+scratch/
+
+# ==========================
+# IDE / editor
+# ==========================
+.vscode/
 
 # Keep the output directories
 !output/figures/.gitkeep
