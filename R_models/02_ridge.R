@@ -40,7 +40,7 @@ cat("  Predictors:      ", ncol(x_train), "\n\n")
 # alpha = 0 tells glmnet to use L2 (Ridge) penalty.
 # cv.glmnet performs K-fold CV (using our shared foldid) to pick lambda.
 
-ridge_fit <- fit_cv_glmnet(x_train, y_train, alpha = 0, foldid = foldid)
+ridge_fit <- fit_foldclean_glmnet(x_raw_train, y_train, alpha = 0, foldid = foldid)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3.  REPORT LAMBDA VALUES
@@ -78,7 +78,7 @@ cond <- safe_condition_numbers(x_train, lambda = ridge_fit$lambda.min)
 # 5.  TRAINING METRICS
 # ─────────────────────────────────────────────────────────────────────────────
 
-y_pred_ridge_train <- predict(ridge_fit, newx = x_train, s = "lambda.min")
+y_pred_ridge_train <- predict(ridge_fit, newx = x_raw_train, s = "lambda.min")
 ridge_train_scores <- score_regression(y_train, as.vector(y_pred_ridge_train))
 
 cat("\n--- Ridge Training Performance ---\n")

@@ -68,7 +68,7 @@ enet_summary <- data.frame(  # summary table
 for (alpha in alpha_grid) {
   cat("--- Fitting Elastic Net with alpha =", alpha, "---\n")
   
-  fit <- fit_cv_glmnet(x_train, y_train, alpha = alpha, foldid = foldid)
+  fit <- fit_foldclean_glmnet(x_raw_train, y_train, alpha = alpha, foldid = foldid)
   
   # Store the fit
   enet_fits[[as.character(alpha)]] <- fit

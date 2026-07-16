@@ -48,7 +48,7 @@ For step-by-step execution, see `CONTRIBUTING.md`.
 - `R_models/` — R scripts for analysis
 - `report/` — LaTeX source files
 - `output/` — Generated figures and tables
-- `ASESII_24A02_ProjectQuiz1_Group01/` — Package folder ready for submission containing:
+- `submission/ASESII_24A02_ProjectQuiz1_Group01/` — Package folder ready for submission containing:
   - `Group01_ProjectQuiz1.Rmd` (self-contained reproducible report)
   - `references.bib` (bibliography database)
   - `README.txt` (replication instructions)
