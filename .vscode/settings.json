@@ -1,0 +1,17 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\sections\\02_ols_ridge_lasso.aux": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\sections\\02_ols_ridge_lasso.log": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\sections\\02_ols_ridge_lasso.gz": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\sections\\02_ols_ridge_lasso.out": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\main.aux": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\main.log": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\main.gz": true,
+        "**/e:\\STATS\\Stats2\\LaTeX_report\\main.out": true
+    }
+}

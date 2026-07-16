@@ -20,20 +20,33 @@ Ordinary Least Squares provides the unpenalised baseline:
 \centering
 \caption{OLS coefficient estimates on the training set.}
 \label{tab:ols-coef}
-% TODO: Uncomment once generated:
-% \input{../output/tables/tab_p2_ols_coef}
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
-    \texttt{tab\_ols\_coef.tex} — run the R pipeline to generate.
-\vspace{0.8cm}}}
+\input{../output/tables/tab_p2_ols_coef}
 \end{table}
 
-% -- OLS diagnostic plots
-\includefigure{0.75\textwidth}{fig_ols_diagnostics}%
-    {OLS diagnostic plots: residuals vs.\ fitted values and Q-Q plot.}%
-    {fig:ols-diagnostics}
+% -- OLS coefficient bar chart
+\includefigure{0.7\textwidth}{fig_p2_ols_coef}%
+    {OLS standardized coefficient estimates. Note the inflated values due to multicollinearity.}%
+    {fig:ols-coef}
 
-% TODO: Interpret OLS coefficients. Note any coefficients with unexpected signs
-%       or inflated standard errors due to multicollinearity.
+% -- OLS diagnostic plots (Residuals vs Fitted and Q-Q Plot)
+\includefigure{0.75\textwidth}{fig_p2_ols_resid}%
+    {OLS Residuals vs. Fitted plot showcasing homoscedasticity and linearity.}%
+    {fig:ols-residuals}
+
+\includefigure{0.75\textwidth}{fig_p2_ols_qq}%
+    {Normal Q-Q plot of OLS residuals validating the normality assumption.}%
+    {fig:ols-qq}
+
+\paragraph{Interpretation of OLS Coefficients.}
+The OLS baseline coefficient estimates reveal severe numerical instability due to severe \textbf{multicollinearity} among the physical predictors. 
+Biologically, we expect body weight (\texttt{weight}) and adiposity (\texttt{adipos}) to have a strong positive relationship with body fat percentage (\texttt{brozek}). 
+However, in our OLS fit, their standardized coefficients are counter-intuitively negative (e.g., \texttt{weight} $\approx -1.33$ and \texttt{adipos} $\approx -1.32$) \cite{123}. 
+
+This occurs because the OLS estimator overcompensates for the extremely strong correlation between predictors by inflating the positive coefficient of a single dominant predictor, \texttt{abdom} ($\approx 9.47$), and balancing it with artificial negative coefficients for other physical dimensions \cite{123}. This inflation of standard errors and unexpected signs makes individual OLS coefficients highly unreliable for structural inference.
+
+Furthermore, residual diagnostics show that the classical assumptions are well met. 
+The \textbf{Residuals vs. Fitted} plot displays a random distribution of points around the zero-line with a flat LOESS curve, satisfying the \textbf{homoscedasticity} and \textbf{linearity} assumptions. 
+The \textbf{Normal Q-Q} plot showcases that the standardized residuals lie tightly along the diagonal reference line, validating the \textbf{normality} assumption of the error terms.
 
 % ---- 2.2 Ridge Regression --------------------------------------------------
 \subsection{Ridge Regression (P2 — Tuấn)}
@@ -60,29 +73,31 @@ Ridge regression adds an $\ell_2$ penalty to the OLS objective:
     {fig:ridge-path}
 
 % -- Ridge coefficient bar chart
-\includefigure{0.7\textwidth}{fig_p2_ridge_coef_bar}%
+\includefigure{0.7\textwidth}{fig_p2_ridge_coef}%
     {Ridge coefficient estimates at $\lambda_{\min}$ vs.\ $\lambda_{1\mathrm{se}}$.}%
     {fig:ridge-coef-bar}
 
 \paragraph{Tuning results.}
-% TODO: Report the selected lambda values:
-% $\lambda_{\min} = \ldots$, $\lambda_{1\mathrm{se}} = \ldots$.
+Through 5-fold cross-validation on the training observations using the shared fold assignments, the optimal penalty values and their corresponding CV errors are reported in Table~\ref{tab:ridge-lambda}.
+
+\input{../output/tables/tab_p2_ridge_lambda}
+
+The value $\lambda_{\min} = 0.63$ represents the model that achieves the absolute minimum cross-validated Mean Squared Error (MSE) of $19.72$, prioritizing predictive accuracy \cite{127}. In contrast, the $\lambda_{1\mathrm{se}} = 2.79$ rule selects the largest penalty (most regularized model) whose error ($22.45$) remains within one standard error of the minimum \cite{127}. By choosing $\lambda_{1\mathrm{se}}$, we obtain a simpler, more heavily shrunk model that significantly guards against overfitting while sacrificing negligible predictive performance.
 
 % -- Condition numbers
 \begin{table}[H]
 \centering
-\caption{Condition number of $\bX^\top\bX$ vs.\ $\bX^\top\bX + \lambda\bm{I}$
-         for selected $\lambda$ values.}
+\caption{Condition number of $\bX^\top\bX$ vs.\ $\bX^\top\bX + \lambda\bm{I}$ for selected $\lambda$ values.}
 \label{tab:condition-numbers}
-% TODO: Uncomment once generated:
-% \input{../output/tables/tab_p2_cond}
-\fbox{\parbox{0.7\textwidth}{\centering\vspace{0.8cm}
-    \texttt{tab\_condition\_numbers.tex} — run the R pipeline to generate.
-\vspace{0.8cm}}}
+\input{../output/tables/tab_p2_cond}
 \end{table}
 
-% TODO: Interpret ridge shrinkage. How do coefficients change compared to OLS?
-%       Does the condition number improve substantially?
+\paragraph{Interpretation of Ridge Shrinkage and Matrix Stabilization.}
+The regularization effect of Ridge regression is clearly visible in the \textit{Coefficient Paths} plot (Figure~\ref{fig:ridge-path}). As the penalty parameter $\lambda$ increases from left to right, the magnitude of all 14 coefficient estimates shrinks smoothly towards zero. However, because the $\ell_2$ penalty lacks a coordinatewise thresholding mechanism, none of the coefficients are set exactly to zero. All 14 variables remain active in the model, confirming that Ridge performs shrinkage but does not conduct variable selection.
+
+Comparing OLS coefficients (Table~\ref{tab:ols-coef}) to Ridge coefficients at $\lambda_{\min}$ (Figure~\ref{fig:ridge-coef-bar}), we observe that the highly unstable, inflated baseline estimates are successfully controlled. Most notably, the extremely high positive coefficient for \texttt{abdom} ($\approx 9.47$ in OLS) is shrunk to a much more stable and physically sensible value ($\approx 5.00$ in Ridge), while the counter-intuitive negative coefficient of \texttt{adipos} is corrected to a positive sign of $0.55$, and \texttt{weight} is pulled back closer to zero (from $-1.33$ to $-0.23$) \cite{123, 125}.
+
+This empirical stability is mathematically justified by the \textbf{Condition Number} analysis (Table~\ref{tab:condition-numbers}). Due to near-perfect multicollinearity, the unpenalized training design matrix $\bX^\top\bX$ is extremely ill-conditioned, posting an exceptionally large condition number of $3,167$ \cite{122}. By adding the diagonal perturbation $\lambda \bm{I}_p$, Ridge mathematically shifts the eigenvalues of the system away from zero. At the fitted $\lambda_{\min}$, the condition number of the regularized system ($\bX^\top\bX + \lambda\bm{I}$) drops dramatically to $1,502$, demonstrating a massive $2.1\text{x}$ reduction in numerical sensitivity \cite{122}. This transformation numerically stabilizes the inverse matrix operations, making our regularized model highly robust to minor variations in the data.
 
 % ---- 2.3 Lasso Regression --------------------------------------------------
 \subsection{Lasso Regression (P3 — Thuận)}
