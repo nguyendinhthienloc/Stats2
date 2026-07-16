@@ -9,6 +9,7 @@
 
 ## AI Code Style (R)
 - **Shared Config:** Always source `setup.R` at the top of scripts.
+- **Portable Paths:** Never hardcode a machine-specific project directory (for example, `D:/Stats2`). Resolve paths from the script location or the detected project root, and use paths relative to that root.
 - **Shared Data:** Load processed data using `load("output/shared_data.RData")`.
 - **Plotting:** Save figures as PDFs: `pdf("output/figures/fig_name.pdf", width=7, height=5)`.
 - **Tables:** Use `save_table_tex()` (from `setup.R`) or `knitr::kable(format="latex")`.
