@@ -38,11 +38,12 @@ We use individual branches for each member to prevent conflicts.
 
 ## 🏃 Execution Order
 If not using `make all`, run scripts strictly in this order:
-1. `Rscript R_models/01_data_prep_eda.R` (Generates shared data)
-2. `Rscript R_models/02_ols.R`, `02_ridge.R`, `02_lasso.R`, `04_enet.R`, `04_neural.R` (Parallel)
-3. `Rscript R_models/02_comparison.R` (Needs OLS/Ridge/Lasso)
-4. `Rscript R_models/04_holdout.R` (Needs ALL fits)
-5. `cd report && latexmk -xelatex main.tex`
+1. `Rscript -e "renv::restore(prompt = FALSE)"` (Restores the locked R environment)
+2. `Rscript R_models/01_data_prep_eda.R` (Generates shared data)
+3. `Rscript R_models/02_ols.R`, `02_ridge.R`, `02_lasso.R`, `04_enet.R`, `04_neural.R` (Parallel)
+4. `Rscript R_models/02_comparison.R` (Needs OLS/Ridge/Lasso)
+5. `Rscript R_models/04_holdout.R` (Needs ALL fits)
+6. `cd report && latexmk -xelatex main.tex`
 
 ## 📅 Task Tracker
 
@@ -53,22 +54,23 @@ If not using `make all`, run scripts strictly in this order:
 
 ### Phase 2: Core Models (Trần Lê Anh Tuấn / P2 & Lê Minh Thuận / P3)
 - [x] **P2:** Run `02_ols.R` & `02_ridge.R`. Generate baselines, CV curves, coeff paths.
-- [ ] **P2:** Draft Sections 2.1 & 2.2 in LaTeX.
+- [x] **P2:** Draft Sections 2.1 & 2.2 in LaTeX.
 - [x] **P3:** Run `02_lasso.R` & `02_comparison.R`. Generate Lasso outputs and comparisons.
-- [ ] **P3:** Draft Sections 2.3, 2.4, 2.5 in LaTeX. Nominate **Core Model**.
+- [x] **P3:** Draft Sections 2.3, 2.4, 2.5 in LaTeX. Nominate **Core Model**.
 
 ### Phase 3: Math Proofs (Nguyễn Bảo Minh Triết / P4)
-- [ ] **P4:** Draft Section 3 (Ridge closed-form, Lasso optimality, Evidence connection).
+- [x] **P4:** Draft Section 3 (Ridge closed-form, Lasso optimality, Evidence connection).
 
 ### Phase 4: Elastic Net & Neural Features (Nguyễn Hồng Tấn Tài / P5)
 - [x] **P5:** Run `04_enet.R` & `04_neural.R`. Generate Elastic Net and ReLU feature metrics.
-- [ ] **P5:** Draft Section 4.1, 4.2, 4.3. Fill literature source map.
+- [x] **P5:** Draft Section 4.1, 4.2, 4.3. Fill literature source map.
 
 ### Phase 5: Holdout & Polish (Nguyễn Hồng Tấn Tài / P5)
 - [x] **P5:** Run `04_holdout.R` (use `y_test`). Generate final comparisons.
-- [ ] **P5:** Draft Sections 4.4, 4.5, 5, and Abstract.
+- [x] **P5:** Draft Sections 4.4, 4.5, 5, and Abstract.
 - [x] **All:** Verify the complete R pipeline runs cleanly via `R_models/00_run_all.R`.
-- [ ] **All:** Resolve the remaining report TODOs and complete the final report review.
+- [x] **All:** Resolve the remaining report TODOs and complete the final report review.
+- [x] **All:** Package submission folder with RMarkdown, BibTeX references, and replication README.
 
 **Latest verified run (2026-07-16):** All eight analysis scripts completed successfully.
 Lasso was selected using training CV and achieved the best holdout RMSE (4.2514).

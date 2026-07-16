@@ -32,11 +32,23 @@ if (!identical(normalizePath(getwd(), winslash = "/"), PROJECT_ROOT)) {
   setwd(PROJECT_ROOT)
 }
 
-# Prefer a project-local library when present. This keeps machine-specific
-# package repairs isolated from the user's global R library.
-project_library <- file.path(PROJECT_ROOT, ".Rlib")
-if (dir.exists(project_library)) {
-  .libPaths(c(project_library, .libPaths()))
+# R normally activates renv through the project-level .Rprofile. Explicitly
+# activate it here as well so scripts still use the locked project library when
+# that startup profile is bypassed.
+renv_activate <- file.path(PROJECT_ROOT, "renv", "activate.R")
+active_renv_project <- Sys.getenv("RENV_PROJECT", unset = "")
+renv_is_active <- nzchar(active_renv_project) && identical(
+  normalizePath(active_renv_project, winslash = "/", mustWork = FALSE),
+  PROJECT_ROOT
+)
+
+if (!renv_is_active) {
+  if (!file.exists(renv_activate)) {
+    stop("renv activation file not found: ", renv_activate,
+         "\nRestore the tracked renv files before running the analysis.",
+         call. = FALSE)
+  }
+  source(renv_activate)
 }
 
 log_line <- function(level, ..., .sep = "") {
@@ -54,14 +66,12 @@ abort_run <- function(...) {
        call. = FALSE)
 }
 
-requirements_file <- file.path(PROJECT_ROOT, "requirements.txt")
-if (!file.exists(requirements_file)) {
-  abort_run("Dependency file not found: ", requirements_file)
+lockfile <- file.path(PROJECT_ROOT, "renv.lock")
+if (!file.exists(lockfile)) {
+  abort_run("renv lockfile not found: ", lockfile)
 }
 
-required_packages <- readLines(requirements_file, warn = FALSE)
-required_packages <- trimws(sub("#.*$", "", required_packages))
-required_packages <- required_packages[nzchar(required_packages)]
+required_packages <- c("glmnet", "xtable")
 
 # requireNamespace() catches broken or incompatible installs; checking only
 # installed.packages() incorrectly reports those packages as usable.
@@ -77,7 +87,8 @@ if (length(failed_packages) > 0) {
   details <- paste(sprintf("  - %s: %s", failed_packages,
                            package_errors[failed_packages]), collapse = "\n")
   abort_run("Required R packages are unavailable:\n", details,
-            "\nRun: Rscript R_models/install_requirements.R")
+            "\nRun from the project root: ",
+            "Rscript -e \"renv::restore(prompt = FALSE)\"")
 }
 
 suppressWarnings(suppressPackageStartupMessages({
@@ -191,7 +202,7 @@ save_table_tex <- function(df, filename, caption = "", label = "") {
   }
 
   sanitize_colnames <- function(x) {
-    gsub("_", "\\\\_", x, fixed = TRUE)
+    gsub("_", "\\_", x, fixed = TRUE)
   }
   
   # Create the xtable object
@@ -474,4 +485,5 @@ safe_condition_numbers <- function(X, lambda = 0, tol = 1e-10) {
 log_info("setup.R loaded | project=", PROJECT_ROOT,
          " | group=", GROUP_NUMBER,
          " | R=", getRversion(),
+         " | renv=", as.character(packageVersion("renv")),
          " | glmnet=", as.character(packageVersion("glmnet")))
