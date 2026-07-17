@@ -57,4 +57,4 @@ scratch/
 !output/tables/.gitkeep
 
 #Idk what this is
-output\session_info.txt
+/output/session_info.txt
