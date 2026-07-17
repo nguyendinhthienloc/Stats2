@@ -57,7 +57,7 @@ help:
 # R environment
 # =============================================================================
 restore: $(RENV_LOCK)
-	Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
+	Rscript --vanilla $(R_DIR)/00_restore.R
 
 # =============================================================================
 # Phase 1: Data preparation and EDA

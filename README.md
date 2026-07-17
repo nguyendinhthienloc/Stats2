@@ -7,19 +7,21 @@ This project predicts body fat percentage (`brozek`) from the `fat.csv` dataset 
 
 ## Prerequisites
 - **R 4.5.x** (the lockfile was created with R 4.5.2)
+- **Internet connection** for the first package restore
 - **LaTeX** distribution with `latexmk` and XeLaTeX
 - **GNU Make** (optional, for automated builds)
 
 Restore the exact R package versions recorded in `renv.lock`:
 
 ```bash
-Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
+Rscript --vanilla R_models/00_restore.R
 ```
 
-The tracked `.Rprofile` adds the restored project library to `.libPaths()` for
-interactive tools such as VSCode-R. Analysis scripts also add the same library
-through `R_models/setup.R` and stop with a clear restore command if a dependency
-is unavailable.
+Here, `--vanilla` only prevents an existing R startup file from interfering
+with restoration. The restore script explicitly installs the versions from
+`renv.lock` into this project's ignored `renv/library/` directory. The tracked
+`.Rprofile` and `R_models/setup.R` then use that project-local library when the
+analysis runs.
 
 ## LaTeX Setup
 The report must be compiled with XeLaTeX. pdfLaTeX is not supported because the
@@ -52,7 +54,7 @@ If GNU Make is not available, run the same workflow manually from the project
 root:
 
 ```bash
-Rscript -e "if (!requireNamespace('renv', quietly = TRUE)) install.packages('renv', repos = 'https://cloud.r-project.org'); renv::restore(prompt = FALSE)"
+Rscript --vanilla R_models/00_restore.R
 Rscript R_models/00_run_all.R
 cd report
 latexmk -C main.tex

@@ -1,3 +1,4 @@
+# Use the restored project library without running renv's slow autoloader.
 project <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
 project_library_root <- file.path(project, "renv", "library")
 project_libraries <- if (dir.exists(project_library_root)) {
@@ -12,7 +13,9 @@ project_library <- project_libraries[
 
 if (length(project_library) > 0) {
   project_library <- project_library[[length(project_library)]]
-  .libPaths(c(project_library, .libPaths()))
+  # Keep the project isolated from user-level packages. Base and recommended
+  # packages remain available from R's system library.
+  .libPaths(c(project_library, .Library))
 }
 
 Sys.setenv(RENV_PROJECT = project)

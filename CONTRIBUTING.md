@@ -36,14 +36,62 @@ We use individual branches for each member to prevent conflicts.
 2. **Commit:** Prefix with your role, e.g., `git commit -m "P2: add ridge CV plot"`
 3. **Push:** `git push origin feature/<your-branch>` (then open a Pull Request)
 
-## 🏃 Execution Order
-If not using `make all`, run scripts strictly in this order:
-1. `Rscript -e "renv::restore(prompt = FALSE)"` (Restores the locked R environment)
-2. `Rscript R_models/01_data_prep_eda.R` (Generates shared data)
-3. `Rscript R_models/02_ols.R`, `02_ridge.R`, `02_lasso.R`, `04_enet.R`, `04_neural.R` (Parallel)
-4. `Rscript R_models/02_comparison.R` (Needs OLS/Ridge/Lasso)
-5. `Rscript R_models/04_holdout.R` (Needs ALL fits)
-6. `cd report && latexmk -xelatex main.tex`
+## 🏃 Running the Analysis
+
+### Recommended: run the complete pipeline
+
+Use `R_models/00_run_all.R` for a full, reproducible run. It restores the
+shared configuration, creates output directories, runs all eight analysis
+scripts in dependency order, stops at the first failure, and writes
+`output/session_info.txt` when the pipeline succeeds.
+
+From a terminal opened at the project root:
+
+```bash
+Rscript --vanilla R_models/00_restore.R
+Rscript R_models/00_run_all.R
+cd report && latexmk -xelatex main.tex
+```
+
+### Running from RStudio
+
+This repository does not currently include an `.Rproj` file. Open the folder
+that contains this repository in RStudio, then set the working directory to
+the project root through **Session > Set Working Directory > Choose
+Directory...**. The project root is the folder containing `README.md`,
+`renv.lock`, and the `R_models` directory.
+In the RStudio Console, run:
+
+```r
+system2(file.path(R.home("bin"), "Rscript"),
+        c("--vanilla", "R_models/00_restore.R"))
+source("R_models/00_run_all.R", encoding = "UTF-8")
+```
+
+`Rscript -e "..."` is a terminal command; do not paste it at RStudio's `>`
+prompt. Use the R code above in the Console instead. Restart RStudio and run
+the last `source()` command again if package restoration changes the active
+library.
+
+### What the support scripts do
+
+- `R_models/setup.R` is shared configuration, not an analysis stage. Every
+  analysis script sources it automatically. It locates the project root,
+  configures the project package library, checks required packages, loads
+  common packages, and defines shared constants and helper functions.
+- `R_models/00_dependencies.R` is only a dependency declaration for `renv`
+  and editor tooling. It does not install packages or run the analysis.
+- `R_models/00_run_all.R` is the pipeline entry point. Do not run it after
+  separately running every individual script unless you intentionally want to
+  regenerate all outputs.
+
+### Running individual scripts
+
+Use individual scripts only while developing or debugging. First run
+`01_data_prep_eda.R`, then fit the model scripts, run `02_comparison.R` after
+OLS/Ridge/Lasso, and run `04_holdout.R` last because it needs every fitted
+model. Each analysis script sources `setup.R` automatically; do not run
+`setup.R` as a separate analysis stage.
 
 ## 📅 Task Tracker
 

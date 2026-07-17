@@ -48,12 +48,10 @@ project_library <- project_libraries[
 
 if (length(project_library) > 0) {
   project_library <- project_library[[length(project_library)]]
-  .libPaths(c(project_library, .libPaths()))
+  .libPaths(c(project_library, .Library))
 } else {
   stop("Project renv library was not found. From the project root, run: ",
-       "Rscript -e \"if (!requireNamespace('renv', quietly = TRUE)) ",
-       "install.packages('renv', repos = 'https://cloud.r-project.org'); ",
-       "renv::restore(prompt = FALSE)\"",
+       "Rscript --vanilla R_models/00_restore.R",
        call. = FALSE)
 }
 
@@ -96,7 +94,7 @@ if (length(failed_packages) > 0) {
                            package_errors[failed_packages]), collapse = "\n")
   abort_run("Required R packages are unavailable:\n", details,
             "\nRun from the project root: ",
-            "Rscript -e \"renv::restore(prompt = FALSE)\"")
+            "Rscript --vanilla R_models/00_restore.R")
 }
 
 suppressWarnings(suppressPackageStartupMessages({
