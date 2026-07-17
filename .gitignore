@@ -55,3 +55,6 @@ scratch/
 # Keep the output directories
 !output/figures/.gitkeep
 !output/tables/.gitkeep
+
+#Idk what this is
+output\session_info.txt
