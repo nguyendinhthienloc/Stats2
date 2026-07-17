@@ -8,11 +8,10 @@ references for Group 01.
 ------------------------------------------------------------------------
 Files Included
 ------------------------------------------------------------------------
-1. Group01_ProjectQuiz1.Rmd : Self-contained RMarkdown report containing
+1. Group01_ProjectQuiz1.Rmd : Self-contained R Markdown report containing
                               both analysis code and report text.
 2. references.bib           : BibTeX file containing all citations.
-3. Group01_ProjectQuiz1.pdf : Final compiled report PDF (user will place
-                              this when ready).
+3. Group01-ProjectQuiz1.pdf : Final compiled report PDF.
 4. README.txt               : This instruction file.
 
 ------------------------------------------------------------------------
@@ -22,9 +21,7 @@ Reproduction Instructions
 To reproduce and render the report from a clean R session:
 
 1. Ensure the following R packages are installed:
-   - tidyverse
    - glmnet
-   - broom
    - knitr
    - rmarkdown (required to render Rmd)
 
@@ -38,6 +35,6 @@ To reproduce and render the report from a clean R session:
 4. Run the following command in your terminal/console from this directory
    to render the RMarkdown document to PDF:
 
-   Rscript -e "rmarkdown::render('Group01_ProjectQuiz1.Rmd', output_format='pdf_document')"
+   Rscript -e "rmarkdown::render('Group01_ProjectQuiz1.Rmd', output_file='Group01-ProjectQuiz1.pdf', output_format='pdf_document')"
 
    Or open `Group01_ProjectQuiz1.Rmd` in RStudio and click the "Knit" button.

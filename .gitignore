@@ -40,6 +40,17 @@ report/*.vrb
 report/sections/*.aux
 report/appendices/*.aux
 
+# R Markdown / LaTeX artifacts generated inside submission folders
+submission/**/*.aux
+submission/**/*.fdb_latexmk
+submission/**/*.fls
+submission/**/*.log
+submission/**/*.tex
+submission/**/*.toc
+submission/**/*.xdv
+submission/**/*.knit.md
+submission/**/figure/
+
 # ==========================
 # Temporary / scratch
 # ==========================

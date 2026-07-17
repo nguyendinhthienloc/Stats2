@@ -1,7 +1,11 @@
 ---
 title: "ASESII 24A02 Project-Based Quiz 1"
 subtitle: "Ridge, Lasso, and Regularization for Neural Features"
-author: "Group 01: Nguyễn Đình Thiên Lộc (24125093), Trần Lê Anh Tuấn (24125107), Lê Minh Thuận (24125105), Nguyễn Bảo Minh Triết (24125047), Nguyễn Hồng Tấn Tài (24125078)"
+author:
+  - "Group 01"
+  - "Nguyễn Đình Thiên Lộc (24125093), Trần Lê Anh Tuấn (24125107)"
+  - "Lê Minh Thuận (24125105), Nguyễn Bảo Minh Triết (24125047)"
+  - "Nguyễn Hồng Tấn Tài (24125078)"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output:
   pdf_document:
@@ -14,15 +18,15 @@ output:
     toc_depth: 3
 bibliography: references.bib
 link-citations: true
-params:
-  group_number: 1
+header-includes:
+  - '\renewcommand{\and}{\\}'
 fontsize: 11pt
 geometry: margin=1in
 ---
 
 # Authorship and contribution statement {-}
 
-We confirm that every group member can explain the submitted analysis. AI use is reported in `Group01_AI_Log.csv` (recorded in the AI Usage Log), and the group checked every AI-assisted item used in this report.
+We confirm that every group member can explain the submitted analysis. AI use is reported in Section 5C, and the group checked every AI-assisted item used in this report.
 
 | Student | ID | Main contributions | Verification performed |
 |---|---|---|---|
@@ -38,11 +42,11 @@ We predict Brozek body-fat percentage from 14 anthropometric measurements for
 252 adult men.  Outcome-derived variables were excluded, preprocessing used
 training-only statistics, and OLS, Ridge, Lasso, Elastic Net, and penalised
 models on 200 fixed random ReLU features were compared with one shared
-five-fold split.  Lasso at $\lambda_{\min}=0.0954$ had the lowest training
-cross-validated RMSE among the original-predictor models (4.241), retained nine
+five-fold split.  Lasso at $\lambda_{\min}=0.0936$ had the lowest training
+cross-validated RMSE among the original-predictor models (4.242), retained nine
 slopes, and was declared for deployment before the holdout responses were
-examined.  On the 51-subject holdout set it remained best, with RMSE 4.251,
-MAE 3.524, and $R^2=0.683$.  Elastic Net was close (RMSE 4.274), whereas the
+examined.  On the 51-subject holdout set it remained best, with RMSE 4.247,
+MAE 3.524, and $R^2=0.684$.  Elastic Net was close (RMSE 4.267), whereas the
 fixed ReLU expansions did not improve prediction.  We therefore recommend the
 predeclared Lasso for this population, while treating its selected variables as
 predictive rather than causal evidence.
@@ -50,7 +54,7 @@ predictive rather than causal evidence.
 # Reproducible setup {-}
 
 ```{r setup, message=FALSE, warning=FALSE}
-required_packages <- c("tidyverse", "glmnet", "broom", "knitr")
+required_packages <- c("glmnet", "knitr")
 missing_packages <- required_packages[
   !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
 ]
@@ -59,20 +63,13 @@ if (length(missing_packages)) {
        paste(missing_packages, collapse = ", "))
 }
 
-library(tidyverse)
 library(glmnet)
-library(broom)
 library(knitr)
 
-group_number <- as.integer(params$group_number)
-if (length(group_number) != 1L || is.na(group_number) || group_number < 1L) {
-  stop("Set params$group_number to your assigned positive group number.")
-}
-
 seeds <- list(
-  split = 240200L + group_number,
-  cv = 240300L + group_number,
-  features = 240400L + group_number
+  split = 240201L,
+  cv = 240301L,
+  features = 240401L
 )
 ```
 
@@ -106,8 +103,7 @@ split_rows <- function(n, train_prop = 0.80, seed) {
 fit_scaler <- function(x, tol = 1e-12) {
   x <- as.matrix(x)
   center <- colMeans(x)
-  centered <- sweep(x, 2L, center, "-")
-  scale <- sqrt(colMeans(centered^2))
+  scale <- apply(x, 2L, sd)
   keep <- is.finite(scale) & scale > tol
   if (!any(keep)) stop("No nonconstant training predictor remains.")
   list(
@@ -120,8 +116,10 @@ fit_scaler <- function(x, tol = 1e-12) {
 
 apply_scaler <- function(x, prep) {
   x <- as.matrix(x)[, prep$keep, drop = FALSE]
-  x <- sweep(x, 2L, prep$center, "-")
-  sweep(x, 2L, prep$scale, "/")
+  scaled <- scale(x, center = prep$center, scale = prep$scale)
+  attr(scaled, "scaled:center") <- NULL
+  attr(scaled, "scaled:scale") <- NULL
+  scaled
 }
 
 make_foldid <- function(n, k = 5L, seed) {
@@ -130,17 +128,184 @@ make_foldid <- function(n, k = 5L, seed) {
   sample(rep(seq_len(k), length.out = n))
 }
 
-fit_cv_glmnet <- function(x, y, alpha, foldid) {
-  glmnet::cv.glmnet(
-    x = x,
+default_lambda_grid <- function() {
+  exp(seq(log(1e-4), log(1e3), length.out = 140L))
+}
+
+foldclean_select_lambda <- function(fold_mse, lambda) {
+  cvm <- colMeans(fold_mse)
+  cvsd <- apply(fold_mse, 2, sd) / sqrt(nrow(fold_mse))
+  min_idx <- which.min(cvm)
+  threshold <- cvm[min_idx] + cvsd[min_idx]
+  eligible <- which(cvm <= threshold)
+  one_se_idx <- eligible[which.max(lambda[eligible])]
+  list(
+    cvm = cvm,
+    cvsd = cvsd,
+    lambda.min = lambda[min_idx],
+    lambda.1se = lambda[one_se_idx]
+  )
+}
+
+fit_foldclean_glmnet <- function(x_raw, y, alpha, foldid,
+                                 lambda = default_lambda_grid()) {
+  x_raw <- as.matrix(x_raw)
+  y <- as.numeric(y)
+  lambda <- sort(lambda, decreasing = TRUE)
+  folds <- sort(unique(foldid))
+  fold_mse <- matrix(NA_real_, nrow = length(folds), ncol = length(lambda))
+
+  for (i in seq_along(folds)) {
+    val_idx <- which(foldid == folds[i])
+    train_idx <- which(foldid != folds[i])
+    fold_scaler <- fit_scaler(x_raw[train_idx, , drop = FALSE])
+    x_fold_train <- apply_scaler(x_raw[train_idx, , drop = FALSE], fold_scaler)
+    x_fold_val <- apply_scaler(x_raw[val_idx, , drop = FALSE], fold_scaler)
+    fold_fit <- glmnet::glmnet(
+      x = x_fold_train,
+      y = y[train_idx],
+      family = "gaussian",
+      alpha = alpha,
+      lambda = lambda,
+      standardize = FALSE,
+      intercept = TRUE
+    )
+    pred <- predict(fold_fit, newx = x_fold_val, s = lambda)
+    fold_mse[i, ] <- colMeans((y[val_idx] - pred)^2)
+  }
+
+  selected <- foldclean_select_lambda(fold_mse, lambda)
+  final_scaler <- fit_scaler(x_raw)
+  x_final <- apply_scaler(x_raw, final_scaler)
+  final_fit <- glmnet::glmnet(
+    x = x_final,
     y = y,
     family = "gaussian",
     alpha = alpha,
-    foldid = foldid,
+    lambda = lambda,
     standardize = FALSE,
-    intercept = TRUE,
-    type.measure = "mse"
+    intercept = TRUE
   )
+
+  fit <- list(
+    alpha = alpha,
+    lambda = lambda,
+    cvm = selected$cvm,
+    cvsd = selected$cvsd,
+    lambda.min = selected$lambda.min,
+    lambda.1se = selected$lambda.1se,
+    fold_mse = fold_mse,
+    scaler = final_scaler,
+    glmnet.fit = final_fit,
+    transform = "scaled"
+  )
+  class(fit) <- "foldclean_glmnet"
+  fit
+}
+
+fit_foldclean_neural_glmnet <- function(x_raw, y, foldid, A, bias, alpha,
+                                        lambda = default_lambda_grid()) {
+  x_raw <- as.matrix(x_raw)
+  y <- as.numeric(y)
+  lambda <- sort(lambda, decreasing = TRUE)
+  folds <- sort(unique(foldid))
+  fold_mse <- matrix(NA_real_, nrow = length(folds), ncol = length(lambda))
+  relu <- function(z) pmax(z, 0)
+
+  for (i in seq_along(folds)) {
+    val_idx <- which(foldid == folds[i])
+    train_idx <- which(foldid != folds[i])
+    x_fold_scaler <- fit_scaler(x_raw[train_idx, , drop = FALSE])
+    x_fold_train <- apply_scaler(x_raw[train_idx, , drop = FALSE], x_fold_scaler)
+    x_fold_val <- apply_scaler(x_raw[val_idx, , drop = FALSE], x_fold_scaler)
+    h_train_raw <- relu(x_fold_train %*% A +
+      matrix(bias, nrow = nrow(x_fold_train), ncol = ncol(A), byrow = TRUE))
+    h_val_raw <- relu(x_fold_val %*% A +
+      matrix(bias, nrow = nrow(x_fold_val), ncol = ncol(A), byrow = TRUE))
+    h_fold_scaler <- fit_scaler(h_train_raw)
+    h_fold_train <- apply_scaler(h_train_raw, h_fold_scaler)
+    h_fold_val <- apply_scaler(h_val_raw, h_fold_scaler)
+    fold_fit <- glmnet::glmnet(
+      x = h_fold_train,
+      y = y[train_idx],
+      family = "gaussian",
+      alpha = alpha,
+      lambda = lambda,
+      standardize = FALSE,
+      intercept = TRUE
+    )
+    pred <- predict(fold_fit, newx = h_fold_val, s = lambda)
+    fold_mse[i, ] <- colMeans((y[val_idx] - pred)^2)
+  }
+
+  selected <- foldclean_select_lambda(fold_mse, lambda)
+  x_final_scaler <- fit_scaler(x_raw)
+  x_final <- apply_scaler(x_raw, x_final_scaler)
+  h_final_raw <- relu(x_final %*% A +
+    matrix(bias, nrow = nrow(x_final), ncol = ncol(A), byrow = TRUE))
+  h_final_scaler <- fit_scaler(h_final_raw)
+  h_final <- apply_scaler(h_final_raw, h_final_scaler)
+  final_fit <- glmnet::glmnet(
+    x = h_final,
+    y = y,
+    family = "gaussian",
+    alpha = alpha,
+    lambda = lambda,
+    standardize = FALSE,
+    intercept = TRUE
+  )
+
+  fit <- list(
+    alpha = alpha,
+    lambda = lambda,
+    cvm = selected$cvm,
+    cvsd = selected$cvsd,
+    lambda.min = selected$lambda.min,
+    lambda.1se = selected$lambda.1se,
+    fold_mse = fold_mse,
+    x_scaler = x_final_scaler,
+    h_scaler = h_final_scaler,
+    A = A,
+    bias = bias,
+    glmnet.fit = final_fit,
+    transform = "neural"
+  )
+  class(fit) <- "foldclean_glmnet"
+  fit
+}
+
+coef.foldclean_glmnet <- function(object, s = "lambda.min", ...) {
+  s_value <- if (is.character(s)) object[[s]] else s
+  coef(object$glmnet.fit, s = s_value, ...)
+}
+
+predict.foldclean_glmnet <- function(object, newx, s = "lambda.min", ...) {
+  s_value <- if (is.character(s)) object[[s]] else s
+  newx <- as.matrix(newx)
+  if (identical(object$transform, "scaled")) {
+    transformed <- apply_scaler(newx, object$scaler)
+  } else {
+    relu <- function(z) pmax(z, 0)
+    x_scaled <- apply_scaler(newx, object$x_scaler)
+    h_raw <- relu(x_scaled %*% object$A +
+      matrix(object$bias, nrow = nrow(x_scaled),
+             ncol = ncol(object$A), byrow = TRUE))
+    transformed <- apply_scaler(h_raw, object$h_scaler)
+  }
+  predict(object$glmnet.fit, newx = transformed, s = s_value, ...)
+}
+
+plot.foldclean_glmnet <- function(x, main = "Fold-clean CV Error", ...) {
+  upper <- x$cvm + x$cvsd
+  lower <- x$cvm - x$cvsd
+  plot(log(x$lambda), x$cvm, type = "b", pch = 16,
+       ylim = range(c(lower, upper), finite = TRUE),
+       xlab = expression(log(lambda)), ylab = "Cross-Validation MSE",
+       main = main, ...)
+  arrows(log(x$lambda), lower, log(x$lambda), upper,
+         angle = 90, code = 3, length = 0.03, col = "grey60")
+  abline(v = log(x$lambda.min), lty = 2, col = "red")
+  abline(v = log(x$lambda.1se), lty = 2, col = "blue")
 }
 
 score_regression <- function(y, prediction) {
@@ -214,9 +379,11 @@ test_id <- split$test
 x_raw <- as.matrix(analysis_data[, predictors, drop = FALSE])
 y_raw <- analysis_data[[config$response]]
 
-x_prep <- fit_scaler(x_raw[train_id, , drop = FALSE])
-x_train <- apply_scaler(x_raw[train_id, , drop = FALSE], x_prep)
-x_test <- apply_scaler(x_raw[test_id, , drop = FALSE], x_prep)
+x_raw_train <- x_raw[train_id, , drop = FALSE]
+x_raw_test <- x_raw[test_id, , drop = FALSE]
+x_prep <- fit_scaler(x_raw_train)
+x_train <- apply_scaler(x_raw_train, x_prep)
+x_test <- apply_scaler(x_raw_test, x_prep)
 y_train <- y_raw[train_id]
 y_test <- y_raw[test_id]
 
@@ -256,15 +423,17 @@ y_pred_ols_train <- predict(ols_fit, newdata = data.frame(x_train))
 ols_train_scores <- score_regression(y_train, y_pred_ols_train)
 
 # K-fold CV for OLS
-ols_cv_errs <- numeric(5)
+ols_cv_pred <- rep(NA_real_, length(y_train))
 for (i in 1:5) {
   val_idx <- which(foldid == i)
   trn_idx <- which(foldid != i)
-  fold_fit <- lm(y ~ ., data = data.frame(y = y_train[trn_idx], x_train[trn_idx, , drop = FALSE]))
-  pred_val <- predict(fold_fit, newdata = data.frame(x_train[val_idx, , drop = FALSE]))
-  ols_cv_errs[i] <- mean((y_train[val_idx] - pred_val)^2)
+  fold_scaler <- fit_scaler(x_raw_train[trn_idx, , drop = FALSE])
+  x_fold_train <- apply_scaler(x_raw_train[trn_idx, , drop = FALSE], fold_scaler)
+  x_fold_val <- apply_scaler(x_raw_train[val_idx, , drop = FALSE], fold_scaler)
+  fold_fit <- lm(y ~ ., data = data.frame(y = y_train[trn_idx], x_fold_train))
+  ols_cv_pred[val_idx] <- predict(fold_fit, newdata = data.frame(x_fold_val))
 }
-ols_cv_rmse <- sqrt(mean(ols_cv_errs))
+ols_cv_rmse <- sqrt(mean((y_train - ols_cv_pred)^2))
 
 # Diagnostic Plot
 plot(fitted(ols_fit), residuals(ols_fit), pch = 16, col = "gray40",
@@ -281,7 +450,7 @@ Under OLS, the partial slopes for highly collinear predictors are large and coun
 ## 2B. Ridge
 
 ```{r ridge, fig.width=8, fig.height=4}
-ridge_fit <- fit_cv_glmnet(x_train, y_train, alpha = 0, foldid = foldid)
+ridge_fit <- fit_foldclean_glmnet(x_raw_train, y_train, alpha = 0, foldid = foldid)
 
 # Plot CV curve
 plot(ridge_fit, main = "Ridge Cross-Validation Curve")
@@ -294,12 +463,12 @@ cat("Ridge lambda.min:", ridge_fit$lambda.min, "\n")
 cat("Ridge lambda.1se:", ridge_fit$lambda.1se, "\n")
 ```
 
-Ridge regression selects $\lambda_{\min} = 0.6280$ and $\lambda_{1\mathrm{se}} = 4.0367$. Ridge shrinks all slopes toward zero but retains all 14 variables. It redistributes the signal among collinear predictors; `abdom` drops from 9.47 to 5.00 at $\lambda_{\min}$ and 2.15 at $\lambda_{1\mathrm{se}}$. Adding $\lambda_{\min} \mathbf{I}$ reduces the condition number of the design from 3166.75 to 15.17, rendering the system stable.
+Ridge selects $\lambda_{\min} = `r sprintf("%.4f", ridge_fit$lambda.min)`$ and $\lambda_{1\mathrm{se}} = `r sprintf("%.4f", ridge_fit$lambda.1se)`$. It shrinks all slopes toward zero but retains all `r count_nonzero(ridge_fit)` variables. The `abdom` slope changes from `r sprintf("%.2f", coef(ols_fit)["abdom"])` under OLS to `r sprintf("%.2f", as.matrix(coef(ridge_fit, s = "lambda.min"))["abdom", 1])` at $\lambda_{\min}$ and `r sprintf("%.2f", as.matrix(coef(ridge_fit, s = "lambda.1se"))["abdom", 1])` at $\lambda_{1\mathrm{se}}$. Adding the Ridge penalty reduces the condition number from `r sprintf("%.2f", safe_condition_numbers(x_train, ridge_fit$lambda.min)["gram"])` to `r sprintf("%.2f", safe_condition_numbers(x_train, ridge_fit$lambda.min)["ridge"])`.
 
 ## 2C. Lasso
 
 ```{r lasso, fig.width=8, fig.height=4}
-lasso_fit <- fit_cv_glmnet(x_train, y_train, alpha = 1, foldid = foldid)
+lasso_fit <- fit_foldclean_glmnet(x_raw_train, y_train, alpha = 1, foldid = foldid)
 
 # Plot CV curve
 plot(lasso_fit, main = "Lasso Cross-Validation Curve")
@@ -312,7 +481,7 @@ cat("Lasso lambda.min:", lasso_fit$lambda.min, "\n")
 cat("Lasso lambda.1se:", lasso_fit$lambda.1se, "\n")
 ```
 
-At $\lambda_{\min} = 0.0954$, K=5 cross-validation selects 9 active predictors (`age`, `weight`, `height`, `neck`, `abdom`, `hip`, `thigh`, `forearm`, `wrist`) with a CV RMSE of 4.241. At $\lambda_{1\mathrm{se}} = 0.7390$, only `age`, `height`, and `abdom` remain active.
+At $\lambda_{\min} = `r sprintf("%.4f", lasso_fit$lambda.min)`$, five-fold cross-validation selects `r count_nonzero(lasso_fit)` active predictors (`r paste(rownames(as.matrix(coef(lasso_fit, s = "lambda.min")))[-1][abs(as.matrix(coef(lasso_fit, s = "lambda.min"))[-1, 1]) > 1e-8], collapse = ", ")`) with CV RMSE `r sprintf("%.3f", sqrt(min(lasso_fit$cvm)))`. At $\lambda_{1\mathrm{se}} = `r sprintf("%.4f", lasso_fit$lambda.1se)`$, `r count_nonzero(lasso_fit, s = "lambda.1se")` predictors remain active.
 
 ## 2D. Training-based comparison and locked core model
 
@@ -341,7 +510,7 @@ comparison_df <- data.frame(
 kable(comparison_df, digits = 4, caption = "Training-based Model Comparison")
 ```
 
-**Core model nominated before holdout evaluation:** Lasso at $\lambda_{\min} = 0.0954$. It achieves the lowest cross-validated RMSE (4.241) while selecting a sparse subset of 9 predictors, improving interpretability.
+**Core model nominated before holdout evaluation:** Lasso at $\lambda_{\min} = `r sprintf("%.4f", lasso_fit$lambda.min)`$. It achieves the lowest cross-validated RMSE (`r sprintf("%.3f", min(comparison_df$CV_RMSE))`) while selecting `r count_nonzero(lasso_fit)` predictors.
 
 ## 2E. Perturbation or stability check
 
@@ -351,9 +520,11 @@ kable(comparison_df, digits = 4, caption = "Training-based Model Comparison")
 set.seed(240302L)
 B <- 50
 lasso_sel <- matrix(0, nrow = B, ncol = ncol(x_train))
-colnames(lasso_sel) <- colnames(x_train)
 ridge_coefs_boot <- matrix(0, nrow = B, ncol = ncol(x_train))
 ols_coefs_boot <- matrix(0, nrow = B, ncol = ncol(x_train))
+colnames(lasso_sel) <- colnames(x_train)
+colnames(ridge_coefs_boot) <- colnames(x_train)
+colnames(ols_coefs_boot) <- colnames(x_train)
 
 for (b in 1:B) {
   boot_idx <- sample(nrow(x_train), replace = TRUE)
@@ -377,7 +548,7 @@ freqs <- colMeans(lasso_sel)
 barplot(sort(freqs, decreasing = TRUE), las = 2, main = "Lasso Variable Selection Frequency (B=50)")
 ```
 
-**Observed result and explanation:** Lasso consistently selects `abdom` and `wrist` (1.00) but exhibits high variability among size predictors (`weight` 0.46, `hip` 0.48, `chest` 0.26). Ridge bootstrap coefficient standard deviations are substantially smaller than OLS (e.g. for `weight`, SD is 0.50 under Ridge versus 6.47 under OLS), demonstrating the stabilizing effect of L2 regularization.
+**Observed result and explanation:** Lasso selects `abdom` in `r sprintf("%.0f%%", 100 * freqs["abdom"])` and `wrist` in `r sprintf("%.0f%%", 100 * freqs["wrist"])` of bootstrap resamples, while correlated size predictors vary more. For `weight`, the bootstrap coefficient SD is `r sprintf("%.2f", sd(ridge_coefs_boot[, "weight"]))` under Ridge versus `r sprintf("%.2f", sd(ols_coefs_boot[, "weight"]))` under OLS, illustrating Ridge's stabilising effect.
 
 # Problem 3. Mathematical mechanisms
 
@@ -399,7 +570,7 @@ cat("Condition number of Gram matrix G:", cond_analysis["gram"], "\n")
 cat("Condition number of G + lambda I:", cond_analysis["ridge"], "\n")
 ```
 
-The condition number drops from 3166.75 to 15.17 at $\lambda_{\min} = 0.6280$, which is a 208.7-fold reduction. Geometric interpretation: adding $\lambda \mathbf{I}$ scales the eigenvalues up, preventing division by near-zero eigenvalues.
+The condition number drops from `r sprintf("%.2f", cond_analysis["gram"])` to `r sprintf("%.2f", cond_analysis["ridge"])` at $\lambda_{\min} = `r sprintf("%.4f", ridge_fit$lambda.min)`$, a `r sprintf("%.1f", cond_analysis["gram"] / cond_analysis["ridge"])`-fold reduction. Geometrically, adding $\lambda \mathbf{I}$ raises the smallest eigenvalues and prevents division by near-zero values.
 
 ## 3B. Lasso optimality and soft thresholding
 
@@ -423,7 +594,7 @@ Because the subgradient condition allows $b_j = 0$ over a range of values (whene
 
 ## 3C. Connect algebra to evidence
 
-The coefficient for `chest` illustrates this mechanism. OLS estimates a partial slope of $-0.08$. Ridge at $\lambda_{\min}$ shrinks and stabilizes it to $0.82$, keeping it active. Lasso sets the coefficient exactly to zero because the conditional correlation falls within the subgradient interval $[-\lambda, \lambda]$, removing it from the active set.
+The coefficient for `chest` illustrates this mechanism. OLS estimates a partial slope of `r sprintf("%.2f", coef(ols_fit)["chest"])`. Ridge at $\lambda_{\min}$ estimates `r sprintf("%.2f", as.matrix(coef(ridge_fit, s = "lambda.min"))["chest", 1])`, keeping it active. Lasso sets the coefficient exactly to zero because the conditional correlation falls within the subgradient interval $[-\lambda, \lambda]$.
 
 # Problem 4. Elastic net and a neural-feature bridge
 
@@ -445,7 +616,9 @@ enet_fits <- list()
 cv_mses <- numeric(length(alpha_grid))
 
 for (i in seq_along(alpha_grid)) {
-  enet_fits[[i]] <- fit_cv_glmnet(x_train, y_train, alpha = alpha_grid[i], foldid = foldid)
+  enet_fits[[i]] <- fit_foldclean_glmnet(
+    x_raw_train, y_train, alpha = alpha_grid[i], foldid = foldid
+  )
   cv_mses[i] <- min(enet_fits[[i]]$cvm)
 }
 
@@ -464,7 +637,7 @@ cat("Selected alpha:", best_alpha, "\n")
 cat("Selected lambda.min:", best_enet$lambda.min, "\n")
 ```
 
-The selected Elastic Net model has $lpha = 0.90$ and $\lambda_{\min} = 0.1061$, with K=5 CV RMSE of 4.242 and 9 active predictors. The active set is identical to Lasso. The small $\ell_2$ penalty contribution provides grouping for highly correlated predictors, while the dominant $\ell_1$ penalty enforces sparsity.
+The selected Elastic Net model has $\alpha = `r sprintf("%.2f", best_alpha)`$ and $\lambda_{\min} = `r sprintf("%.4f", best_enet$lambda.min)`$, with five-fold CV RMSE `r sprintf("%.3f", sqrt(min(best_enet$cvm)))` and `r count_nonzero(best_enet)` active predictors. Its small $\ell_2$ contribution encourages grouping among correlated predictors, while the dominant $\ell_1$ contribution enforces sparsity.
 
 ## 4C. Fixed ReLU features
 
@@ -475,47 +648,45 @@ M <- 200L
 A <- matrix(rnorm(p * M, mean = 0, sd = sqrt(1/p)), nrow = p, ncol = M)
 bias <- rnorm(M, mean = 0, sd = 0.5)
 
-# Generate features
-relu <- function(z) pmax(z, 0)
-H_train_raw <- relu(x_train %*% A + matrix(bias, nrow = nrow(x_train), ncol = M, byrow = TRUE))
-H_test_raw <- relu(x_test %*% A + matrix(bias, nrow = nrow(x_test), ncol = M, byrow = TRUE))
+# Fit models; predictor and hidden-feature scaling are refitted inside each fold.
+neural_ridge <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = 0
+)
+neural_lasso <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = 1
+)
+neural_enet <- fit_foldclean_neural_glmnet(
+  x_raw_train, y_train, foldid, A, bias, alpha = best_alpha
+)
 
-# Remove constant columns
-train_vars <- apply(H_train_raw, 2, var)
-non_constant <- which(train_vars > 1e-12)
-
-H_train_nonconst <- H_train_raw[, non_constant, drop = FALSE]
-H_test_nonconst <- H_test_raw[, non_constant, drop = FALSE]
-
-# Scale features
-H_prep <- fit_scaler(H_train_nonconst)
-H_train <- apply_scaler(H_train_nonconst, H_prep)
-H_test <- apply_scaler(H_test_nonconst, H_prep)
-
-# Fit models
-neural_ridge <- fit_cv_glmnet(H_train, y_train, alpha = 0, foldid = foldid)
-neural_lasso <- fit_cv_glmnet(H_train, y_train, alpha = 1, foldid = foldid)
-neural_enet <- fit_cv_glmnet(H_train, y_train, alpha = 0.90, foldid = foldid)
-
-cat("Neural Ridge CV RMSE:", sqrt(min(neural_ridge$cvm)), "Active Features:", count_nonzero(neural_ridge), "\n")
-cat("Neural Lasso CV RMSE:", sqrt(min(neural_lasso$cvm)), "Active Features:", count_nonzero(neural_lasso), "\n")
-cat("Neural Elastic Net CV RMSE:", sqrt(min(neural_enet$cvm)), "Active Features:", count_nonzero(neural_enet), "\n")
+cat(
+  "Neural Ridge CV RMSE:", sqrt(min(neural_ridge$cvm)),
+  "Active Features:", count_nonzero(neural_ridge), "\n"
+)
+cat(
+  "Neural Lasso CV RMSE:", sqrt(min(neural_lasso$cvm)),
+  "Active Features:", count_nonzero(neural_lasso), "\n"
+)
+cat(
+  "Neural Elastic Net CV RMSE:", sqrt(min(neural_enet$cvm)),
+  "Active Features:", count_nonzero(neural_enet), "\n"
+)
 ```
 
-The projection matrix $\mathbf{A}$ and offsets $\mathbf{c}$ are fixed randomly. The learned parameters are the output weights and bias. Constant features are removed using `H_train` information only. Neural Ridge has CV RMSE 4.784 with all 199 features active. Neural Lasso and Neural ENet select 31 features, achieving CV RMSEs of 4.390, which does not outperform the original predictor models.
+The projection matrix $\mathbf{A}$ and offsets $\mathbf{c}$ are fixed randomly. The learned parameters are the output weights and bias. Predictor and hidden-feature scaling are refitted inside every CV training fold. Neural Ridge has CV RMSE `r sprintf("%.3f", sqrt(min(neural_ridge$cvm)))` with `r count_nonzero(neural_ridge)` active features; Neural Lasso and Neural Elastic Net have CV RMSEs `r sprintf("%.3f", sqrt(min(neural_lasso$cvm)))` and `r sprintf("%.3f", sqrt(min(neural_enet$cvm)))`, respectively.
 
 ## 4D. Locked declaration and final holdout evaluation
 
-> **Locked before viewing `y_test`:** All centering/scaling parameters are fixed on training data only. Predeclared candidate models are OLS, Ridge (lambda.min=0.6280), Lasso (lambda.min=0.0954), and Elastic Net (alpha=0.90, lambda.min=0.1061). Feature seed is 240401, M=200. Nominated model for deployment is original-predictor Lasso. Metrics: RMSE and MAE.
+> **Locked before viewing `y_test`:** All centering/scaling parameters are fitted on training data only. Candidates are OLS, Ridge ($\lambda_{\min}=`r sprintf("%.4f", ridge_fit$lambda.min)`$), Lasso ($\lambda_{\min}=`r sprintf("%.4f", lasso_fit$lambda.min)`$), and Elastic Net ($\alpha=`r sprintf("%.2f", best_alpha)`$, $\lambda_{\min}=`r sprintf("%.4f", best_enet$lambda.min)`$), plus their fixed-feature counterparts. Feature seed is 240401 and $M=200$. The nominated deployment model is original-predictor Lasso; primary metrics are RMSE and MAE.
 
 ```{r final-holdout-evaluation}
 pred_ols <- predict(ols_fit, newdata = data.frame(x_test))
-pred_ridge <- predict(ridge_fit, newx = x_test, s = "lambda.min")
-pred_lasso <- predict(lasso_fit, newx = x_test, s = "lambda.min")
-pred_enet <- predict(best_enet, newx = x_test, s = "lambda.min")
-pred_nridge <- predict(neural_ridge, newx = H_test, s = "lambda.min")
-pred_nlasso <- predict(neural_lasso, newx = H_test, s = "lambda.min")
-pred_nenet <- predict(neural_enet, newx = H_test, s = "lambda.min")
+pred_ridge <- predict(ridge_fit, newx = x_raw_test, s = "lambda.min")
+pred_lasso <- predict(lasso_fit, newx = x_raw_test, s = "lambda.min")
+pred_enet <- predict(best_enet, newx = x_raw_test, s = "lambda.min")
+pred_nridge <- predict(neural_ridge, newx = x_raw_test, s = "lambda.min")
+pred_nlasso <- predict(neural_lasso, newx = x_raw_test, s = "lambda.min")
+pred_nenet <- predict(neural_enet, newx = x_raw_test, s = "lambda.min")
 
 holdout_results <- rbind(
   OLS = score_regression(y_test, pred_ols),
@@ -530,7 +701,7 @@ holdout_results <- rbind(
 kable(holdout_results, digits = 4, caption = "Final Holdout Evaluation Results")
 ```
 
-The holdout evidence supports the predeclared choice. Lasso ranks first on the test set with a test RMSE of 4.251, MAE of 3.524, and $R^2$ of 0.683. Elastic Net performs similarly (Test RMSE 4.271). The fixed random features models rank worst, with Neural Ridge yielding 4.761.
+The holdout evidence supports the predeclared choice. Lasso ranks first with RMSE `r sprintf("%.4f", holdout_results["Lasso", "RMSE"])`, MAE `r sprintf("%.4f", holdout_results["Lasso", "MAE"])`, and $R^2=`r sprintf("%.4f", holdout_results["Lasso", "R2"])`$. Elastic Net is close at RMSE `r sprintf("%.4f", holdout_results["ENet", "RMSE"])`, while Neural Ridge has RMSE `r sprintf("%.4f", holdout_results["Neural_Ridge", "RMSE"])`.
 
 ## 4E. Deep-learning connection and limitations
 
@@ -542,11 +713,11 @@ Limitations include: (1) sensitivity to the random feature seed, as different in
 
 ## 5A. Reproduction record
 
-The R Markdown file requires R, `tidyverse`, `glmnet`, `broom`, and `knitr`. It executes the reproducible split, training-only scaling, model fitting, cross-validation, and final holdout scoring self-contained from a clean workspace.
+The R Markdown file requires R, `glmnet`, `knitr`, and `rmarkdown`. It executes the fixed split, fold-clean scaling, model fitting, cross-validation, and final holdout scoring from source data in a clean workspace.
 
 ## 5B. Recommendation and limitations
 
-We recommend the original-predictor Lasso at $\lambda_{\min} = 0.0954$. It achieves the best holdout RMSE (4.251) and MAE (3.524) while using only 9 variables. Limitations include the small size ($n=252$) and male-only demographics of the training population, making generalizability to other cohorts uncertain.
+We recommend the original-predictor Lasso at $\lambda_{\min} = `r sprintf("%.4f", lasso_fit$lambda.min)`$. It achieves the best holdout RMSE (`r sprintf("%.4f", holdout_results["Lasso", "RMSE"])`) and MAE (`r sprintf("%.4f", holdout_results["Lasso", "MAE"])`) while using `r count_nonzero(lasso_fit)` predictors. Limitations include the small sample ($n=252$) and male-only population, which restrict generalisability to other cohorts.
 
 ## 5C. AI verification record
 
@@ -570,6 +741,30 @@ if (length(missing_objects)) {
   )
 }
 stopifnot(length(intersect(train_id, test_id)) == 0L)
+
+# Guard the fixed abstract values against future code drift.
+expected_results <- c(
+  ridge_lambda = 0.08334188,
+  lasso_lambda = 0.09358862,
+  enet_lambda = 0.1050952,
+  lasso_rmse = 4.2465,
+  lasso_mae = 3.5238,
+  lasso_r2 = 0.6842,
+  enet_rmse = 4.2672,
+  neural_ridge_rmse = 5.3143
+)
+computed_results <- c(
+  ridge_lambda = ridge_fit$lambda.min,
+  lasso_lambda = lasso_fit$lambda.min,
+  enet_lambda = best_enet$lambda.min,
+  lasso_rmse = holdout_results["Lasso", "RMSE"],
+  lasso_mae = holdout_results["Lasso", "MAE"],
+  lasso_r2 = holdout_results["Lasso", "R2"],
+  enet_rmse = holdout_results["ENet", "RMSE"],
+  neural_ridge_rmse = holdout_results["Neural_Ridge", "RMSE"]
+)
+stopifnot(max(abs(computed_results - expected_results)) < 5e-4)
+stopifnot(best_alpha == 0.90, count_nonzero(lasso_fit) == 9L)
 ```
 
 ```{r session-info}
