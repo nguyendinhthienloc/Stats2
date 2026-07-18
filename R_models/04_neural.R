@@ -193,9 +193,12 @@ cat("\n")
 
 cat("[04c_neural] Generating neural Ridge CV plot...\n")
 
-pdf("output/figures/fig_p4_neural_ridge_cv.pdf", width = 8, height = 5)
-par(mar = c(5, 4, 3, 2))
-plot(neural_ridge_fit, main = "Neural Ridge: CV Error vs log(lambda)")
+pdf("output/figures/fig_p4_neural_ridge_cv.pdf", width = 8.5, height = 5.5)
+par(mar = c(5, 4, 4, 2))
+plot(neural_ridge_fit, main = "Neural Ridge: Cross-Validation Error",
+  xlab = expression(log(lambda)), ylab = "CV MSE", col = project_colors["NeuralRidge"],
+  lwd = 2)
+abline(v = log(neural_ridge_fit$lambda.min), col = project_colors["NeuralRidge"], lty = 2)
 dev.off()
 cat("[04c_neural] Saved: output/figures/fig_p4_neural_ridge_cv.pdf\n")
 
@@ -205,9 +208,12 @@ cat("[04c_neural] Saved: output/figures/fig_p4_neural_ridge_cv.pdf\n")
 
 cat("[04c_neural] Generating neural Lasso CV plot...\n")
 
-pdf("output/figures/fig_p4_neural_lasso_cv.pdf", width = 8, height = 5)
-par(mar = c(5, 4, 3, 2))
-plot(neural_lasso_fit, main = "Neural Lasso: CV Error vs log(lambda)")
+pdf("output/figures/fig_p4_neural_lasso_cv.pdf", width = 8.5, height = 5.5)
+par(mar = c(5, 4, 4, 2))
+plot(neural_lasso_fit, main = "Neural Lasso: Cross-Validation Error",
+  xlab = expression(log(lambda)), ylab = "CV MSE", col = project_colors["NeuralLasso"],
+  lwd = 2)
+abline(v = log(neural_lasso_fit$lambda.min), col = project_colors["NeuralLasso"], lty = 2)
 dev.off()
 cat("[04c_neural] Saved: output/figures/fig_p4_neural_lasso_cv.pdf\n")
 
@@ -218,8 +224,8 @@ cat("[04c_neural] Saved: output/figures/fig_p4_neural_lasso_cv.pdf\n")
 
 cat("[04c_neural] Generating active features comparison...\n")
 
-pdf("output/figures/fig_p4_neural_active.pdf", width = 7, height = 5)
-par(mar = c(5, 4, 3, 2))
+pdf("output/figures/fig_p4_neural_active.pdf", width = 8, height = 5.5)
+par(mar = c(6, 4, 4, 2))
 
 active_counts <- c(n_nz_ridge, n_nz_lasso, n_nz_enet)
 active_names  <- c("Neural\nRidge", "Neural\nLasso",
@@ -232,7 +238,7 @@ bp <- barplot(
                 project_colors["NeuralLasso"],
                 project_colors["NeuralENet"]),
   border    = NA,
-  main      = paste("Active Features out of", M, "Random Features"),
+  main      = paste("Active Features Out of", M, "Random Features"),
   ylab      = "Number of Active (Non-Zero) Features",
   ylim      = c(0, M + 20),
   las       = 1

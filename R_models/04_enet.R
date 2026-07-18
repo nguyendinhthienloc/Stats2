@@ -132,9 +132,10 @@ cat("[04b_enet] Generating CV error comparison plot...\n")
 
 # Choose distinct colours for each alpha
 alpha_colors <- colorRampPalette(c("#2166AC", "#B2182B"))(length(alpha_grid))
+best_alpha_col <- alpha_colors[best_row]
 
 pdf("output/figures/fig_p4_enet_cv.pdf", width = 9, height = 6)
-par(mar = c(5, 4, 3, 8), xpd = TRUE)
+par(mar = c(5, 4, 4, 2), xpd = NA)
 
 # Determine axis limits across all fits
 all_log_lambda <- unlist(lapply(enet_fits, function(f) log(f$lambda)))
@@ -145,25 +146,29 @@ plot(NULL,
      ylim = range(all_cvm),
      xlab = expression(log(lambda)),
      ylab = "Cross-Validation MSE",
-     main = "Elastic Net: CV Error for Different Alpha Values",
+  main = "Elastic Net: Cross-Validation Error by Alpha",
      las = 1)
 
 for (i in seq_along(alpha_grid)) {
   alpha_char <- as.character(alpha_grid[i])
   fit <- enet_fits[[alpha_char]]
   lines(log(fit$lambda), fit$cvm, col = alpha_colors[i], lwd = 2)
+  abline(v = log(fit$lambda.min), col = adjustcolor(alpha_colors[i], alpha.f = 0.2), lty = 3)
   
   # Mark lambda.min with a point
-  idx_min <- which(fit$lambda == fit$lambda.min)
+  idx_min <- which.min(abs(fit$lambda - fit$lambda.min))
   points(log(fit$lambda.min), fit$cvm[idx_min],
          col = alpha_colors[i], pch = 16, cex = 1.5)
 }
 
 # Highlight the best alpha
-legend("topright", inset = c(-0.22, 0),
-       legend = paste0("alpha = ", alpha_grid,
-                       ifelse(alpha_grid == best_alpha, " (BEST)", "")),
-       col = alpha_colors, lwd = 2, bty = "n", cex = 0.75)
+legend("topright",
+    legend = paste0("alpha = ", alpha_grid,
+           ifelse(alpha_grid == best_alpha, " (best)", "")),
+    col = alpha_colors, lwd = 2, bty = "n", cex = 0.8)
+text(x = log(best_fit$lambda.min), y = max(all_cvm),
+  labels = paste0("best alpha = ", best_alpha),
+  pos = 4, offset = 0.5, col = best_alpha_col, cex = 0.9)
 
 dev.off()
 cat("[04b_enet] Saved: output/figures/fig_p4_enet_cv.pdf\n")
@@ -175,27 +180,36 @@ cat("[04b_enet] Saved: output/figures/fig_p4_enet_cv.pdf\n")
 cat("[04b_enet] Generating best elastic net coefficient plot...\n")
 
 coef_no_int <- best_coefs[-1]
+coef_order <- order(abs(coef_no_int), decreasing = TRUE)
+coef_sorted <- coef_no_int[coef_order]
+coef_names_sorted <- names(coef_sorted)
 
-pdf("output/figures/fig_p4_enet_coef.pdf", width = 8, height = 5)
-par(mar = c(7, 4, 3, 2))
+pdf("output/figures/fig_p4_enet_coef.pdf", width = 9, height = 6)
+par(mar = c(5, 10, 4, 2))
 
-bar_colors_enet <- ifelse(coef_no_int != 0,
-                          ifelse(coef_no_int > 0,
+bar_colors_enet <- ifelse(coef_sorted != 0,
+           ifelse(coef_sorted > 0,
                                  project_colors["ElasticNet"],
                                  project_colors["OLS"]),
                           project_colors["neutral"])
 
-barplot(
-  coef_no_int,
-  col    = bar_colors_enet,
+bar_positions <- barplot(
+  rev(coef_sorted),
+  horiz  = TRUE,
+  col    = rev(bar_colors_enet),
   border = NA,
-  main   = paste0("Elastic Net Coefficients (alpha = ", best_alpha,
-                   ", lambda.min = ", round(best_fit$lambda.min, 4), ")"),
-  ylab   = "Coefficient Value",
-  las    = 2,
-  cex.names = 0.8
+  main   = paste0("Elastic Net Coefficients at lambda.min (alpha = ", best_alpha, ")"),
+  xlab   = "Coefficient Value",
+  names.arg = rev(coef_names_sorted),
+  las    = 1,
+  cex.names = 0.85
 )
 abline(h = 0, col = "grey40", lty = 2)
+abline(v = 0, col = "grey40", lty = 2)
+text(x = coef_sorted, y = rev(bar_positions),
+     labels = round(rev(coef_sorted), 3),
+     pos = ifelse(rev(coef_sorted) >= 0, 4, 2),
+     cex = 0.75, col = "grey20")
 
 dev.off()
 cat("[04b_enet] Saved: output/figures/fig_p4_enet_coef.pdf\n")
