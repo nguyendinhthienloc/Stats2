@@ -78,6 +78,7 @@ For step-by-step execution, see `CONTRIBUTING.md`.
 - `submission/ASESII_24A02_ProjectQuiz1_Group01/` — Package folder ready for submission containing:
   - `Group01_ProjectQuiz1.Rmd` (self-contained reproducible report)
   - `references.bib` (bibliography database)
+  - `Group01_ProjectQuiz1.pdf` — A copy of report/main.pdf
   - `README.txt` (replication instructions)
 - `CONTRIBUTING.md` — Team roster, workflow, and tasks
 - `MEMORY.md` — Project context, status, and decisions

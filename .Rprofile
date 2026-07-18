@@ -1,3 +1,4 @@
+source("renv/activate.R")
 # Use the restored project library without running renv's slow autoloader.
 project <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
 project_library_root <- file.path(project, "renv", "library")
