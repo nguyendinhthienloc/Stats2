@@ -4,6 +4,7 @@ ASESII 24A02 Project-Based Quiz 1 — Group 01 Replication Guide
 
 This folder contains the self-contained R Markdown report and bibliographical
 references for Group 01.
+Our GitHub: https://github.com/nguyendinhthienloc/Stats2
 
 ------------------------------------------------------------------------
 Files Included

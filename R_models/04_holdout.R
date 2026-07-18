@@ -53,11 +53,14 @@ cat("[04d_holdout] Loaded all shared data and model fits\n")
 cat("  Test set size:", length(y_test), "observations\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2.  GENERATE PREDICTIONS ON x_test (and H_test for neural models)
+# 2.  GENERATE PREDICTIONS ON TEST PREDICTORS
 # ─────────────────────────────────────────────────────────────────────────────
 # Each model predicts on the test predictors that it was designed for:
-#   - OLS, Ridge, Lasso, Elastic Net  →  use x_test (14 original features)
-#   - Neural Ridge/Lasso/ENet         →  use H_test (200 random features)
+#   - OLS                             →  use x_test (training-scaled features)
+#   - Fold-clean regularized models   →  use x_raw_test; each model applies
+#                                      its stored training scaler
+#   - Fold-clean neural models        →  use x_raw_test; each model also applies
+#                                      its stored ReLU transform
 
 cat("--- Generating test-set predictions ---\n")
 
@@ -66,27 +69,27 @@ pred_ols <- predict(ols_fit, newdata = data.frame(x_test))
 cat("  OLS predictions: done\n")
 
 # 2b. Ridge predictions (at lambda.min)
-pred_ridge <- as.vector(predict(ridge_fit, newx = x_test, s = "lambda.min"))
+pred_ridge <- as.vector(predict(ridge_fit, newx = x_raw_test, s = "lambda.min"))
 cat("  Ridge predictions: done\n")
 
 # 2c. Lasso predictions (at lambda.min)
-pred_lasso <- as.vector(predict(lasso_fit, newx = x_test, s = "lambda.min"))
+pred_lasso <- as.vector(predict(lasso_fit, newx = x_raw_test, s = "lambda.min"))
 cat("  Lasso predictions: done\n")
 
 # 2d. Elastic Net predictions (at lambda.min of best alpha)
-pred_enet <- as.vector(predict(best_fit, newx = x_test, s = "lambda.min"))
+pred_enet <- as.vector(predict(best_fit, newx = x_raw_test, s = "lambda.min"))
 cat("  Elastic Net (alpha =", best_alpha, ") predictions: done\n")
 
 # 2e. Neural Ridge predictions
-pred_neural_ridge <- as.vector(predict(neural_ridge_fit, newx = H_test, s = "lambda.min"))
+pred_neural_ridge <- as.vector(predict(neural_ridge_fit, newx = x_raw_test, s = "lambda.min"))
 cat("  Neural Ridge predictions: done\n")
 
 # 2f. Neural Lasso predictions
-pred_neural_lasso <- as.vector(predict(neural_lasso_fit, newx = H_test, s = "lambda.min"))
+pred_neural_lasso <- as.vector(predict(neural_lasso_fit, newx = x_raw_test, s = "lambda.min"))
 cat("  Neural Lasso predictions: done\n")
 
 # 2g. Neural Elastic Net predictions
-pred_neural_enet <- as.vector(predict(neural_enet_fit, newx = H_test, s = "lambda.min"))
+pred_neural_enet <- as.vector(predict(neural_enet_fit, newx = x_raw_test, s = "lambda.min"))
 cat("  Neural Elastic Net predictions: done\n\n")
 
 # ─────────────────────────────────────────────────────────────────────────────

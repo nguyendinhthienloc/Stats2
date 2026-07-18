@@ -196,9 +196,7 @@ cat("[04c_neural] Generating neural Ridge CV plot...\n")
 pdf("output/figures/fig_p4_neural_ridge_cv.pdf", width = 8.5, height = 5.5)
 par(mar = c(5, 4, 4, 2))
 plot(neural_ridge_fit, main = "Neural Ridge: Cross-Validation Error",
-  xlab = expression(log(lambda)), ylab = "CV MSE", col = project_colors["NeuralRidge"],
-  lwd = 2)
-abline(v = log(neural_ridge_fit$lambda.min), col = project_colors["NeuralRidge"], lty = 2)
+  col = project_colors["NeuralRidge"], lwd = 2)
 dev.off()
 cat("[04c_neural] Saved: output/figures/fig_p4_neural_ridge_cv.pdf\n")
 
@@ -211,9 +209,7 @@ cat("[04c_neural] Generating neural Lasso CV plot...\n")
 pdf("output/figures/fig_p4_neural_lasso_cv.pdf", width = 8.5, height = 5.5)
 par(mar = c(5, 4, 4, 2))
 plot(neural_lasso_fit, main = "Neural Lasso: Cross-Validation Error",
-  xlab = expression(log(lambda)), ylab = "CV MSE", col = project_colors["NeuralLasso"],
-  lwd = 2)
-abline(v = log(neural_lasso_fit$lambda.min), col = project_colors["NeuralLasso"], lty = 2)
+  col = project_colors["NeuralLasso"], lwd = 2)
 dev.off()
 cat("[04c_neural] Saved: output/figures/fig_p4_neural_lasso_cv.pdf\n")
 
@@ -273,8 +269,9 @@ save_table_tex(
 # ─────────────────────────────────────────────────────────────────────────────
 # SAVE NEURAL FITS AND PROJECTION PARAMETERS
 # ─────────────────────────────────────────────────────────────────────────────
-# We save A, bias, H_train, H_test, the scaler, and all three fits.
-# 04_holdout.R will need H_test to make predictions.
+# Save the transformed matrices for diagnostics and reproducibility. Prediction
+# with the fold-clean model objects must receive raw predictors because each
+# object stores and applies its own predictor and neural-feature scalers.
 
 save(neural_ridge_fit, neural_lasso_fit, neural_enet_fit,
      A, bias, M, constant_feature_indices, H_train, H_test, h_scaler,
