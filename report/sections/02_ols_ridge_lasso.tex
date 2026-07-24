@@ -64,8 +64,8 @@ Ridge regression adds an $\ell_2$ penalty to the OLS objective:
     {fig:ridge-coef-bar}
 
 \paragraph{Tuning results.}
-Shared-fold CV selected $\lambda_{\min}=0.6280$ (CV MSE 19.86, RMSE
-4.457) and $\lambda_{1\mathrm{se}}=4.0367$ (CV MSE 23.38, RMSE 4.835).
+Shared-fold CV selected $\lambda_{\min}=0.083342$ (CV MSE 18.4828, RMSE
+4.299) and $\lambda_{1\mathrm{se}}=1.199877$ (CV MSE 20.9041, RMSE 4.572).
 The minimum rule targets the lowest estimated prediction error; the one-SE rule
 accepts some estimated error for stronger shrinkage.
 
@@ -78,7 +78,7 @@ measurements.  For example, \texttt{abdom} shrinks from 9.47 under OLS to 5.00
 at $\lambda_{\min}$ and 2.15 at $\lambda_{1\mathrm{se}}$, while correlated
 size measures receive smaller, more similar contributions.  On the
 $G=\bX^\top\bX/n$ scale, adding $\lambda_{\min}I$ reduces the condition number
-from 3166.75 to 15.17, a 208.7-fold improvement.  No Ridge slope is described
+from 3166.75 to 104.76, a 30.2-fold improvement.  No Ridge slope is described
 as an exact variable-selection result.
 
 % =============================================================================
@@ -112,12 +112,12 @@ automatic feature selection:
 \input{../output/tables/tab_p2_lasso_sel}
 \input{../output/tables/tab_p2_lasso_coef}
 
-At $\lambda_{\min}=0.0954$, the Lasso CV MSE is 17.99 (RMSE 4.241) and
+At $\lambda_{\min}=0.093589$, the Lasso CV MSE is 18.00 (RMSE 4.242) and
 nine slopes are nonzero: \texttt{age}, \texttt{weight}, \texttt{height},
 \texttt{neck}, \texttt{abdom}, \texttt{hip}, \texttt{thigh},
 \texttt{forearm}, and \texttt{wrist}.  At
-$\lambda_{1\mathrm{se}}=0.7390$, only \texttt{age}, \texttt{height}, and
-\texttt{abdom} remain and CV MSE rises to 20.39 (RMSE 4.516).  Unlike Ridge,
+$\lambda_{1\mathrm{se}}=0.754567$, only \texttt{age}, \texttt{height}, and
+\texttt{abdom} remain and CV MSE rises to 20.44 (RMSE 4.521).  Unlike Ridge,
 the $\ell_1$ optimality condition sets other slopes exactly to zero.  The
 selection identifies predictive conditional associations, not causal effects.
 
@@ -139,8 +139,8 @@ selection identifies predictive conditional associations, not causal effects.
 \fbox{\parbox{0.95\textwidth}{%
 \textbf{Core Model Declaration (pre-holdout):}\\[4pt]
 Based only on the shared five-fold training comparison, we nominate
-\textbf{Lasso at $\lambda_{\min}=0.0954$}.  It has the lowest CV RMSE (4.241
-versus 4.406 for OLS and 4.457 for Ridge) and reduces the model from 14 to nine
+\textbf{Lasso at $\lambda_{\min}=0.093589$}.  It has the lowest CV RMSE (4.242
+versus 4.406 for OLS and 4.299 for Ridge) and reduces the model from 14 to nine
 nonzero slopes.  This declaration precedes all holdout scoring.
 }}
 
