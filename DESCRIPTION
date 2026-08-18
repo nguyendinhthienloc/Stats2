@@ -17,4 +17,5 @@ Imports:
     ggplot2,
     glmnet,
     knitr,
+    languageserver,
     rmarkdown

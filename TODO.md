@@ -17,6 +17,7 @@ Default planning assumption: treat `quality` as a regression target. Confirm thi
 - [x] Validate the red-wine file contract: 1,599 rows, 11 predictors, and the `quality` target.
 - [x] Add CI for cross-platform analysis checks, MiKTeX PDF rendering, and artifact upload.
 - [x] Standardize the PDF toolchain on MiKTeX and document direct terminal commands for every workflow.
+- [x] Add the R language server to the reproducible `renv` environment for editor support.
 - [x] Keep `renv.lock` current whenever an R dependency is added or upgraded; automated checks enforce synchronization.
 - [x] Verify a clean clone can restore packages and run the analysis top-to-bottom (tested with a separate empty project library on 2026-08-18).
 - [ ] Require CI to pass before merging changes.

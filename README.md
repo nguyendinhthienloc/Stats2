@@ -40,7 +40,7 @@ Use these versions and tools on every computer:
 
 - **R 4.5.2**, exactly as recorded in `renv.lock`.
 - **Pandoc 2.0 or newer**. RStudio and Quarto normally include it.
-- **MiKTeX with XeLaTeX** for the PDF report. Other TeX distributions are unsupported for this project.
+- **MiKTeX** for the PDF report. MiKTeX supplies the `xelatex` compiler used by the report; other TeX distributions are unsupported.
 - Git, if cloning the repository.
 - Internet access for the first R package restore and any MiKTeX packages needed by the report.
 
@@ -86,6 +86,8 @@ xelatex --version
 
 The first command must report R 4.5.2. The last command should identify MiKTeX.
 
+MiKTeX is the distribution and XeLaTeX is its Unicode-capable compiler. Therefore, `latex_engine: xelatex` in the report and `xelatex --version` in the terminal checks are intentional MiKTeX configuration, not references to another TeX distribution.
+
 ## First run from a clean clone
 
 Open PowerShell, Command Prompt, macOS Terminal, or a Linux terminal. Clone the repository, enter its root folder, and run:
@@ -125,6 +127,8 @@ In order, these restore packages, validate the project, run the full analysis, a
 ## Why the restore is portable
 
 `renv.lock`, `renv/activate.R`, and `.Rprofile` are tracked. The generated `renv/library/` directory is ignored. Each computer restores its own operating-system-specific project library from the same lockfile, so never copy or commit another member's `renv/library/` directory.
+
+The R `languageserver` package is also restored by `renv`, so supported editors can provide completion, diagnostics, and navigation inside this isolated project environment.
 
 The restore is strict and non-interactive. It fails clearly if the active R version is not 4.5.2, a declared package is absent from the lockfile, or the restored library and lockfile disagree.
 
