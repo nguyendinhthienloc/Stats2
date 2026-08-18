@@ -76,6 +76,36 @@ sudo miktexsetup --shared=yes finish
 sudo initexmf --admin --set-config-value='[MPM]AutoInstall=1'
 ```
 
+#### Fedora setup
+
+These instructions target Fedora 43 or 44 on x86-64. Install the build tools and Pandoc first:
+
+```sh
+sudo dnf install -y git curl gcc gcc-c++ gcc-gfortran make libxml2-devel pandoc
+```
+
+Fedora normally provides the newest R release, but this project requires exactly R 4.5.2. Install `rig`, then use it to install and select that version:
+
+```sh
+sudo dnf install -y https://github.com/r-lib/rig/releases/download/latest/r-rig-latest-1.$(arch).rpm
+rig add 4.5.2
+rig default 4.5.2
+Rscript --version
+```
+
+Install MiKTeX from its Fedora repository. This example is for Fedora 44; replace `44` with `43` when using Fedora 43:
+
+```sh
+sudo rpm --import https://miktex.org/download/key
+sudo curl -L -o /etc/yum.repos.d/miktex.repo https://miktex.org/download/fedora/44/miktex.repo
+sudo dnf install -y miktex
+sudo miktexsetup --shared=yes finish
+sudo initexmf --admin --set-config-value='[MPM]AutoInstall=1'
+xelatex --version
+```
+
+After cloning the repository, use the same project commands shown below. Fedora is supported by the documented tools, although the GitHub-hosted CI matrix currently tests Ubuntu, Windows, and macOS rather than Fedora.
+
 On every operating system, open a new terminal and verify the tools before rendering:
 
 ```text
