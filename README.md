@@ -4,10 +4,10 @@ This repository is the active workspace for STAT452 Project 03, **Wine Quality (
 
 The project has two required parts:
 
-1. A complete supervised-learning workflow for Wine Quality (Red): EDA, cleaning, feature selection, a baseline, at least two regularized models, and held-out evaluation.
+1. A supervised-learning workflow for Wine Quality (Red): EDA, cleaning, feature selection, a baseline, at least two regularized models, and held-out evaluation.
 2. A separate experimental-design study using two-factor ANOVA or a `2^k` factorial design with `k >= 2`.
 
-The current planning assumption is regression on the quality score. This is recorded as a decision to confirm in [TODO.md](TODO.md).
+The current planning assumption is regression on the quality score. Confirm that decision in [TODO.md](TODO.md) before modelling.
 
 ## Group 8
 
@@ -23,40 +23,155 @@ The current planning assumption is regression on the quality score. This is reco
 
 | Path | Purpose |
 |---|---|
-| `analysis/` | Ordered, top-to-bottom R analysis scripts |
+| `analysis/` | Ordered R analysis scripts |
 | `R/` | Shared configuration and reusable functions |
 | `data/raw/` | Immutable supplied source data |
 | `data/processed/` | Reproducible derived datasets |
 | `output/` | Generated figures, tables, and model objects |
-| `report/` | Reproducible final report source |
+| `report/` | Final report source and generated PDF |
 | `presentation/` | Presentation source and final deck |
-| `scripts/` | Repository validation and automation helpers |
+| `scripts/` | Restore, reproduce, and validation commands |
 | `references/` | Course briefs, group assignment, notes, and labs |
-| `legacy/midterm/` | Preserved Applied Statistics II midterm project |
+| `legacy/midterm/` | Read-only Applied Statistics II midterm history |
 
-## Quick start
+## What to install
 
-Prerequisites are R 4.5.x, Pandoc, and XeLaTeX.
+Use these versions and tools on every computer:
 
-```text
-make restore
-make check
-make analysis
-make report
+- **R 4.5.2**, exactly as recorded in `renv.lock`.
+- **Pandoc 2.0 or newer**. RStudio and Quarto normally include it.
+- **MiKTeX with XeLaTeX** for the PDF report. Other TeX distributions are unsupported for this project.
+- Git, if cloning the repository.
+- Internet access for the first R package restore and any MiKTeX packages needed by the report.
+
+R packages are handled by `renv`; do not install them manually before the first run. If R must compile a package, Windows needs Rtools 4.5, macOS needs Xcode Command Line Tools and compatible GNU Fortran, and Ubuntu/Debian needs `build-essential` and `gfortran`.
+
+### MiKTeX setup
+
+Windows:
+
+1. Download and run the [Basic MiKTeX Installer](https://miktex.org/download).
+2. Choose a private per-user installation.
+3. Set **Install missing packages on-the-fly** to **Always**.
+4. Close and reopen PowerShell or Command Prompt.
+
+macOS:
+
+1. Install MiKTeX from the [official macOS instructions](https://miktex.org/howto/install-miktex-mac).
+2. Finish the private setup in MiKTeX Console and enable automatic installation of missing packages.
+3. If `xelatex` is not found, add MiKTeX's private `~/bin` directory to your terminal `PATH` using the [official PATH instructions](https://miktex.org/howto/modify-path).
+
+Linux:
+
+Follow the commands for your distribution on the [official MiKTeX download page](https://miktex.org/download), then finish the setup and enable automatic package installation. For Ubuntu 24.04, the commands are:
+
+```sh
+sudo apt-get update
+sudo apt-get install -y curl gnupg
+curl -fsSL https://miktex.org/download/key | sudo gpg --dearmor -o /usr/share/keyrings/miktex.gpg
+echo "deb [signed-by=/usr/share/keyrings/miktex.gpg] https://miktex.org/download/ubuntu noble universe" | sudo tee /etc/apt/sources.list.d/miktex.list
+sudo apt-get update
+sudo apt-get install -y miktex
+sudo miktexsetup --shared=yes finish
+sudo initexmf --admin --set-config-value='[MPM]AutoInstall=1'
 ```
 
-Without Make, run the corresponding commands from [Makefile](Makefile). The analysis uses the fixed project seed `4520803`. Raw data are never edited in place, and the held-out test target may only be used by `analysis/04_holdout_evaluation.R`.
+On every operating system, open a new terminal and verify the tools before rendering:
 
-## Automation
+```text
+Rscript --version
+pandoc --version
+xelatex --version
+```
 
-- Continuous integration validates the repository and data contract, runs the ordered analysis, renders the PDF report, and uploads it as a build artifact.
-- Continuous delivery runs for tags matching `v*` and creates a GitHub release containing the PDF report and reproducible source bundle.
-- Package versions are recorded in `renv.lock`; update it intentionally when dependencies change.
+The first command must report R 4.5.2. The last command should identify MiKTeX.
+
+## First run from a clean clone
+
+Open PowerShell, Command Prompt, macOS Terminal, or a Linux terminal. Clone the repository, enter its root folder, and run:
+
+```text
+git clone https://github.com/nguyendinhthienloc/Stats2.git
+cd Stats2
+Rscript --vanilla scripts/reproduce.R
+```
+
+That one R command:
+
+1. bootstraps the `renv` version in `renv.lock`;
+2. restores the exact locked R package versions;
+3. checks the R version, dependency declarations, lockfile, repository, and dataset;
+4. runs `analysis/00_run_all.R` in the required order.
+
+To run the same workflow and render the PDF with MiKTeX:
+
+```text
+Rscript --vanilla scripts/reproduce.R --report
+```
+
+Run commands from the repository root. There is no Make requirement.
+
+## Useful terminal commands
+
+```text
+Rscript --vanilla scripts/restore.R
+Rscript --vanilla scripts/ci_check.R
+Rscript --vanilla scripts/reproduce.R
+Rscript --vanilla scripts/reproduce.R --report
+```
+
+In order, these restore packages, validate the project, run the full analysis, and run the full analysis plus PDF report. The same commands work in PowerShell, Command Prompt, macOS Terminal, and Linux shells.
+
+## Why the restore is portable
+
+`renv.lock`, `renv/activate.R`, and `.Rprofile` are tracked. The generated `renv/library/` directory is ignored. Each computer restores its own operating-system-specific project library from the same lockfile, so never copy or commit another member's `renv/library/` directory.
+
+The restore is strict and non-interactive. It fails clearly if the active R version is not 4.5.2, a declared package is absent from the lockfile, or the restored library and lockfile disagree.
+
+## Updating R dependencies
+
+When intentionally adding or upgrading an R package:
+
+1. Add it to `Imports` in `DESCRIPTION`.
+2. Install it in the project library:
+
+   ```text
+   Rscript -e "renv::install('package-name')"
+   ```
+
+3. Update the lockfile:
+
+   ```text
+   Rscript -e "renv::snapshot(prompt = FALSE)"
+   ```
+
+4. Re-run the project and commit `DESCRIPTION` and `renv.lock` together:
+
+   ```text
+   Rscript --vanilla scripts/reproduce.R
+   ```
+
+Do not edit `renv.lock` manually.
+
+## Data and modelling safeguards
+
+- Project seed: `4520803`.
+- Treat `data/raw/` as immutable.
+- Generate derived data under `data/processed/`.
+- Fit preprocessing, feature selection, and tuning on training/resampling data only.
+- Inspect held-out test outcomes only in `analysis/04_holdout_evaluation.R`.
+- Run the stages through `analysis/00_run_all.R`, not in an arbitrary order.
+
+## Continuous integration
+
+CI runs the analysis command on Ubuntu, Windows, and macOS with R 4.5.2. A separate Ubuntu job installs MiKTeX from its official repository and runs the report command. This keeps cross-platform analysis checks fast while testing the exact documented PDF toolchain.
+
+GitHub branch protection still must be enabled before CI can be required for merges. Submission artifacts are assembled manually after CI passes.
 
 ## Deliverables
 
-- Written report: PDF, no more than 20 pages excluding appendices.
-- Reproducible source: R Markdown and R scripts that run top-to-bottom without manual intervention.
-- Presentation: 10 minutes.
+- PDF report, at most 20 pages excluding appendices.
+- Reproducible R Markdown and R source that run top-to-bottom.
+- Ten-minute presentation.
 
-See [TODO.md](TODO.md) for the complete requirement checklist and open decisions.
+See [TODO.md](TODO.md) for the requirement checklist and open decisions.

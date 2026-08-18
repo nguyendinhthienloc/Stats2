@@ -18,15 +18,19 @@ PROJECT_ROOT <- normalizePath(file.path(dirname(SETUP_FILE), ".."),
                               winslash = "/", mustWork = TRUE)
 
 
-project_library_root <- file.path(PROJECT_ROOT, "renv", "library")
-if (dir.exists(project_library_root)) {
-  project_libraries <- list.dirs(project_library_root, recursive = TRUE,
-                                 full.names = TRUE)
-  project_library <- project_libraries[
-    file.exists(file.path(project_libraries, "renv", "DESCRIPTION"))
-  ]
-  if (length(project_library) > 0L) {
-    .libPaths(c(project_library[[length(project_library)]], .Library))
+# A canonical reproduction run activates renv before sourcing this file. The
+# fallback below only supports direct `Rscript --vanilla analysis/...` calls.
+if (!nzchar(Sys.getenv("RENV_PROJECT", unset = ""))) {
+  project_library_root <- file.path(PROJECT_ROOT, "renv", "library")
+  if (dir.exists(project_library_root)) {
+    project_libraries <- list.dirs(project_library_root, recursive = TRUE,
+                                   full.names = TRUE)
+    project_library <- project_libraries[
+      file.exists(file.path(project_libraries, "renv", "DESCRIPTION"))
+    ]
+    if (length(project_library) > 0L) {
+      .libPaths(c(project_library[[length(project_library)]], .Library))
+    }
   }
 }
 

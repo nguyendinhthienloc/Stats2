@@ -15,10 +15,10 @@ Default planning assumption: treat `quality` as a regression target. Confirm thi
 - [x] Archive the legacy midterm project under `legacy/midterm/`.
 - [x] Place the supplied Wine Quality archive and extracted source files under `data/raw/`.
 - [x] Validate the red-wine file contract: 1,599 rows, 11 predictors, and the `quality` target.
-- [x] Add CI for structure/data checks, the ordered analysis, PDF rendering, and artifact upload.
-- [x] Add tagged continuous delivery for the report and reproducible source bundle.
-- [ ] Keep `renv.lock` current whenever an R dependency is added or upgraded.
-- [ ] Verify a clean clone can restore packages and run the analysis top-to-bottom.
+- [x] Add CI for cross-platform analysis checks, MiKTeX PDF rendering, and artifact upload.
+- [x] Standardize the PDF toolchain on MiKTeX and document direct terminal commands for every workflow.
+- [x] Keep `renv.lock` current whenever an R dependency is added or upgraded; automated checks enforce synchronization.
+- [x] Verify a clean clone can restore packages and run the analysis top-to-bottom (tested with a separate empty project library on 2026-08-18).
 - [ ] Require CI to pass before merging changes.
 
 ## Decisions needed before analysis
@@ -91,7 +91,7 @@ Default planning assumption: treat `quality` as a regression target. Confirm thi
 - [ ] Prepare a 10-minute presentation with a timed rehearsal.
 - [ ] Add a concise contribution statement for all five group members.
 - [ ] Package the PDF report, reproducible R Markdown/source code, and presentation.
-- [ ] Create a version tag only after CI passes; the release workflow will publish the submission artifacts.
+- [ ] Assemble the final submission artifacts after CI passes.
 
 ## Suggested ownership discussion
 
@@ -107,8 +107,9 @@ Every result should have a second-person review, regardless of lead ownership.
 
 ## Definition of done
 
-- [ ] A clean clone restores dependencies without manual fixes.
-- [ ] `make check` passes locally and CI is green.
+- [x] A clean clone restores dependencies without manual fixes.
+- [x] `Rscript --vanilla scripts/reproduce.R` passes locally.
+- [ ] CI is green on GitHub and required before merging.
 - [ ] The complete analysis runs top-to-bottom with fixed seeds.
 - [ ] No preprocessing, feature selection, or tuning uses held-out test outcomes.
 - [ ] The report PDF, source bundle, and presentation are generated and reviewed.
