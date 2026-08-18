@@ -1,0 +1,8 @@
+legacy/
+references/
+tmp/
+artifacts/
+dist/
+data/raw/
+output/
+presentation/

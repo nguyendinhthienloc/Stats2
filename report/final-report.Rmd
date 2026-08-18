@@ -1,0 +1,80 @@
+---
+title: "STAT452 Final Project: Wine Quality and Experimental Design"
+author:
+  - "Trần Lê Anh Tuấn"
+  - "Nguyễn Bảo Minh Triết"
+  - "Nguyễn Đình Thiên Lộc"
+  - "Nguyễn Hồng Tấn Tài"
+  - "Lê Minh Thuận"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+bibliography: references.bib
+output:
+  pdf_document:
+    latex_engine: xelatex
+    number_sections: true
+    toc: true
+    keep_tex: false
+fontsize: 11pt
+geometry: margin=1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                      fig.pos = "H")
+source("../R/setup.R")
+wine_red <- read_wine_red()
+```
+
+# Executive summary
+
+TODO: Summarize the Part 1 predictive findings, the Part 2 experimental-design findings, and the most important limitations.
+
+# Part 1: Wine Quality (Red)
+
+The assigned data contain `r nrow(wine_red)` observations, `r ncol(wine_red) - 1L` physicochemical predictors, and the `quality` response [@cortez2009wine].
+
+## Exploratory data analysis
+
+TODO: Describe variables, distributions, pairwise relationships, correlations, and modelling implications.
+
+## Cleaning and preprocessing
+
+TODO: Document missing-value, duplicate, outlier, transformation, splitting, and training-only preprocessing decisions.
+
+## Feature selection
+
+TODO: Report the principled selection method, results, stability, and interpretation.
+
+## Baseline and regularized models
+
+TODO: Compare the baseline, Ridge, Lasso, and any Elastic Net model using shared cross-validation folds and coefficient-path evidence.
+
+## Held-out evaluation
+
+TODO: Compare models fairly on the locked test set and discuss uncertainty, diagnostics, and the bias-variance trade-off.
+
+# Part 2: Experimental-design extension
+
+## Dataset, research questions, and hypotheses
+
+TODO: Introduce and justify the separate dataset and state hypotheses before analysis.
+
+## Descriptive statistics and assumptions
+
+TODO: Add summaries, interaction plots, and checks for normality, equal variance, and independence.
+
+## ANOVA or factorial-design results
+
+TODO: Interpret main effects, interactions, model adequacy, and post-hoc comparisons where justified.
+
+# Conclusions and limitations
+
+TODO: Provide actionable conclusions, practical significance, limitations, and improvements.
+
+# Contributions
+
+TODO: State each member's contribution.
+
+\newpage
+
+# References {-}

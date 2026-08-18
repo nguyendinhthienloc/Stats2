@@ -1,0 +1,20 @@
+Package: stats452final
+Type: Project
+Title: STAT452 Group 8 Final Project
+Version: 0.1.0
+Authors@R: c(
+    person("STAT452", "Group 8", role = c("aut", "cre"),
+           email = "ndtloc2407@apcs.fitus.edu.vn")
+  )
+Description: Reproducible analysis of the UCI Wine Quality (Red) data with
+    regularized supervised-learning models, plus an experimental-design
+    extension using ANOVA or factorial design.
+License: file LICENSE
+Encoding: UTF-8
+Depends:
+    R (>= 4.5.0)
+Imports:
+    ggplot2,
+    glmnet,
+    knitr,
+    rmarkdown

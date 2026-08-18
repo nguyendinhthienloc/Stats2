@@ -1,0 +1,51 @@
+# R and project-local libraries
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.Rlib/
+renv/library/
+renv/staging/
+
+# Generated analysis artifacts
+data/processed/*
+!data/processed/.gitkeep
+output/figures/*
+!output/figures/.gitkeep
+output/tables/*
+!output/tables/.gitkeep
+output/models/*
+!output/models/.gitkeep
+
+# Report build intermediates
+report/*.aux
+report/*.bbl
+report/*.bcf
+report/*.blg
+report/*.fdb_latexmk
+report/*.fls
+report/*.log
+report/*.out
+report/*.run.xml
+report/*.synctex.gz
+report/*.tex
+report/*.toc
+report/*.xdv
+report/*_files/
+report/*_cache/
+
+# Distribution and temporary files
+artifacts/
+dist/
+tmp/
+scratch/
+*.tmp
+
+# Editors and operating systems
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Preserve final deliverables when intentionally added
+!report/final-report.pdf
+!presentation/final-presentation.pdf
