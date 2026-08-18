@@ -1,0 +1,41 @@
+<!-- Owner: P3 — Lê Minh Thuận -->
+
+# Feature Selection
+
+## Screening without deleting correlated information
+
+We use three training-only views of relevance: marginal correlations, variance
+inflation factors (VIFs), and an AIC stepwise sensitivity analysis. The largest
+VIF is `r fmt(max_vif_row$VIF, 2)` for
+`r pretty_feature(max_vif_row$Feature)`. This is material multicollinearity but
+not evidence that the feature is useless: deleting one correlated chemistry
+measure can make the retained coefficient depend arbitrarily on that choice.
+Therefore all predictors enter Ridge, while sparse selection is delegated to
+Lasso's embedded penalty.
+
+\includefigure{../output/figures/fig_p3_feature_screening.pdf}{VIFs and full-OLS coefficients after the training-derived transformations. Coefficients are comparable because predictors are standardized.}{fig:p3-screening}
+
+The AIC sensitivity model retains
+`r length(analysis_summary$stepwise_features)` of 11 predictors:
+`r paste(pretty_feature(analysis_summary$stepwise_features), collapse = ", ")`.
+We do not promote this data-dependent subset directly to the holdout comparison;
+it is a diagnostic against which to compare Lasso.
+
+## Mean and OLS baselines
+
+\tightinputtable{../output/tables/tab_p3_baseline_performance.tex}
+
+The mean-only model establishes the no-chemistry benchmark. OLS lowers
+cross-validated error, but correlated predictors allow coefficient variance.
+Regularization deliberately accepts some training bias to reduce that variance.
+
+## Embedded Lasso selection
+
+At the one-standard-error penalty, Lasso retains
+`r nrow(selected_lasso)` predictors:
+`r if (nrow(selected_lasso)) paste(pretty_feature(selected_lasso$Feature), collapse = ", ") else "none"`.
+This is the required principled feature-selection result. The one-SE rule is
+used for interpretation because it favors a stable sparse description; the
+minimum-CV penalty remains the predeclared predictive fit.
+
+\tightinputtable{../output/tables/tab_p4_lasso_selection.tex}

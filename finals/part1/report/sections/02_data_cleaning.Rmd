@@ -1,0 +1,51 @@
+<!-- Section 2 owner: P2 — Trần Lê Anh Tuấn -->
+
+# Data Cleaning
+
+## Missingness, duplicates, and the locked split
+
+The raw archive contains `r analysis_summary$config$raw_rows` rows, 11 numeric
+predictors, no missing cells, and no non-finite values. It also contains
+`r analysis_summary$config$duplicate_rows` exact duplicate records. Because the
+archive provides no sample identifier, an exact repeat could be either a copied
+row or a genuinely repeated batch. We conservatively keep the first copy and
+remove the rest **before** splitting, preventing identical profiles and labels
+from appearing in both training and holdout data. The limitation is that this
+choice may underweight genuinely repeated batches.
+
+\tightinputtable{../output/tables/tab_p1_data_audit.tex}
+
+The fixed seed `r analysis_summary$config$seed_split` produces a
+quality-stratified 80/20 partition after deduplication. Seed
+`r analysis_summary$config$seed_folds` then assigns five stratified folds inside
+training. The shared fold IDs are reused by every model.
+
+\tightinputtable{../output/tables/tab_p1_split_summary.tex}
+
+## Outliers and transformations
+
+Tukey's 1.5-IQR rule flags `r analysis_summary$rows_with_any_iqr_flag` training
+rows (`r fmt(100 * analysis_summary$rows_with_any_iqr_flag / analysis_summary$config$training_rows, 1)`%).
+Deleting all of them would discard a large and scientifically plausible part of
+the target population; the dataset metadata also warns that rare wines are
+expected. We therefore retain every row, winsorize each predictor at its
+training 1st and 99th percentiles to limit leverage, and never clip the response.
+
+\includefigure{../output/figures/fig_p2_outlier_audit.pdf}{Training observations flagged by the univariate Tukey-IQR rule. Flags are diagnosed and retained rather than deleted wholesale.}{fig:p2-outliers}
+
+The training skewness rule selects
+`r paste(pretty_feature(analysis_summary$log_features), collapse = ", ")`
+for `log1p` transformation. Median imputation is defined as a reproducibility
+safeguard but is a no-op for this dataset. After winsorization and optional
+`log1p`, all predictors are centered and scaled so penalty magnitudes are
+comparable.
+
+## Leakage control
+
+All medians, winsorization limits, transformation choices, means, and standard
+deviations are learned without holdout outcomes. During cross-validation, those
+quantities are refit inside each analysis fold and applied to its validation
+fold. The final recipe is fit once to all training predictors and then applied
+unchanged to the predictor-only holdout file. This design prevents preprocessing
+information from leaking backward into feature selection or tuning.
+

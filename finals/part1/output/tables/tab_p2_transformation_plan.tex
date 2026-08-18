@@ -1,0 +1,24 @@
+\begin{table}
+
+\caption{\label{tab:p2-transformation-plan}Training-only transformation and winsorization plan.}
+\centering
+\begin{tabular}[t]{lrrrrl}
+\toprule
+Variable & Raw\_Skewness & IQR\_Flags & Winsor\_Lower & Winsor\_Upper & Transformation\\
+\midrule
+fixed\_acidity & 0.9245 & 31 & 5.1000 & 13.2130 & standardize\\
+volatile\_acidity & 0.8077 & 18 & 0.2000 & 1.0400 & standardize\\
+citric\_acid & 0.2631 & 0 & 0.0000 & 0.7113 & standardize\\
+residual\_sugar & 4.6767 & 98 & 1.4000 & 8.3000 & log1p + standardize\\
+chlorides & 5.4213 & 80 & 0.0419 & 0.3732 & log1p + standardize\\
+\addlinespace
+free\_sulfur\_dioxide & 1.1919 & 21 & 3.0000 & 48.2600 & log1p + standardize\\
+total\_sulfur\_dioxide & 1.6105 & 34 & 8.0000 & 144.1300 & log1p + standardize\\
+density & 0.0134 & 28 & 0.9918 & 1.0014 & standardize\\
+ph & 0.2582 & 23 & 2.9300 & 3.6913 & standardize\\
+sulphates & 2.3385 & 46 & 0.4287 & 1.3126 & log1p + standardize\\
+\addlinespace
+alcohol & 0.8544 & 7 & 9.0000 & 13.5710 & standardize\\
+\bottomrule
+\end{tabular}
+\end{table}

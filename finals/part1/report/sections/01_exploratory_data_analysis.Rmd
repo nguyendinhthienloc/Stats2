@@ -1,0 +1,57 @@
+<!-- Section 1 owner: P1 — Nguyễn Đình Thiên Lộc -->
+
+# Exploratory Data Analysis
+
+## Dataset, variables, and prediction question
+
+The UCI Wine Quality data describe red Portuguese Vinho Verde samples using 11
+continuous physicochemical measurements and a sensory score supplied as the
+median of at least three expert ratings [@Cortez2009; @UCIWine]. The response is
+`quality`; the predictors cover acidity, sugar, chlorides, sulfur dioxide,
+density, pH, sulphates, and alcohol. All predictors are numeric, and the detailed
+data dictionary appears in Appendix A.
+
+We model quality numerically because regression preserves its ordering and
+avoids an arbitrary good/poor threshold. This assumes that a one-point change
+has roughly comparable meaning across the observed 3--8 range. Gaussian
+regression can produce fractional expected scores, so the interpretation is
+prediction of expected expert score rather than exact ordinal classification.
+
+After the integrity checks in Section 2, the unique records were divided by a
+fixed quality-stratified 80/20 split. Every plot below uses only the
+`r analysis_summary$config$training_rows` training observations; the
+`r analysis_summary$config$holdout_rows` holdout outcomes were not inspected.
+
+## Response and predictor distributions
+
+\includefigure{../output/figures/fig_p2_quality_distribution.pdf}{Training-set distribution of the sensory response. Scores 5 and 6 dominate, while the extremes contain few observations.}{fig:p2-quality}
+
+The response is concentrated at 5 and 6. A mean-like prediction is therefore a
+strong baseline, and error estimates for rare scores 3, 4, and 8 will be less
+precise. This imbalance also foreshadows regression toward the center.
+
+\includefigure{../output/figures/fig_p2_predictor_distributions.pdf}{Training-set predictor distributions before transformation. Several chemistry measures are strongly right-skewed.}{fig:p2-distributions}
+
+Residual sugar, chlorides, sulfur-dioxide measures, and sulphates have long
+right tails. These distributions motivate the transformations documented in
+Section 2; EDA itself is shown on the original measurement scale.
+
+## Pairwise relationships and correlation structure
+
+\includefigure{../output/figures/fig_p2_correlation_heatmap.pdf}{Training-set Pearson correlations. Blocks among acidity, density, pH, and sulfur-dioxide measures motivate coefficient stabilization.}{fig:p2-correlation}
+
+The strongest marginal response signals are
+`r paste(sprintf("%s ($r=%s$)", pretty_feature(top_correlations$Variable), fmt(top_correlations$Correlation_with_quality, 2)), collapse = "; ")`.
+The heatmap also shows correlated predictor blocks, especially among acidity,
+density, pH, and the two sulfur-dioxide measurements. That structure makes OLS
+coefficients potentially unstable and directly motivates Ridge, Lasso, and
+Elastic Net.
+
+\includefigure{../output/figures/fig_p2_pairwise_quality.pdf}{The four strongest marginal predictor--quality relationships in training. Jitter reveals the discrete response; lines are descriptive OLS trends.}{fig:p2-pairwise}
+
+Alcohol is positively associated with quality and volatile acidity negatively
+associated, but every score overlaps substantially on every predictor. No
+single physicochemical measurement is sufficient. These are predictive
+associations, not causal effects, because grape variety, brand, vintage, price,
+and production conditions are absent.
+

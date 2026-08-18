@@ -1,0 +1,4 @@
+Locked model: Ridge
+Selection metric: Five-fold CV RMSE
+Cross-validated RMSE: 0.648708
+Rule: Lowest CV RMSE; selected before holdout outcomes are reconstructed

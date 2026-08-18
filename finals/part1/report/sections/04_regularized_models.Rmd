@@ -1,0 +1,42 @@
+<!-- Owner: P4 — Nguyễn Bảo Minh Triết -->
+
+# Modelling with Regularization
+
+For standardized transformed predictors, all regularized candidates minimize
+
+\[
+\frac{1}{2n}\lVert \mathbf y-\beta_0-\mathbf X\boldsymbol\beta\rVert_2^2
++\lambda\left\{\alpha\lVert\boldsymbol\beta\rVert_1
++\frac{1-\alpha}{2}\lVert\boldsymbol\beta\rVert_2^2\right\}.
+\]
+
+Ridge uses $\alpha=0$ [@Hoerl1970], Lasso $\alpha=1$ [@Tibshirani1996],
+and Elastic Net searches $\alpha\in\{0.25,0.50,0.75\}$ [@Zou2005]. For each
+alpha, 120 decreasing $\lambda$ values from 100 to $10^{-4}$ use identical
+folds. Coordinate-descent fits are produced with `glmnet` [@Friedman2010].
+
+## Cross-validation and shrinkage
+
+\includefigure{../output/figures/fig_p4_cv_curves.pdf}{Five-fold training CV curves with fold-specific preprocessing. Dashed lines minimize CV error; dotted lines apply the one-standard-error rule.}{fig:p4-cv}
+
+Elastic Net selected $\alpha=`r fmt(analysis_summary$enet_alpha, 2)`$. The
+minimum-error and one-SE penalties, CV errors, and effective model sizes are
+reported below. Ridge keeps all coefficients but continuously shrinks them;
+Lasso and Elastic Net can set coefficients exactly to zero.
+
+\tightinputtable{../output/tables/tab_p4_regularized_display.tex}
+
+\includefigure{../output/figures/fig_p4_coefficient_paths.pdf}{Coefficient paths as regularization changes. The vertical line in each panel is the minimum-CV penalty used for prediction.}{fig:p4-paths}
+
+As $\lambda$ grows, paths move toward zero. Lasso reaches exact zeros earliest;
+Ridge shares weight among correlated measurements; Elastic Net interpolates.
+This is the expected bias--variance mechanism rather than merely a software
+choice.
+
+## Pre-holdout decision
+
+Before reconstructing any holdout outcome, we locked
+**`r locked_model`**, whose five-fold CV RMSE was
+`r fmt(analysis_summary$model_lock$CV_RMSE[[1]], 4)`. This written lock prevents
+choosing a preferred model after seeing test performance. All predeclared models
+are nevertheless evaluated to make the comparison transparent.

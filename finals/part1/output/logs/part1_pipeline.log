@@ -1,0 +1,65 @@
+STAT452 Group 08 — Part 1 pipeline
+Started: 2026-08-18 13:57:09 UTC
+R: 4.6.1
+Working root: D:/reps/Stats2/finals/part1
+
+
+===== 1/5 R/01_p1_data_prep.R =====
+ >>> [20:57:10] INFO  Part 1 setup loaded | root=D:/reps/Stats2/finals/part1 | R=4.6.1 | glmnet=5.0
+>>> [20:57:10] STEP  P1: ingesting and validating Wine Quality (Red)
+>>> [20:57:10] STEP  P1: creating the fixed, quality-stratified 80/20 split
+>>> [20:57:11] STEP  P1: writing portable data and split artifacts
+>>> [20:57:11] INFO  P1 complete | raw=1599 | unique=1359 | training=1088 | holdout=271 | duplicates removed=240 
+
+===== 2/5 R/02_p2_eda_cleaning.R =====
+ >>> [20:57:12] INFO  Part 1 setup loaded | root=D:/reps/Stats2/finals/part1 | R=4.6.1 | glmnet=5.0
+>>> [20:57:12] STEP  P2: auditing distributions and selecting training-only transformations
+>>> [20:57:12] STEP  P2: generating training-only EDA figures
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+>>> [20:57:12] INFO  P2 complete | log1p features=residual_sugar, chlorides, free_sulfur_dioxide, total_sulfur_dioxide, sulphates | rows with >=1 IQR flag=283 (26.0%) 
+
+===== 3/5 R/03_p3_feature_selection.R =====
+ >>> [20:57:14] INFO  Part 1 setup loaded | root=D:/reps/Stats2/finals/part1 | R=4.6.1 | glmnet=5.0
+>>> [20:57:14] STEP  P3: computing correlation/VIF screening and baseline models
+null device 
+          1 
+>>> [20:57:14] INFO  P3 complete | max VIF=8.07 | AIC sensitivity retained=7/11 | OLS CV RMSE=0.650 
+
+===== 4/5 R/04_p4_regularized_models.R =====
+ >>> [20:57:15] INFO  Part 1 setup loaded | root=D:/reps/Stats2/finals/part1 | R=4.6.1 | glmnet=5.0
+>>> [20:57:15] STEP  P4: tuning Ridge, Lasso, and Elastic Net on shared fold IDs
+>>> [20:57:15] INFO  P4 CV alpha=0
+>>> [20:57:15] INFO  P4 CV alpha=0.25
+>>> [20:57:15] INFO  P4 CV alpha=0.5
+>>> [20:57:16] INFO  P4 CV alpha=0.75
+>>> [20:57:16] INFO  P4 CV alpha=1
+null device 
+          1 
+null device 
+          1 
+null device 
+          1 
+>>> [20:57:16] INFO  P4 complete | Elastic Net alpha=0.75 | locked model=Ridge | locked CV RMSE=0.6487 
+
+===== 5/5 R/04_holdout.R =====
+ >>> [20:57:17] INFO  Part 1 setup loaded | root=D:/reps/Stats2/finals/part1 | R=4.6.1 | glmnet=5.0
+>>> [20:57:17] STEP  P5: reconstructing the locked holdout response for one-time evaluation
+>>> [20:57:17] STEP  P5: bootstrapping metric uncertainty with a fixed seed
+>>> [20:57:17] STEP  P5: generating locked holdout diagnostic figures
+null device 
+          1 
+null device 
+          1 
+>>> [20:57:18] INFO  P5 complete | locked=Ridge | observed holdout winner=OLS | best RMSE=0.6996 
+Completed: 2026-08-18 13:57:18 UTC
+Elapsed seconds: 8.5
+

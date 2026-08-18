@@ -1,0 +1,59 @@
+<!-- Owner: P5 — Nguyễn Hồng Tấn Tài -->
+
+# Evaluation
+
+## Fair model comparison
+
+\tightinputtable{../output/tables/tab_p5_holdout_display.tex}
+
+On the same `r analysis_summary$config$holdout_rows` rows, the pre-locked
+`r locked_model` obtained RMSE `r fmt(locked_row$Holdout_RMSE)`, MAE
+`r fmt(locked_row$Holdout_MAE)`, and $R^2$ `r fmt(locked_row$Holdout_R2)`.
+The observed lowest holdout RMSE belongs to **`r best_row$Model`**
+(`r fmt(best_row$Holdout_RMSE)`). We retain the CV lock as the confirmatory
+choice even if this ranking differs: selecting by the holdout would make its
+error optimistic. The bootstrap intervals are wide enough that small ranking
+differences should not be overinterpreted.
+
+\includefigure{../output/figures/fig_p5_actual_vs_predicted.pdf}{Held-out predictions from the four fitted regression models. The diagonal denotes perfect prediction.}{fig:p5-predictions}
+
+Predictions shrink toward the common scores 5--6, which lowers average error but
+systematically misses rare extremes. This pattern follows from response
+imbalance and squared-error fitting, not simply from regularization.
+
+## Diagnostics and bias--variance trade-off
+
+\includefigure{../output/figures/fig_p5_locked_residual_diagnostics.pdf}{Residual checks for the pre-locked model on the untouched holdout set. These diagnostics describe generalization and were not used to retune the model.}{fig:p5-residuals}
+
+OLS has the least shrinkage and therefore the lowest regularization bias but the
+greatest sensitivity to correlated predictors. Ridge reduces coefficient
+variance without selection; Lasso trades additional bias for sparsity; Elastic
+Net stabilizes groups of correlated features while retaining some selection.
+The relevant empirical comparison is the gap among training, CV, and holdout
+RMSE in Table \ref{tab:p5-holdout-display}. The regularized candidates have
+similar held-out accuracy, so stability and interpretability matter more than a
+small decimal-place difference.
+
+## Limitations
+
+1. Quality is ordinal and discrete; Gaussian regression treats adjacent scores
+   as equally spaced and permits fractional predictions.
+2. Rare scores 3, 4, and 8 yield imprecise tail performance, while the bootstrap
+   quantifies only sampling variation in this holdout.
+3. Exact deduplication prevents leakage but may remove genuinely repeated
+   batches because the archive has no sample identifier.
+4. Physicochemical measurements omit brand, vintage, grape variety, price, and
+   production process; predictive associations are not causal effects.
+5. Winsorization limits leverage and log transforms reduce skew, but alternative
+   robust losses or ordinal models could change tail behavior.
+
+## Conclusion
+
+The full workflow meets the Part 1 objective: documented EDA and cleaning,
+principled selection, a baseline plus three regularized models, shared-fold CV,
+coefficient-path interpretation, and a single locked holdout evaluation.
+`r locked_model` is the confirmatory recommendation for expected-score
+prediction under this design. Alcohol and volatile acidity provide the strongest
+marginal signals, but correlated chemistry measurements and irreducible sensory
+variation limit accuracy. A future extension should compare ordinal regression
+or robust nonlinear models under the same locked resampling protocol.

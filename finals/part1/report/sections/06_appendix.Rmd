@@ -1,0 +1,52 @@
+<!-- Integration appendix; generated artifacts are owned by P1–P5 -->
+
+\clearpage
+\appendix
+
+# Detailed data documentation
+
+\tightinputtable{../output/tables/tab_p1_data_dictionary.tex}
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p2_descriptive_statistics.tex}
+\endgroup
+
+# Cleaning and outlier audit
+
+\tightinputtable{../output/tables/tab_p2_outlier_audit.tex}
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p2_transformation_plan.tex}
+\endgroup
+
+\includefigure{../output/figures/fig_p2_outlier_audit.pdf}{Training observations flagged by the univariate Tukey-IQR rule. Flags are diagnosed rather than deleted wholesale.}{fig:appendix-outliers}
+
+# Supplementary selection and model tables
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p3_feature_screening.tex}
+\endgroup
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p4_coefficient_comparison.tex}
+\endgroup
+
+\tightinputtable{../output/tables/tab_p4_enet_alpha_search.tex}
+
+\tightinputtable{../output/tables/tab_p5_error_by_quality.tex}
+
+# Reproducibility and collaboration
+
+The analysis is rebuilt with one command:
+`Rscript --vanilla finals/part1/R/00_build_part1.R`. The five scripts are
+executed in ownership order, every random operation uses a recorded seed, and
+`output/artifact_manifest.csv` stores file sizes and MD5 checksums. Row-level
+holdout outcomes are not serialized. Software versions for the verified run
+are listed below; full `sessionInfo()` is in `output/logs/session_info.txt`.
+
+\tightinputtable{../output/tables/tab_reproducibility_versions.tex}
+
+The workstream allocation and review interfaces are documented in
+`collaboration/WORK_SPLIT.md`. These organizational labels must be checked
+against the members' actual contributions before final submission.
+

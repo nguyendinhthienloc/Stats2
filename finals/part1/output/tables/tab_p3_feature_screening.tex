@@ -1,0 +1,24 @@
+\begin{table}
+
+\caption{\label{tab:p3-feature-screening}Training-only feature screening and OLS coefficients on the standardized scale.}
+\centering
+\begin{tabular}[t]{llrrrl}
+\toprule
+  & Feature & Correlation\_with\_quality & VIF & OLS\_standardized\_coefficient & Stepwise\_AIC\_retained\\
+\midrule
+11 & alcohol & 0.501 & 3.559 & 0.297 & Yes\\
+2 & volatile\_acidity & -0.398 & 1.750 & -0.187 & Yes\\
+10 & sulphates & 0.308 & 1.469 & 0.186 & Yes\\
+3 & citric\_acid & 0.249 & 3.046 & -0.032 & No\\
+7 & total\_sulfur\_dioxide & -0.179 & 3.378 & -0.100 & Yes\\
+\addlinespace
+8 & density & -0.173 & 7.011 & -0.052 & No\\
+1 & fixed\_acidity & 0.136 & 8.075 & 0.054 & No\\
+5 & chlorides & -0.134 & 1.435 & -0.087 & Yes\\
+4 & residual\_sugar & 0.070 & 1.794 & 0.045 & No\\
+9 & ph & -0.070 & 3.423 & -0.064 & Yes\\
+\addlinespace
+6 & free\_sulfur\_dioxide & -0.067 & 3.013 & 0.052 & Yes\\
+\bottomrule
+\end{tabular}
+\end{table}

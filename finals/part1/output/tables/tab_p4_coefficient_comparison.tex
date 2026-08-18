@@ -1,0 +1,24 @@
+\begin{table}
+
+\caption{\label{tab:p4-coefficient-comparison}Coefficients at minimum-CV penalties on the standardized transformed scale.}
+\centering
+\begin{tabular}[t]{lrrrr}
+\toprule
+Feature & OLS & Ridge & Lasso & Elastic\_Net\\
+\midrule
+fixed\_acidity & 0.0537 & 0.0594 & 0.0000 & 0.0000\\
+volatile\_acidity & -0.1866 & -0.1763 & -0.1773 & -0.1770\\
+citric\_acid & -0.0322 & -0.0134 & 0.0000 & 0.0000\\
+residual\_sugar & 0.0448 & 0.0466 & 0.0142 & 0.0149\\
+chlorides & -0.0873 & -0.0845 & -0.0771 & -0.0777\\
+\addlinespace
+free\_sulfur\_dioxide & 0.0517 & 0.0405 & 0.0060 & 0.0086\\
+total\_sulfur\_dioxide & -0.1004 & -0.0906 & -0.0558 & -0.0586\\
+density & -0.0525 & -0.0670 & 0.0000 & 0.0000\\
+ph & -0.0639 & -0.0493 & -0.0604 & -0.0609\\
+sulphates & 0.1863 & 0.1795 & 0.1650 & 0.1653\\
+\addlinespace
+alcohol & 0.2970 & 0.2759 & 0.3235 & 0.3222\\
+\bottomrule
+\end{tabular}
+\end{table}

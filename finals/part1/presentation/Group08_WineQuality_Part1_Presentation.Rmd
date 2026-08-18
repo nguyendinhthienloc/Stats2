@@ -1,0 +1,155 @@
+---
+title: "Can Chemistry Predict Red Wine Quality?"
+subtitle: "STAT452 Final Project — Part 1"
+author: "Group 08"
+date: "Academic Year 2025–2026"
+output:
+  beamer_presentation:
+    latex_engine: xelatex
+    theme: Madrid
+    colortheme: default
+    fonttheme: professionalfonts
+    slide_level: 2
+    keep_tex: false
+    includes:
+      in_header: header.tex
+classoption: aspectratio=169
+---
+
+```{r setup, include=FALSE}
+input_file <- normalizePath(knitr::current_input(dir = TRUE), winslash = "/",
+                            mustWork = TRUE)
+source(file.path(dirname(input_file), "..", "setup.R"))
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_knit$set(root.dir = PART1_ROOT)
+options(knitr.graphics.rel_path = FALSE)
+if (!file.exists(file.path(OUTPUT_DIR, "analysis_summary.RData"))) {
+  source(file.path(PART1_ROOT, "R", "00_run_all.R"),
+         local = new.env(parent = globalenv()))
+}
+load(file.path(OUTPUT_DIR, "analysis_summary.RData"))
+performance <- analysis_summary$holdout$performance
+locked_model <- analysis_summary$model_lock$Locked_model[[1]]
+locked_row <- performance[performance$Model == locked_model, ]
+winner <- performance[which.min(performance$Holdout_RMSE), ]
+selected <- subset(analysis_summary$lasso_selection, Selected == "Yes")
+fmt <- function(x, d = 3) formatC(x, digits = d, format = "f")
+pretty_feature <- function(x) gsub("_", " ", x)
+```
+
+## Question and design
+
+**Question:** predict expert red-wine quality from 11 physicochemical measurements.
+
+- Regression preserves the ordered 3--8 score without inventing a threshold.
+- `r analysis_summary$config$raw_rows` raw rows; `r analysis_summary$config$duplicate_rows`
+  exact duplicates removed before splitting.
+- Fixed, quality-stratified split:
+  `r analysis_summary$config$training_rows` train / `r analysis_summary$config$holdout_rows` holdout.
+- Holdout outcomes opened once, after model choice.
+
+**Primary metric:** RMSE; **supporting:** MAE and $R^2$.
+
+## What the training data show
+
+```{r quality-figure, out.width='82%', fig.align='center'}
+knitr::include_graphics(file.path(FIGURE_DIR, "fig_p2_quality_distribution.pdf"))
+```
+
+Scores 5--6 dominate; rare extremes will be hard to learn precisely.
+
+## Chemistry signals are correlated
+
+```{r correlation-figure, out.width='72%', fig.align='center'}
+knitr::include_graphics(file.path(FIGURE_DIR, "fig_p2_correlation_heatmap.pdf"))
+```
+
+Alcohol is the strongest positive marginal signal; volatile acidity is the
+strongest negative signal. Correlated acidity/density/pH measures motivate
+regularization.
+
+## Cleaning and leakage controls
+
+- No missing or non-finite values; median imputation remains a safe no-op.
+- IQR rules flag `r analysis_summary$rows_with_any_iqr_flag` training rows, so
+  deleting every flag would change the population.
+- Winsorize predictors at training 1st/99th percentiles; never clip quality.
+- `log1p`: `r paste(pretty_feature(analysis_summary$log_features), collapse = ", ")`.
+- Standardize after transformation.
+- Every CV fold refits imputation, limits, centering, and scaling.
+
+## Feature relevance
+
+```{r screening-figure, out.width='88%', fig.align='center'}
+knitr::include_graphics(file.path(FIGURE_DIR, "fig_p3_feature_screening.pdf"))
+```
+
+Lasso one-SE selection retains **`r nrow(selected)` / 11** predictors:
+`r paste(pretty_feature(selected$Feature), collapse = ", ")`.
+
+## Models and tuning
+
+We compare mean and OLS baselines with:
+
+\[
+\text{loss}+\lambda\{\alpha\|\beta\|_1+(1-\alpha)\|\beta\|_2^2/2\}.
+\]
+
+- Ridge: $\alpha=0$
+- Lasso: $\alpha=1$
+- Elastic Net: CV chose $\alpha=`r fmt(analysis_summary$enet_alpha, 2)`$
+- Same five folds and 120 $\lambda$ values for fair comparison
+
+```{r cv-figure, out.width='88%', fig.align='center'}
+knitr::include_graphics(file.path(FIGURE_DIR, "fig_p4_cv_curves.pdf"))
+```
+
+## Coefficient shrinkage
+
+```{r paths-figure, out.width='90%', fig.align='center'}
+knitr::include_graphics(file.path(FIGURE_DIR, "fig_p4_coefficient_paths.pdf"))
+```
+
+- Ridge shares weight across correlated variables.
+- Lasso yields exact zeros and a sparse interpretation.
+- Elastic Net combines grouped shrinkage and selection.
+
+**Locked before holdout:** `r locked_model`, CV RMSE `r fmt(analysis_summary$model_lock$CV_RMSE[[1]])`.
+
+## Untouched holdout results
+
+```{r results-table, results='asis'}
+slide_table <- performance[, c("Model", "CV_RMSE", "Holdout_RMSE",
+                               "Holdout_MAE", "Holdout_R2", "Locked_by_CV")]
+names(slide_table) <- c("Model", "CV RMSE", "Test RMSE", "Test MAE", "$R^2$", "Locked")
+cat(knitr::kable(slide_table, format = "latex", booktabs = TRUE, digits = 3,
+                 escape = FALSE))
+```
+
+Locked `r locked_model`: RMSE **`r fmt(locked_row$Holdout_RMSE)`**, MAE
+**`r fmt(locked_row$Holdout_MAE)`**, $R^2$ **`r fmt(locked_row$Holdout_R2)`**.
+Observed lowest RMSE: `r winner$Model`; we do not relabel it as the confirmatory
+winner after seeing the holdout.
+
+## What the errors mean
+
+```{r predictions-figure, out.width='69%', fig.align='center'}
+knitr::include_graphics(file.path(FIGURE_DIR, "fig_p5_actual_vs_predicted.pdf"))
+```
+
+All models shrink predictions toward 5--6 and miss rare extremes. Small ranking
+differences are less important than the shared stability gain and honest
+uncertainty.
+
+## Takeaways and next steps
+
+1. A leakage-controlled regularized workflow improves on the mean benchmark.
+2. `r locked_model` is the predeclared recommendation for expected-score prediction.
+3. Alcohol and volatile acidity are useful, but no measurement acts alone.
+4. Limitations: ordinal target, rare tail scores, unknown duplicate provenance,
+   and omitted production/market variables.
+5. Next: compare ordinal or robust nonlinear models under the same locked split.
+
+**Reproducibility:** one build command, fixed seeds, modular five-person
+workstreams, PDF figures, CSV/LaTeX tables, model lock, artifact checksums, and
+session information.

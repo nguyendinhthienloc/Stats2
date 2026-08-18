@@ -1,0 +1,22 @@
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\definecolor{GroupBlue}{HTML}{2878B5}
+\newcommand{\includefigure}[3]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{#1}{%
+      \includegraphics[width=0.96\linewidth,height=0.70\textheight,keepaspectratio]{#1}%
+    }{%
+      \fbox{\parbox[c][0.22\textheight][c]{0.86\linewidth}{\centering Missing figure: \texttt{#1}}}%
+    }
+    \caption{#2}
+    \label{#3}
+  \end{figure}%
+}
+\newcommand{\tightinputtable}[1]{%
+  \begingroup\small\setlength{\tabcolsep}{4pt}\input{#1}\endgroup%
+}

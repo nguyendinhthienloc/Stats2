@@ -1,0 +1,2 @@
+"Locked_model","Selection_metric","CV_RMSE","Rule"
+"Ridge","Five-fold CV RMSE",0.64870812602523,"Lowest CV RMSE; selected before holdout outcomes are reconstructed"

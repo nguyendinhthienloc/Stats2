@@ -1,0 +1,14 @@
+\begin{table}
+
+\caption{\label{tab:p4-regularized-summary}Cross-validated regularized-model tuning results before holdout evaluation.}
+\centering
+\begin{tabular}[t]{lrrrrrrrr}
+\toprule
+Model & Alpha & Lambda\_min & Lambda\_1se & Training\_RMSE & CV\_RMSE\_min & CV\_RMSE\_1se & Nonzero\_min & Nonzero\_1se\\
+\midrule
+Ridge & 0.00 & 0.0419 & 0.3800 & 0.6432 & 0.6487 & 0.6589 & 11 & 11\\
+Lasso & 1.00 & 0.0104 & 0.0470 & 0.6448 & 0.6489 & 0.6578 & 8 & 7\\
+Elastic Net & 0.75 & 0.0131 & 0.0666 & 0.6447 & 0.6489 & 0.6594 & 8 & 7\\
+\bottomrule
+\end{tabular}
+\end{table}
