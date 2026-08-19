@@ -21,6 +21,7 @@ Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratifie
 - [x] Document Fedora 43/44 setup.
 - [x] Keep `renv.lock` current whenever an R dependency is added or upgraded; automated checks enforce synchronization.
 - [x] Verify the pre-integration scaffold could restore from a clean library (2026-08-18 historical setup test).
+- [x] Remove the pre-merge duplicate data/output snapshot from `finals/part1/`; the root `data/` and `output/` trees are canonical.
 - [~] Re-run the integrated Part 1 workflow under locked R 4.5.2 in CI; local pipeline and artifact validation pass under R 4.6.1.
 - [ ] Require CI to pass before merging changes.
 

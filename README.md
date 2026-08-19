@@ -36,10 +36,10 @@ Part 1 is a regression analysis of the quality score. The locked protocol uses a
 
 The ordered scripts at the repository root are the canonical workflow. They
 incorporate the completed Part 1 modules under `finals/part1/`; do not run the
-retired nested entry points as a second pipeline. Tracked files already under
-`finals/part1/output/` are a pre-merge review snapshot and are not consumed
-by the canonical run. Part 2 remains an explicit TODO in
-`analysis/05_part2_experimental_design.R`.
+retired nested entry points as a second pipeline. All source data, derived
+data, and generated artifacts use the root `data/` and `output/` directories;
+`finals/part1/` contains implementation and report source only. Part 2 remains
+an explicit TODO in `analysis/05_part2_experimental_design.R`.
 
 ## What to install
 

@@ -45,6 +45,41 @@ if (length(missing)) {
        call. = FALSE)
 }
 
+manifest_file <- file.path(PROJECT_ROOT, "output", "artifact_manifest.csv")
+artifact_manifest <- utils::read.csv(manifest_file, stringsAsFactors = FALSE)
+if (!"File" %in% names(artifact_manifest) || anyDuplicated(artifact_manifest$File)) {
+  stop("The artifact manifest is malformed.", call. = FALSE)
+}
+output_root <- file.path(PROJECT_ROOT, "output")
+manifest_output <- artifact_manifest$File[
+  startsWith(artifact_manifest$File, "output/")
+]
+expected_output <- normalizePath(
+  file.path(PROJECT_ROOT, manifest_output),
+  winslash = "/", mustWork = FALSE
+)
+actual_output <- list.files(
+  output_root, recursive = TRUE, full.names = TRUE, all.files = TRUE,
+  no.. = TRUE
+)
+actual_output <- actual_output[
+  file.info(actual_output)$isdir %in% FALSE & basename(actual_output) != ".gitkeep"
+]
+actual_output <- normalizePath(actual_output, winslash = "/", mustWork = TRUE)
+allowed_output <- unique(c(expected_output, normalizePath(
+  manifest_file, winslash = "/", mustWork = TRUE
+)))
+unexpected_output <- actual_output[
+  !(tolower(actual_output) %in% tolower(allowed_output))
+]
+if (length(unexpected_output)) {
+  stop(
+    "Unexpected noncanonical output artifact(s): ",
+    paste(unexpected_output, collapse = ", "),
+    call. = FALSE
+  )
+}
+
 forbidden_outcome_copies <- file.path(
   paths$processed, c("winequality-red.csv", "winequality.names")
 )

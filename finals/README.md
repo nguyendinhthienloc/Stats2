@@ -1,13 +1,14 @@
 # STAT452 Final Project — Group 08
 
-This directory is the isolated submission workspace for the STAT452 final
-project.  The older body-fat midterm project at the repository root is not used
-for this analysis.
+This directory contains Part 1 implementation, report, presentation, and
+collaboration source integrated by the canonical root project. It is not a
+standalone data or output tree.
 
-- `part1/` contains the complete supervised-learning workflow for Project 03,
+- `part1/` contains the five supervised-learning workstreams for Project 03,
   Wine Quality (Red).
-- Part 2 and the eventual combined submission can be added beside `part1/`
-  without changing or overwriting the locked Part 1 analysis.
+- Part 2 belongs in root `analysis/05_part2_experimental_design.R` and the
+  combined root report.
 
-See `part1/README.md` for reproduction commands and the artifact inventory.
+See `part1/README.md` for the canonical reproduction commands and ownership
+boundaries.
 

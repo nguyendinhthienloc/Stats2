@@ -45,6 +45,18 @@ if (length(missing_paths)) {
        call. = FALSE)
 }
 
+duplicate_snapshot_paths <- file.path(
+  PROJECT_ROOT, "finals", "part1", c("data", "output")
+)
+if (any(dir.exists(duplicate_snapshot_paths))) {
+  stop(
+    "Noncanonical duplicate tree(s) found: ",
+    paste(duplicate_snapshot_paths[dir.exists(duplicate_snapshot_paths)],
+          collapse = ", "),
+    call. = FALSE
+  )
+}
+
 log_step("Checking renv lockfile synchronization")
 if (!requireNamespace("renv", quietly = TRUE)) {
   stop("renv is unavailable. Run: Rscript --vanilla scripts/restore.R",

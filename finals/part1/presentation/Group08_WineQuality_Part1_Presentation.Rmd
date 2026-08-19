@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 knitr::opts_knit$set(root.dir = PART1_ROOT)
 options(knitr.graphics.rel_path = FALSE)
 if (!file.exists(file.path(OUTPUT_DIR, "analysis_summary.RData"))) {
-  source(file.path(PART1_ROOT, "R", "00_run_all.R"),
+  source(file.path(PROJECT_ROOT, "analysis", "00_run_all.R"),
          local = new.env(parent = globalenv()))
 }
 load(file.path(OUTPUT_DIR, "analysis_summary.RData"))

@@ -11,7 +11,7 @@ authorship statement before submission.
 | P2 Data Cleaning | Trần Lê Anh Tuấn (`24125107`) | `R/02_p2_eda_cleaning.R`, `report/sections/02_data_cleaning.Rmd` | Missing/duplicate/outlier decisions, preprocessing recipe, transformed matrices | P3 checks transformations and VIF inputs |
 | P3 Feature Selection | Lê Minh Thuận (`24125105`) | `R/03_p3_feature_selection.R`, report section 3 | VIF/correlation screen, stepwise sensitivity check, Lasso interpretation, and baselines | P4 checks common folds and metric definitions |
 | P4 Modelling with Regularization | Nguyễn Bảo Minh Triết (`24125047`) | `R/04_p4_regularized_models.R`, report section 4 | Fold-clean Ridge/Lasso/Elastic Net CV, coefficient paths, and pre-holdout model lock | P3 checks selected features; P5 checks lock order |
-| P5 Evaluation | Nguyễn Hồng Tấn Tài (`24125078`) | `R/04_holdout.R`, report section 5 | RMSE/MAE/R2 comparison, diagnostics, bias--variance discussion, and reproducibility record | P1 verifies record-ID reconstruction; all review conclusions |
+| P5 Evaluation | Nguyễn Hồng Tấn Tài (`24125078`) | `analysis/04_holdout_evaluation.R`, report section 5 | RMSE/MAE/R2 comparison, diagnostics, bias--variance discussion, and reproducibility record | P1 verifies record-ID reconstruction; all review conclusions |
 
 ## Handoff sequence
 
