@@ -2,7 +2,7 @@
 
 Project: Group 8, Project 03 - Wine Quality (Red)  
 Course: STAT452, Academic Year 2025-2026  
-Default planning assumption: treat `quality` as a regression target. Confirm this before model implementation.
+Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratified train/holdout split; five shared cross-validation folds; RMSE primary, with MAE and R-squared secondary.
 
 ## Status key
 
@@ -20,18 +20,24 @@ Default planning assumption: treat `quality` as a regression target. Confirm thi
 - [x] Add the R language server to the reproducible `renv` environment for editor support.
 - [x] Document Fedora 43/44 setup.
 - [x] Keep `renv.lock` current whenever an R dependency is added or upgraded; automated checks enforce synchronization.
-- [x] Verify a clean clone can restore packages and run the analysis top-to-bottom (tested with a separate empty project library on 2026-08-18).
+- [x] Verify the pre-integration scaffold could restore from a clean library (2026-08-18 historical setup test).
+- [~] Re-run the integrated Part 1 workflow under locked R 4.5.2 in CI; local pipeline and artifact validation pass under R 4.6.1.
 - [ ] Require CI to pass before merging changes.
 
 ## Decisions needed before analysis
 
-- [ ] Confirm the primary task: regression on the 0-10 score (recommended) or a documented good/poor classification rule.
-- [ ] Choose the held-out test proportion and document the split protocol before inspecting test outcomes.
-- [ ] Confirm primary metrics. Suggested regression metrics: RMSE (primary), MAE, and R-squared.
-- [ ] Decide whether repeated cross-validation is needed in addition to fixed shared folds.
+- [x] Model the 0-10 quality score as a regression response.
+- [x] Use project seed `4520803` and an 80/20 split stratified by observed quality score; keep holdout outcomes inaccessible before Stage 4.
+- [x] Use RMSE as the primary metric, with MAE and R-squared as secondary metrics.
+- [x] Use five fixed shared cross-validation folds; repeated cross-validation is not part of the locked primary workflow.
 - [ ] Select a separate real-world dataset for Part 2 with at least two categorical factors and a continuous response, or at least two two-level factors for a factorial design.
 
 ## Part 1 - Wine Quality supervised-learning workflow
+
+The canonical scripts now implement every Part 1 item below. Items remain
+unchecked until the assigned lead and a second member review the generated
+result and interpretation; checking a box records human sign-off, not merely
+the presence of code.
 
 ### 1. Exploratory data analysis
 
@@ -95,15 +101,15 @@ Default planning assumption: treat `quality` as a regression target. Confirm thi
 - [ ] Package the PDF report, reproducible R Markdown/source code, and presentation.
 - [ ] Assemble the final submission artifacts after CI passes.
 
-## Suggested ownership discussion
+## Part 1 ownership and review
 
-| Member | Suggested lead | Reviewer |
-|---|---|---|
-| Trần Lê Anh Tuấn | Part 1 EDA and cleaning | To assign |
-| Nguyễn Bảo Minh Triết | Feature selection and diagnostics | To assign |
-| Nguyễn Đình Thiên Lộc | Regularized modelling and integration | To assign |
-| Nguyễn Hồng Tấn Tài | Part 2 experimental design | To assign |
-| Lê Minh Thuận | Report and presentation | To assign |
+| Section | Lead | Canonical stage | Reviewer |
+|---|---|---|---|
+| 1. Exploratory data analysis | Nguyễn Đình Thiên Lộc (`24125093`) | `analysis/01_eda_cleaning.R` (EDA outputs) | To assign |
+| 2. Data cleaning | Trần Lê Anh Tuấn (`24125107`) | `analysis/01_eda_cleaning.R` (cleaning/preprocessing outputs) | To assign |
+| 3. Feature selection | Lê Minh Thuận (`24125105`) | `analysis/02_feature_selection.R` | To assign |
+| 4. Modelling with regularization | Nguyễn Bảo Minh Triết (`24125047`) | `analysis/03_regularized_models.R` | To assign |
+| 5. Held-out evaluation | Nguyễn Hồng Tấn Tài (`24125078`) | `analysis/04_holdout_evaluation.R` | To assign |
 
 Every result should have a second-person review, regardless of lead ownership.
 

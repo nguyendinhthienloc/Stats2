@@ -7,7 +7,7 @@ The project has two required parts:
 1. A supervised-learning workflow for Wine Quality (Red): EDA, cleaning, feature selection, a baseline, at least two regularized models, and held-out evaluation.
 2. A separate experimental-design study using two-factor ANOVA or a `2^k` factorial design with `k >= 2`.
 
-The current planning assumption is regression on the quality score. Confirm that decision in [TODO.md](TODO.md) before modelling.
+Part 1 is a regression analysis of the quality score. The locked protocol uses an 80/20 stratified train/holdout split, five shared cross-validation folds, RMSE as the primary metric, and MAE and R-squared as secondary metrics.
 
 ## Group 8
 
@@ -34,13 +34,20 @@ The current planning assumption is regression on the quality score. Confirm that
 | `references/` | Course briefs, group assignment, notes, and labs |
 | `legacy/midterm/` | Read-only Applied Statistics II midterm history |
 
+The ordered scripts at the repository root are the canonical workflow. They
+incorporate the completed Part 1 modules under `finals/part1/`; do not run the
+retired nested entry points as a second pipeline. Tracked files already under
+`finals/part1/output/` are a pre-merge review snapshot and are not consumed
+by the canonical run. Part 2 remains an explicit TODO in
+`analysis/05_part2_experimental_design.R`.
+
 ## What to install
 
 Use these versions and tools on every computer:
 
 - **R 4.5.2**, exactly as recorded in `renv.lock`.
 - **Pandoc 2.0 or newer**. RStudio and Quarto normally include it.
-- **MiKTeX** for the PDF report. MiKTeX supplies the `xelatex` compiler used by the report; other TeX distributions are unsupported.
+- **XeLaTeX** for the PDF report. MiKTeX is the documented and CI-tested distribution; TinyTeX or TeX Live also work when they provide `xelatex` on `PATH`.
 - Git, if cloning the repository.
 - Internet access for the first R package restore and any MiKTeX packages needed by the report.
 
@@ -114,11 +121,32 @@ pandoc --version
 xelatex --version
 ```
 
-The first command must report R 4.5.2. The last command should identify MiKTeX.
+The first command must report R 4.5.2. The last command must identify a working XeLaTeX installation.
 
-MiKTeX is the distribution and XeLaTeX is its Unicode-capable compiler. Therefore, `latex_engine: xelatex` in the report and `xelatex --version` in the terminal checks are intentional MiKTeX configuration, not references to another TeX distribution.
+XeLaTeX is the Unicode-capable compiler required for the Vietnamese member names. MiKTeX remains the team's recommended distribution and the one exercised by report CI.
 
-## First run from a clean clone
+## First run in RStudio
+
+1. Clone the repository and open `Stats2.Rproj` in RStudio. Do not open an individual script as a standalone project.
+2. In **Tools > Global Options > General > R version**, select **R 4.5.2**, then restart RStudio if requested.
+3. Confirm that the Console working directory is the repository root with `getwd()`.
+4. Restore the locked packages once:
+
+   ```r
+   renv::restore()
+   ```
+
+5. Run the canonical pipeline:
+
+   ```r
+   source('analysis/00_run_all.R')
+   ```
+
+The runner executes the numbered stages in order. Develop in individual stages only when their prerequisites already exist; use `00_run_all.R` for a complete reproducibility check.
+
+Generated files belong under `data/processed/` and `output/`. Never hand-edit them: change the owning R source and rerun the pipeline.
+
+## First run from a clean clone in a terminal
 
 Open PowerShell, Command Prompt, macOS Terminal, or a Linux terminal. Clone the repository, enter its root folder, and run:
 
@@ -135,24 +163,32 @@ That one R command:
 3. checks the R version, dependency declarations, lockfile, repository, and dataset;
 4. runs `analysis/00_run_all.R` in the required order.
 
-To run the same workflow and render the PDF with MiKTeX:
+To run the same workflow and render the PDF with the configured XeLaTeX:
 
 ```text
 Rscript --vanilla scripts/reproduce.R --report
 ```
 
-Run commands from the repository root. There is no Make requirement.
+Run commands from the repository root. The direct `Rscript` commands are the cross-platform interface. A root `Makefile` provides optional shortcuts for members who already have Make; Make is not required by RStudio or CI.
 
 ## Useful terminal commands
 
 ```text
 Rscript --vanilla scripts/restore.R
 Rscript --vanilla scripts/ci_check.R
+Rscript --vanilla analysis/00_run_all.R
+Rscript --vanilla scripts/validate_outputs.R
 Rscript --vanilla scripts/reproduce.R
 Rscript --vanilla scripts/reproduce.R --report
 ```
 
-In order, these restore packages, validate the project, run the full analysis, and run the full analysis plus PDF report. The same commands work in PowerShell, Command Prompt, macOS Terminal, and Linux shells.
+These commands restore packages, check source/configuration, run the ordered
+analysis, validate generated artifacts and the holdout boundary, reproduce
+everything, and reproduce everything plus the PDF report. They work in
+PowerShell, Command Prompt, macOS Terminal, and Linux shells.
+
+Optional Make equivalents are `make restore`, `make check`, `make analysis`,
+`make verify`, and `make report`.
 
 ## Why the restore is portable
 
@@ -190,11 +226,28 @@ Do not edit `renv.lock` manually.
 ## Data and modelling safeguards
 
 - Project seed: `4520803`.
+- Model the numeric quality score as a regression response.
+- Use the locked 80/20 stratified split and five shared cross-validation folds.
+- Compare models by RMSE first, with MAE and R-squared as secondary metrics.
 - Treat `data/raw/` as immutable.
 - Generate derived data under `data/processed/`.
 - Fit preprocessing, feature selection, and tuning on training/resampling data only.
 - Inspect held-out test outcomes only in `analysis/04_holdout_evaluation.R`.
 - Run the stages through `analysis/00_run_all.R`, not in an arbitrary order.
+
+## Five Part 1 workstreams
+
+This ownership split mirrors `finals/part1/collaboration/WORK_SPLIT.md`. Ownership coordinates review and handoffs; the final contribution statement must describe work that each member actually reviewed and completed.
+
+| Section | Lead | Canonical stage |
+|---|---|---|
+| 1. Exploratory data analysis | Nguyễn Đình Thiên Lộc (`24125093`) | `analysis/01_eda_cleaning.R` (EDA outputs) |
+| 2. Data cleaning | Trần Lê Anh Tuấn (`24125107`) | `analysis/01_eda_cleaning.R` (cleaning and preprocessing outputs) |
+| 3. Feature selection | Lê Minh Thuận (`24125105`) | `analysis/02_feature_selection.R` |
+| 4. Modelling with regularization | Nguyễn Bảo Minh Triết (`24125047`) | `analysis/03_regularized_models.R` |
+| 5. Held-out evaluation | Nguyễn Hồng Tấn Tài (`24125078`) | `analysis/04_holdout_evaluation.R` |
+
+Each lead hands generated artifacts to the next section, and a second member reviews the code and statistical interpretation. Sections 1--4 must not inspect held-out outcomes.
 
 ## Continuous integration
 

@@ -5,10 +5,13 @@
 # Description: Training-only EDA, outlier audit, transformations, and recipe.
 ###############################################################################
 
-setup_candidates <- c("setup.R", file.path("finals", "part1", "setup.R"),
-                      file.path("..", "setup.R"))
-source(setup_candidates[file.exists(setup_candidates)][1])
-load("output/shared_data.RData")
+if (!exists("PROJECT_ROOT", inherits = TRUE)) {
+  stop("Run this module through analysis/01_eda_cleaning.R.", call. = FALSE)
+}
+source(file.path(PROJECT_ROOT, "R", "setup.R"))
+source(file.path(PROJECT_ROOT, "R", "part1_helpers.R"))
+
+load(SHARED_DATA_FILE)
 
 log_step("P2: auditing distributions and selecting training-only transformations")
 training_predictors <- train_data[PREDICTORS]
@@ -192,7 +195,7 @@ save(
   descriptive_statistics, quality_frequency, outlier_audit,
   rows_with_any_iqr_flag, transformation_plan, correlation_matrix,
   correlation_quality,
-  file = file.path(OUTPUT_DIR, "shared_data.RData")
+  file = SHARED_DATA_FILE
 )
 
 log_info("P2 complete | log1p features=", paste(log_features, collapse = ", "),

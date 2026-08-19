@@ -5,9 +5,11 @@
 # Description: Ingest, validate, deduplicate, split, and lock shared row IDs.
 ###############################################################################
 
-setup_candidates <- c("setup.R", file.path("finals", "part1", "setup.R"),
-                      file.path("..", "setup.R"))
-source(setup_candidates[file.exists(setup_candidates)][1])
+if (!exists("PROJECT_ROOT", inherits = TRUE)) {
+  stop("Run this module through analysis/01_eda_cleaning.R.", call. = FALSE)
+}
+source(file.path(PROJECT_ROOT, "R", "setup.R"))
+source(file.path(PROJECT_ROOT, "R", "part1_helpers.R"))
 
 log_step("P1: ingesting and validating Wine Quality (Red)")
 wine_raw <- read_red_wine()
@@ -107,19 +109,13 @@ save_table_artifacts(
   "Wine Quality (Red) data dictionary.", "p1-data-dictionary", digits = 2
 )
 
-log_step("P1: writing portable data and split artifacts")
-portable_raw <- wine_raw[analytical_columns]
-names(portable_raw) <- gsub("_", " ", names(portable_raw), fixed = TRUE)
-utils::write.table(
-  portable_raw, file.path(DATA_DIR, "winequality-red.csv"), sep = ";",
-  row.names = FALSE, col.names = TRUE, quote = TRUE
+log_step("P1: writing split artifacts and the predictor-only holdout interface")
+stale_outcome_copies <- file.path(
+  DATA_DIR, c("winequality-red.csv", "winequality.names")
 )
-
-archive <- file.path(PROJECT_ROOT, "final_resources", "wine+quality.zip")
-if (file.exists(archive)) {
-  metadata <- readLines(unz(archive, "winequality.names"), warn = FALSE)
-  writeLines(metadata, file.path(DATA_DIR, "winequality.names"), useBytes = TRUE)
-}
+invisible(file.remove(stale_outcome_copies[file.exists(stale_outcome_copies)]))
+archive <- file.path(PROJECT_ROOT, "data", "raw", "source",
+                     "wine-quality.zip")
 utils::write.csv(train_data, file.path(DATA_DIR, "training_data.csv"),
                  row.names = FALSE)
 utils::write.csv(holdout_predictors,
@@ -147,11 +143,11 @@ analysis_config <- list(
   archive_md5 = if (file.exists(archive)) unname(tools::md5sum(archive)) else NA_character_
 )
 
-# Deliberately omit holdout outcomes. They are reconstructed only in 04_holdout.R.
+# Deliberately omit holdout outcomes. Stage 04 reconstructs them once.
 save(
   train_data, holdout_predictors, training_index, holdout_index, foldid,
   split_manifest, split_summary, data_audit, data_dictionary, analysis_config,
-  file = file.path(OUTPUT_DIR, "shared_data.RData")
+  file = SHARED_DATA_FILE
 )
 
 log_info("P1 complete | raw=", nrow(wine_raw), " | unique=", nrow(wine_unique),

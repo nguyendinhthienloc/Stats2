@@ -5,10 +5,13 @@
 # Description: Correlation/VIF screening, sensitivity selection, and baselines.
 ###############################################################################
 
-setup_candidates <- c("setup.R", file.path("finals", "part1", "setup.R"),
-                      file.path("..", "setup.R"))
-source(setup_candidates[file.exists(setup_candidates)][1])
-load("output/shared_data.RData")
+if (!exists("PROJECT_ROOT", inherits = TRUE)) {
+  stop("Run this module through analysis/02_feature_selection.R.", call. = FALSE)
+}
+source(file.path(PROJECT_ROOT, "R", "setup.R"))
+source(file.path(PROJECT_ROOT, "R", "part1_helpers.R"))
+
+load(SHARED_DATA_FILE)
 
 log_step("P3: computing correlation/VIF screening and baseline models")
 vif_values <- compute_vif(x_train)

@@ -8,6 +8,7 @@ renv/library/
 renv/staging/
 
 # Generated analysis artifacts
+*.RData
 data/processed/*
 !data/processed/.gitkeep
 output/figures/*
@@ -16,6 +17,9 @@ output/tables/*
 !output/tables/.gitkeep
 output/models/*
 !output/models/.gitkeep
+output/logs/*
+output/*.csv
+output/*.txt
 
 # Report build intermediates
 report/*.aux

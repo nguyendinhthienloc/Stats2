@@ -1,6 +1,24 @@
+frame_sources <- vapply(sys.frames(), function(frame) {
+  value <- frame$ofile
+  if (is.null(value) || !length(value)) NA_character_ else as.character(value[[1L]])
+}, character(1L))
+script_frames <- frame_sources[
+  !is.na(frame_sources) &
+    basename(frame_sources) == "reproduce.R" &
+    basename(dirname(frame_sources)) == "scripts"
+]
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
-script_file <- normalizePath(sub("^--file=", "", script_arg[[1L]]),
-                             winslash = "/", mustWork = TRUE)
+script_file <- if (length(script_frames)) {
+  tail(script_frames, 1L)
+} else if (length(script_arg)) {
+  sub("^--file=", "", script_arg[[1L]])
+} else {
+  file.path("scripts", "reproduce.R")
+}
+if (!file.exists(script_file) && file.exists(basename(script_file))) {
+  script_file <- basename(script_file)
+}
+script_file <- normalizePath(script_file, winslash = "/", mustWork = TRUE)
 project_root <- normalizePath(file.path(dirname(script_file), ".."),
                               winslash = "/", mustWork = TRUE)
 arguments <- commandArgs(trailingOnly = TRUE)
@@ -29,13 +47,8 @@ if (render_report) {
     stop("Pandoc 2.0 or newer is required to render the report. See README.md.",
          call. = FALSE)
   }
-  miktex_commands <- Sys.which(c("miktex", "initexmf"))
-  if (!any(nzchar(miktex_commands))) {
-    stop("MiKTeX is required to render the report. See README.md.",
-         call. = FALSE)
-  }
   if (!nzchar(Sys.which("xelatex"))) {
-    stop("MiKTeX's XeLaTeX executable is not on PATH. See README.md.",
+    stop("A XeLaTeX executable is required on PATH. See README.md.",
          call. = FALSE)
   }
 

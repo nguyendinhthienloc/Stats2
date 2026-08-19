@@ -17,10 +17,13 @@
 ## Reproducibility rules
 
 - Source `R/setup.R` from every analysis script.
+- Open `Stats2.Rproj`, select R 4.5.2, and run `renv::restore()` before the first RStudio run.
+- Use `source('analysis/00_run_all.R')` for the complete RStudio pipeline; use the direct `Rscript` commands in `README.md` in a terminal.
 - Use the shared split and resampling objects once they are created.
 - Fit preprocessing and feature selection without held-out test data.
 - Use `analysis/04_holdout_evaluation.R` as the single test-set boundary.
 - Update `renv.lock` after intentional dependency changes.
+- Never hand-edit files under `data/processed/` or `output/`; update their owning source and regenerate them.
 
 ## Review checklist
 
@@ -30,4 +33,4 @@
 - Metrics are appropriate and computed on the same rows for every model.
 - Tables and figures have labels, units, readable text, and captions.
 - Limitations and alternative explanations are stated honestly.
-- `make check` passes.
+- `Rscript --vanilla scripts/ci_check.R` passes. `make check` is an optional convenience wrapper for the same command.

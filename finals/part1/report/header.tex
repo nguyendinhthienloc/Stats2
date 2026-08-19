@@ -11,7 +11,7 @@
     \IfFileExists{#1}{%
       \includegraphics[width=0.96\linewidth,height=0.70\textheight,keepaspectratio]{#1}%
     }{%
-      \fbox{\parbox[c][0.22\textheight][c]{0.86\linewidth}{\centering Missing figure: \texttt{#1}}}%
+      \fbox{\parbox[c][0.22\textheight][c]{0.86\linewidth}{\centering Missing figure: \texttt{\detokenize{#1}}}}%
     }
     \caption{#2}
     \label{#3}

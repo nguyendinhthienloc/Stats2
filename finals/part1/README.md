@@ -1,69 +1,47 @@
-# Part 1 — Red Wine Quality Regression
+# Part 1 implementation modules
 
-This folder is a self-contained, reproducible Part 1 submission for Group 08.
-It follows `references/STAT452_FinalProject_Y2526.pdf` and intentionally uses
-only the red-wine data from `final_resources/wine+quality.zip`.
+This directory preserves the five Part 1 workstreams and report sections
+integrated by the root project. It is not a standalone project and does not
+define a second reproducibility contract.
 
-## Reproduce everything
+## Canonical run
 
-From the repository root, run:
+Open `Stats2.Rproj` and run:
 
-```powershell
-Rscript --vanilla finals/part1/R/00_build_part1.R
+```r
+source('analysis/00_run_all.R')
 ```
 
-That command runs the five R workstreams in order, writes the audit log,
-figures, tables, fitted models, shared data, and artifact manifest. It does not
-require Pandoc, LaTeX, PowerPoint, or any document renderer.
+The terminal equivalent is:
 
-The direct pipeline command is equivalent:
-
-```powershell
-Rscript --vanilla finals/part1/R/00_run_all.R
+```text
+Rscript --vanilla analysis/00_run_all.R
 ```
 
-The first run extracts a portable copy of `winequality-red.csv` and its metadata
-into `data/`.  Later runs can therefore use this folder independently of the
-repository, provided the generated data files are retained.
+The canonical runner reads immutable inputs from root `data/raw/`, writes
+derived interfaces to `data/processed/`, and writes figures, tables,
+models, logs, and manifests to root `output/`. Do not invoke the nested
+`R/00_run_all.R` or `R/00_build_part1.R`; those pre-merge entry
+points are retired.
 
-## Analysis contract
+## Five reviewable workstreams
 
-- Task: regression on the numeric `quality` score; no arbitrary good/poor cutoff.
-- Exact duplicate records are removed before splitting to prevent identical
-  profiles from appearing in both training and holdout sets.
-- The split is quality-stratified, 80/20, with fixed seeds.
-- EDA and preprocessing decisions use training data only.
-- Missing-value imputation, winsorization limits, centering, and scaling are fit
-  without holdout outcomes.  CV refits those quantities inside every fold.
-- OLS is the baseline. Ridge, Lasso, and Elastic Net use the same five folds and
-  lambda grid. Elastic Net alpha is also selected by CV.
-- The model preferred by CV is written to `output/model_lock.csv` before the
-  holdout script is run.
-- `y_test` is created and used only in `R/04_holdout.R`.
+1. Exploratory data analysis and data audit.
+2. Cleaning and training-only preprocessing.
+3. Feature selection and the OLS baseline.
+4. Ridge, Lasso, and Elastic Net with a pre-holdout model lock.
+5. One-time held-out evaluation in
+   `analysis/04_holdout_evaluation.R`.
 
-## Five-person work split
+Detailed ownership and cross-review expectations are in
+`finals/part1/collaboration/WORK_SPLIT.md`. The labels organize work;
+the final contribution statement must reflect what members actually completed
+and reviewed.
 
-The project is divided into five independently reviewable workstreams:
+## Historical artifacts
 
-1. P1 — Exploratory Data Analysis.
-2. P2 — Data Cleaning.
-3. P3 — Feature Selection.
-4. P4 — Modelling with Regularization.
-5. P5 — Evaluation.
-
-Detailed ownership, interfaces, and cross-review expectations are in
-`collaboration/WORK_SPLIT.md`. These labels organize the work; the final
-authorship statement must be confirmed by the actual group members.
-
-## Artifact layout
-
-- `R/` — modular R analysis and build scripts.
-- `report/` — master R Markdown content and five smaller owned sections.
-- `presentation/` — 10-minute presentation content in R Markdown.
-- `data/` — portable raw red-wine data and metadata copy.
-- `output/figures/` — PDF figures.
-- `output/tables/` — matching CSV and LaTeX tables.
-- `output/models/` — serialized fitted models and summaries.
-- `output/logs/` — pipeline log and session information.
-- `output/shared_data.RData` — the shared train/holdout-predictor interface.
-- `output/artifact_manifest.csv` — generated-file sizes and checksums.
+Tracked files already present under `finals/part1/output/` are a
+pre-merge snapshot made with the old nested configuration. They are retained
+only as review history and are not canonical results. In particular, do not
+mix their model lock or metrics with artifacts regenerated under root
+`output/` and seed `4520803`.

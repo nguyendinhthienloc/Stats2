@@ -1,79 +1,110 @@
 ---
 title: "STAT452 Final Project: Wine Quality and Experimental Design"
 author:
-  - "Trần Lê Anh Tuấn"
-  - "Nguyễn Bảo Minh Triết"
-  - "Nguyễn Đình Thiên Lộc"
-  - "Nguyễn Hồng Tấn Tài"
-  - "Lê Minh Thuận"
-date: "`r format(Sys.Date(), '%d %B %Y')`"
-bibliography: references.bib
+  - "Tr\u1EA7n L\u00EA Anh Tu\u1EA5n (24125107)"
+  - "Nguy\u1EC5n B\u1EA3o Minh Tri\u1EBFt (24125047)"
+  - "Nguy\u1EC5n \u0110\u00ECnh Thi\u00EAn L\u1ED9c (24125093)"
+  - "Nguy\u1EC5n H\u1ED3ng T\u1EA5n T\u00E0i (24125078)"
+  - "L\u00EA Minh Thu\u1EADn (24125105)"
+date: "Academic Year 2025--2026"
+bibliography:
+  - references.bib
+  - ../finals/part1/report/references.bib
+link-citations: true
 output:
   pdf_document:
     latex_engine: xelatex
     number_sections: true
     toc: true
+    toc_depth: 2
+    fig_caption: true
     keep_tex: false
-fontsize: 11pt
-geometry: margin=1in
+    includes:
+      in_header: ../finals/part1/report/header.tex
+fontsize: 10pt
+geometry: margin=0.78in
 ---
 
+\begin{abstract}
+This report currently completes Part 1 of the Group 8 final project. We predict
+red Vinho Verde quality from 11 physicochemical measurements with a locked,
+leakage-controlled comparison of OLS, Ridge, Lasso, and Elastic Net. Part 2,
+the separate experimental-design extension, remains explicitly pending.
+\end{abstract}
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
-                      fig.pos = "H")
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE, results = "asis"
+)
 source("../R/setup.R")
-wine_red <- read_wine_red()
+knitr::opts_knit$set(root.dir = PROJECT_ROOT)
+
+summary_file <- file.path(PROJECT_ROOT, "output", "analysis_summary.RData")
+if (!file.exists(summary_file)) {
+  stop("Run source('analysis/00_run_all.R') before rendering the report.")
+}
+load(summary_file)
+
+holdout_table <- analysis_summary$holdout$performance
+locked_model <- analysis_summary$model_lock$Locked_model[[1L]]
+locked_row <- holdout_table[holdout_table$Model == locked_model, ]
+best_row <- holdout_table[which.min(holdout_table$Holdout_RMSE), ]
+top_correlations <- analysis_summary$correlations[seq_len(4L), ]
+max_vif_row <- analysis_summary$feature_screening[
+  which.max(analysis_summary$feature_screening$VIF),
+]
+selected_lasso <- subset(analysis_summary$lasso_selection, Selected == "Yes")
+
+fmt <- function(x, digits = 3L) formatC(x, digits = digits, format = "f")
+pretty_feature <- function(x) gsub("_", " ", x)
 ```
-
-# Executive summary
-
-TODO: Summarize the Part 1 predictive findings, the Part 2 experimental-design findings, and the most important limitations.
 
 # Part 1: Wine Quality (Red)
 
-The assigned data contain `r nrow(wine_red)` observations, `r ncol(wine_red) - 1L` physicochemical predictors, and the `quality` response [@cortez2009wine].
+```{r part1-sections}
+section_files <- file.path(
+  PROJECT_ROOT, "finals", "part1", "report", "sections",
+  c(
+    "01_exploratory_data_analysis.Rmd",
+    "02_data_cleaning.Rmd",
+    "03_feature_selection.Rmd",
+    "04_regularized_models.Rmd",
+    "05_evaluation_conclusion.Rmd"
+  )
+)
+for (section in section_files) {
+  cat(
+    knitr::knit_child(section, envir = knitr::knit_global(), quiet = TRUE),
+    sep = "\n"
+  )
+}
+```
 
-## Exploratory data analysis
-
-TODO: Describe variables, distributions, pairwise relationships, correlations, and modelling implications.
-
-## Cleaning and preprocessing
-
-TODO: Document missing-value, duplicate, outlier, transformation, splitting, and training-only preprocessing decisions.
-
-## Feature selection
-
-TODO: Report the principled selection method, results, stability, and interpretation.
-
-## Baseline and regularized models
-
-TODO: Compare the baseline, Ridge, Lasso, and any Elastic Net model using shared cross-validation folds and coefficient-path evidence.
-
-## Held-out evaluation
-
-TODO: Compare models fairly on the locked test set and discuss uncertainty, diagnostics, and the bias-variance trade-off.
+\clearpage
 
 # Part 2: Experimental-design extension
 
-## Dataset, research questions, and hypotheses
-
-TODO: Introduce and justify the separate dataset and state hypotheses before analysis.
-
-## Descriptive statistics and assumptions
-
-TODO: Add summaries, interaction plots, and checks for normality, equal variance, and independence.
-
-## ANOVA or factorial-design results
-
-TODO: Interpret main effects, interactions, model adequacy, and post-hoc comparisons where justified.
-
-# Conclusions and limitations
-
-TODO: Provide actionable conclusions, practical significance, limitations, and improvements.
+TODO: Select and justify the separate dataset; state hypotheses; complete the
+two-factor ANOVA or \(2^k\) factorial analysis; check assumptions; report
+interactions and post-hoc comparisons where justified; and interpret practical
+significance and limitations.
 
 # Contributions
 
-TODO: State each member's contribution.
+TODO: Replace the workstream ownership plan with a statement of the work each
+member actually completed and reviewed.
+
+```{r appendix}
+appendix_file <- file.path(
+  PROJECT_ROOT, "finals", "part1", "report", "sections", "06_appendix.Rmd"
+)
+cat(
+  knitr::knit_child(
+    appendix_file, envir = knitr::knit_global(), quiet = TRUE
+  ),
+  sep = "\n"
+)
+```
 
 \newpage
 

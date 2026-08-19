@@ -37,16 +37,19 @@
 
 # Reproducibility and collaboration
 
-The analysis is rebuilt with one command:
-`Rscript --vanilla finals/part1/R/00_build_part1.R`. The five scripts are
-executed in ownership order, every random operation uses a recorded seed, and
+The canonical analysis is rebuilt from RStudio with
+`source("analysis/00_run_all.R")`, or from a terminal with
+`Rscript --vanilla analysis/00_run_all.R`. The five workstreams execute in
+dependency order, every random operation uses a recorded seed, and
 `output/artifact_manifest.csv` stores file sizes and MD5 checksums. Row-level
 holdout outcomes are not serialized. Software versions for the verified run
 are listed below; full `sessionInfo()` is in `output/logs/session_info.txt`.
+The analysis and dynamic report use R, `knitr`, and `rmarkdown`
+[@RCore2026; @XieKnitr2025; @AllaireRmarkdown2026].
 
 \tightinputtable{../output/tables/tab_reproducibility_versions.tex}
 
-The workstream allocation and review interfaces are documented in
-`collaboration/WORK_SPLIT.md`. These organizational labels must be checked
+The workstream allocation and review interfaces are documented in the
+repository's collaboration work-split file. These organizational labels must be checked
 against the members' actual contributions before final submission.
 

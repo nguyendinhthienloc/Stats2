@@ -5,10 +5,13 @@
 # Description: Fold-clean Ridge/Lasso/Elastic Net tuning and coefficient paths.
 ###############################################################################
 
-setup_candidates <- c("setup.R", file.path("finals", "part1", "setup.R"),
-                      file.path("..", "setup.R"))
-source(setup_candidates[file.exists(setup_candidates)][1])
-load("output/shared_data.RData")
+if (!exists("PROJECT_ROOT", inherits = TRUE)) {
+  stop("Run this module through analysis/03_regularized_models.R.", call. = FALSE)
+}
+source(file.path(PROJECT_ROOT, "R", "setup.R"))
+source(file.path(PROJECT_ROOT, "R", "part1_helpers.R"))
+
+load(SHARED_DATA_FILE)
 load(file.path(MODEL_DIR, "baseline_fits.RData"))
 
 log_step("P4: tuning Ridge, Lasso, and Elastic Net on shared fold IDs")

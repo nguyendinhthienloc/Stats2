@@ -1,6 +1,24 @@
+frame_sources <- vapply(sys.frames(), function(frame) {
+  value <- frame$ofile
+  if (is.null(value) || !length(value)) NA_character_ else as.character(value[[1L]])
+}, character(1L))
+script_frames <- frame_sources[
+  !is.na(frame_sources) &
+    basename(frame_sources) == "ci_check.R" &
+    basename(dirname(frame_sources)) == "scripts"
+]
 script_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
-script_file <- normalizePath(sub("^--file=", "", script_arg[[1L]]),
-                             winslash = "/", mustWork = TRUE)
+script_file <- if (length(script_frames)) {
+  tail(script_frames, 1L)
+} else if (length(script_arg)) {
+  sub("^--file=", "", script_arg[[1L]])
+} else {
+  file.path("scripts", "ci_check.R")
+}
+if (!file.exists(script_file) && file.exists(basename(script_file))) {
+  script_file <- basename(script_file)
+}
+script_file <- normalizePath(script_file, winslash = "/", mustWork = TRUE)
 source(file.path(dirname(script_file), "..", "R", "setup.R"))
 
 log_step("Checking required repository structure")
@@ -12,6 +30,8 @@ required_paths <- c(
   "renv/activate.R",
   "scripts/restore.R",
   "scripts/reproduce.R",
+  "scripts/validate_outputs.R",
+  "R/part1_helpers.R",
   "analysis/00_run_all.R",
   "analysis/04_holdout_evaluation.R",
   "report/final-report.Rmd",
@@ -76,6 +96,8 @@ r_files <- c(
              recursive = TRUE, full.names = TRUE),
   list.files(file.path(PROJECT_ROOT, "analysis"), pattern = "[.]R$",
              recursive = TRUE, full.names = TRUE),
+  list.files(file.path(PROJECT_ROOT, "finals", "part1", "R"),
+             pattern = "[.]R$", recursive = TRUE, full.names = TRUE),
   list.files(file.path(PROJECT_ROOT, "scripts"), pattern = "[.]R$",
              recursive = TRUE, full.names = TRUE)
 )

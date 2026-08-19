@@ -2,7 +2,15 @@
 # Shared configuration for the STAT452 Group 8 final project.
 ###############################################################################
 
-setup_source <- tryCatch(sys.frame(1)$ofile, error = function(e) NULL)
+frame_sources <- vapply(sys.frames(), function(frame) {
+  value <- frame$ofile
+  if (is.null(value) || !length(value)) NA_character_ else as.character(value[[1L]])
+}, character(1L))
+setup_frames <- frame_sources[
+  !is.na(frame_sources) & grepl("(^|[/\\\\])R[/\\\\]setup[.]R$", frame_sources,
+                                ignore.case = TRUE)
+]
+setup_source <- if (length(setup_frames)) tail(setup_frames, 1L) else NULL
 if (is.null(setup_source) || !nzchar(setup_source)) {
   setup_candidates <- c("R/setup.R", "../R/setup.R", "setup.R")
   existing_setup <- setup_candidates[file.exists(setup_candidates)]
@@ -29,7 +37,7 @@ if (!nzchar(Sys.getenv("RENV_PROJECT", unset = ""))) {
       file.exists(file.path(project_libraries, "renv", "DESCRIPTION"))
     ]
     if (length(project_library) > 0L) {
-      .libPaths(c(project_library[[length(project_library)]], .Library))
+      .libPaths(c(project_library[[length(project_library)]], .libPaths()))
     }
   }
 }
@@ -46,14 +54,21 @@ paths <- list(
   processed = file.path(PROJECT_ROOT, "data", "processed"),
   figures = file.path(PROJECT_ROOT, "output", "figures"),
   tables = file.path(PROJECT_ROOT, "output", "tables"),
-  models = file.path(PROJECT_ROOT, "output", "models")
+  models = file.path(PROJECT_ROOT, "output", "models"),
+  logs = file.path(PROJECT_ROOT, "output", "logs")
 )
 
 config <- list(
-  task_type = "regression", # TODO: confirm before modelling.
+  task_type = "regression",
   response = "quality",
   test_fraction = 0.20,
-  cv_folds = 10L
+  cv_folds = 5L
+)
+
+seeds <- list(
+  split = PROJECT_SEED,
+  folds = PROJECT_SEED + 1L,
+  bootstrap = PROJECT_SEED + 2L
 )
 
 log_step <- function(...) {
@@ -61,7 +76,7 @@ log_step <- function(...) {
 }
 
 ensure_dirs <- function() {
-  invisible(lapply(paths[c("processed", "figures", "tables", "models")],
+  invisible(lapply(paths[c("processed", "figures", "tables", "models", "logs")],
                    dir.create, recursive = TRUE, showWarnings = FALSE))
 }
 
@@ -80,7 +95,8 @@ save_table_tex <- function(data, filename, caption = NULL, label = NULL,
   ensure_dirs()
   destination <- file.path(paths$tables, filename)
   table_tex <- knitr::kable(data, format = "latex", booktabs = TRUE,
-                            digits = digits, caption = caption, label = label)
+                            digits = digits, caption = caption, label = label,
+                            row.names = FALSE)
   writeLines(as.character(table_tex), destination, useBytes = TRUE)
   invisible(destination)
 }
