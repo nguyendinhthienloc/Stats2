@@ -1,6 +1,8 @@
-# Archived teaching materials and supplied templates are reference inputs, not
-# executable parts of this analysis. Excluding them keeps dependency discovery
-# focused on the project-owned R scripts.
+legacy/
 references/
-midterm_resources/
-submission/
+tmp/
+artifacts/
+dist/
+data/raw/
+output/
+presentation/

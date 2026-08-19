@@ -1,142 +1,33 @@
-# 👥 Contributing & Task Tracker — Group 01
+# Contributing
 
-## 👥 Roster & Main Roles
+## Working agreement
 
-| Member | Student ID | Primary Role | Assigned R Files | Assigned Report Sections |
-|:---|:---|:---|:---|:---|
-| **Nguyễn Đình Thiên Lộc** (P1) | `24125093` | Data & EDA | `setup.R`, `01_data_prep_eda.R` | `00_authorship.tex`, `01_prediction_design.tex` |
-| **Trần Lê Anh Tuấn** (P2) | `24125107` | OLS & Ridge | `02_ols.R`, `02_ridge.R` | `02_ols_ridge_lasso.tex` (Sec 2.1, 2.2) |
-| **Lê Minh Thuận** (P3) | `24125105` | Lasso & Comparison | `02_lasso.R`, `02_comparison.R` | `02_ols_ridge_lasso.tex` (Sec 2.3, 2.4, 2.5) |
-| **Nguyễn Bảo Minh Triết** (P4) | `24125047` | Math Derivations | *(None)* | `03_math_mechanisms.tex` (Sec 3.1, 3.2, 3.3) |
-| **Nguyễn Hồng Tấn Tài** (P5) | `24125078` | Elastic Net, Neural & Integration | `04_enet.R`, `04_neural.R`, `04_holdout.R` | `00_abstract.tex`, `04_elastic_net.tex`, `05_report_quality.tex` |
+1. Start from an up-to-date branch and choose one bounded item from `TODO.md`.
+2. Record modelling decisions before viewing held-out test outcomes.
+3. Keep raw inputs immutable and generate every processed file from code.
+4. Add or update validation whenever a data contract or pipeline stage changes.
+5. Ask another member to review statistical reasoning as well as code.
 
-*(Do not edit other members' files without asking!)*
+## Branches and commits
 
-## 🐙 Git Workflow & Branching Guidelines
-We use individual branches for each member to prevent conflicts. 
-**Before starting your work, switch to your dedicated branch and read your personal `TODO.md` file located in the `members/` folder!**
+- Use short branches such as `eda/outliers`, `model/ridge-lasso`, or `part2/anova`.
+- Keep commits focused and describe the statistical decision, not only the file edit.
+- Do not commit local R libraries, credentials, temporary files, or generated LaTeX intermediates.
 
-- **Nguyễn Đình Thiên Lộc (P1):**
-  - Branch: `feature/p1-loc-data-eda`
-  - Workspace: `members/P1_Loc/TODO.md`
-- **Trần Lê Anh Tuấn (P2):**
-  - Branch: `feature/p2-tuan-ols-ridge`
-  - Workspace: `members/P2_Tuan/TODO.md`
-- **Lê Minh Thuận (P3):**
-  - Branch: `feature/p3-thuan-lasso-compare`
-  - Workspace: `members/P3_Thuan/TODO.md`
-- **Nguyễn Bảo Minh Triết (P4):**
-  - Branch: `feature/p4-triet-math`
-  - Workspace: `members/P4_Triet/TODO.md`
-- **Nguyễn Hồng Tấn Tài (P5):**
-  - Branch: `feature/p5-tai-enet-neural`
-  - Workspace: `members/P5_Tai/TODO.md`
+## Reproducibility rules
 
-1. **Pull & Checkout:** `git pull origin main` then `git checkout feature/<your-branch>`
-2. **Commit:** Prefix with your role, e.g., `git commit -m "P2: add ridge CV plot"`
-3. **Push:** `git push origin feature/<your-branch>` (then open a Pull Request)
+- Source `R/setup.R` from every analysis script.
+- Use the shared split and resampling objects once they are created.
+- Fit preprocessing and feature selection without held-out test data.
+- Use `analysis/04_holdout_evaluation.R` as the single test-set boundary.
+- Update `renv.lock` after intentional dependency changes.
 
-## 🏃 Running the Analysis
+## Review checklist
 
-### Recommended: run the complete pipeline
-
-Use `R_models/00_run_all.R` for a full, reproducible run. It restores the
-shared configuration, creates output directories, runs all eight analysis
-scripts in dependency order, stops at the first failure, and writes
-`output/session_info.txt` when the pipeline succeeds.
-
-From a terminal opened at the project root:
-
-```bash
-Rscript --vanilla R_models/00_restore.R
-Rscript R_models/00_run_all.R
-cd report && latexmk -xelatex main.tex
-```
-
-### Running from RStudio
-
-This repository does not currently include an `.Rproj` file. Open the folder
-that contains this repository in RStudio, then set the working directory to
-the project root through **Session > Set Working Directory > Choose
-Directory...**. The project root is the folder containing `README.md`,
-`renv.lock`, and the `R_models` directory.
-In the RStudio Console, run:
-
-```r
-system2(file.path(R.home("bin"), "Rscript"),
-        c("--vanilla", "R_models/00_restore.R"))
-source("R_models/00_run_all.R", encoding = "UTF-8")
-```
-
-`Rscript -e "..."` is a terminal command; do not paste it at RStudio's `>`
-prompt. Use the R code above in the Console instead. Restart RStudio and run
-the last `source()` command again if package restoration changes the active
-library.
-
-### What the support scripts do
-
-- `R_models/setup.R` is shared configuration, not an analysis stage. Every
-  analysis script sources it automatically. It locates the project root,
-  configures the project package library, checks required packages, loads
-  common packages, and defines shared constants and helper functions.
-- `R_models/00_dependencies.R` is only a dependency declaration for `renv`
-  and editor tooling. It does not install packages or run the analysis.
-- `R_models/00_run_all.R` is the pipeline entry point. Do not run it after
-  separately running every individual script unless you intentionally want to
-  regenerate all outputs.
-
-### Running individual scripts
-
-Use individual scripts only while developing or debugging. First run
-`01_data_prep_eda.R`, then fit the model scripts, run `02_comparison.R` after
-OLS/Ridge/Lasso, and run `04_holdout.R` last because it needs every fitted
-model. Each analysis script sources `setup.R` automatically; do not run
-`setup.R` as a separate analysis stage.
-
-## 📅 Task Tracker
-
-**Overall status: approximately 90%.** The statistical pipeline and report
-content are substantially complete, but the generated figures still require a
-source-level visual-quality pass before the submission is final.
-
-### Phase 1: Foundation (Nguyễn Đình Thiên Lộc / P1)
-- [x] Run `01_data_prep_eda.R`, split data, generate `shared_data.RData`.
-- [x] Generate EDA figures (`fig_p1_correlation.pdf`, etc.) and summary table.
-- [x] Draft Section 1 in LaTeX. Fill authorship info.
-
-### Phase 2: Core Models (Trần Lê Anh Tuấn / P2 & Lê Minh Thuận / P3)
-- [x] **P2:** Run `02_ols.R` & `02_ridge.R`. Generate baselines, CV curves, coeff paths.
-- [x] **P2:** Draft Sections 2.1 & 2.2 in LaTeX.
-- [x] **P3:** Run `02_lasso.R` & `02_comparison.R`. Generate Lasso outputs and comparisons.
-- [x] **P3:** Draft Sections 2.3, 2.4, 2.5 in LaTeX. Nominate **Core Model**.
-
-### Phase 3: Math Proofs (Nguyễn Bảo Minh Triết / P4)
-- [x] **P4:** Draft Section 3 (Ridge closed-form, Lasso optimality, Evidence connection).
-
-### Phase 4: Elastic Net & Neural Features (Nguyễn Hồng Tấn Tài / P5)
-- [x] **P5:** Run `04_enet.R` & `04_neural.R`. Generate Elastic Net and ReLU feature metrics.
-- [x] **P5:** Draft Section 4.1, 4.2, 4.3. Fill literature source map.
-
-### Phase 5: Holdout & Polish (Nguyễn Hồng Tấn Tài / P5)
-- [x] **P5:** Run `04_holdout.R` (use `y_test`). Generate final comparisons.
-- [x] **P5:** Draft Sections 4.4, 4.5, 5, and Abstract.
-- [x] **All:** Verify the complete R pipeline runs cleanly via `R_models/00_run_all.R`.
-- [ ] **All:** Complete the final visual-quality review and resolve its findings.
-- [x] **All:** Prepare a draft submission folder with RMarkdown, BibTeX references, and replication README.
-
-### Phase 6: Figure Generation and Final Polish (All)
-- [ ] **P1:** Refactor EDA figure generation in `01_data_prep_eda.R`; coordinate reusable plotting defaults in `setup.R`.
-- [ ] **P2:** Refactor OLS and Ridge figure generation in `02_ols.R` and `02_ridge.R`.
-- [ ] **P3:** Refactor Lasso and comparison figure generation in `02_lasso.R` and `02_comparison.R`.
-- [ ] **P4:** Audit mathematical correctness and legibility, then send figure-specific feedback to each R-file owner.
-- [ ] **P5:** Refactor Elastic Net, neural-feature, and holdout figure generation in `04_enet.R`, `04_neural.R`, and `04_holdout.R`.
-- [ ] **All:** Re-run the full pipeline, compile the report, and inspect every figure at its final report size.
-
-For this phase, fix plots in the assigned R source files. Do not hand-edit
-generated PDFs, change asset filenames, or alter validated statistical results
-solely for appearance.
-
-**Latest verified run (2026-07-16):** All eight analysis scripts completed successfully.
-Lasso was selected using training CV and achieved the best holdout RMSE (4.2514).
-The XeLaTeX report builds successfully, but figure aesthetics remain the final
-major work item before submission.
+- The code runs from the repository root and from a clean environment.
+- Seeds and resampling folds are explicit.
+- Claims match generated output.
+- Metrics are appropriate and computed on the same rows for every model.
+- Tables and figures have labels, units, readable text, and captions.
+- Limitations and alternative explanations are stated honestly.
+- `make check` passes.
