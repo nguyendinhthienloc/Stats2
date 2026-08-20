@@ -8,7 +8,15 @@ Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratifie
 
 - [ ] Not started
 - [x] Complete
-- [~] In progress or awaiting a decision
+- [~] Implemented or in progress, but still awaiting review or a decision
+
+## Current project status
+
+- [x] Nguyễn Đình Thiên Lộc created and organized the final-project framework, including the reproducible repository structure, canonical analysis stages, shared setup, CI configuration, report scaffold, and archived midterm history (`3f56e2d`).
+- [x] Nguyễn Bảo Minh Triết integrated the Part 1 modules into the canonical workflow and ran Part 1 successfully under the locked R 4.5.2 environment (`af46786`; completed 2026-08-19).
+- [x] The successful Part 1 run generated the expected processed data, figures, tables, fitted models, holdout summary, and artifact manifest. The holdout boundary and generated artifacts passed local validation.
+- [~] Part 1 is computationally complete. Section leads and second reviewers still need to check the statistical interpretation, refine the report prose, and record their sign-off.
+- [ ] Part 2, the final report review, and the presentation remain to be completed.
 
 ## Milestone 0 - Repository and reproducibility
 
@@ -21,7 +29,8 @@ Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratifie
 - [x] Document Fedora 43/44 setup.
 - [x] Keep `renv.lock` current whenever an R dependency is added or upgraded; automated checks enforce synchronization.
 - [x] Verify the pre-integration scaffold could restore from a clean library (2026-08-18 historical setup test).
-- [~] Re-run the integrated Part 1 workflow under locked R 4.5.2 in CI; local pipeline and artifact validation pass under R 4.6.1.
+- [x] Run the integrated Part 1 workflow under locked R 4.5.2; Triet's local run and artifact validation passed on 2026-08-19.
+- [~] Confirm the integrated Part 1 workflow passes on every configured CI platform.
 - [ ] Require CI to pass before merging changes.
 
 ## Decisions needed before analysis
@@ -34,49 +43,49 @@ Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratifie
 
 ## Part 1 - Wine Quality supervised-learning workflow
 
-The canonical scripts now implement every Part 1 item below. Items remain
-unchecked until the assigned lead and a second member review the generated
-result and interpretation; checking a box records human sign-off, not merely
-the presence of code.
+The canonical scripts implement and successfully run every Part 1 section.
+The `[~]` items below have working code and generated outputs, but remain open
+until the assigned lead and a second member review the result and its
+interpretation. Change an item to `[x]` only after that human sign-off.
 
 ### 1. Exploratory data analysis
 
-- [ ] Create a variable dictionary with units, types, ranges, and target definition.
-- [ ] Audit duplicates, impossible values, missing values, and class/score frequencies.
-- [ ] Plot predictor and target distributions.
-- [ ] Examine pairwise relationships and the predictor correlation structure.
-- [ ] Summarize modelling implications, including skew, collinearity, nonlinear patterns, and rare quality scores.
+- [~] Create and review a variable dictionary with units, types, ranges, and target definition.
+- [~] Review the audit of duplicates, impossible values, missing values, and score frequencies.
+- [~] Review the predictor and target distribution plots.
+- [~] Review pairwise relationships and the predictor correlation structure.
+- [~] Refine and approve the modelling implications, including skew, collinearity, nonlinear patterns, and rare quality scores.
 
 ### 2. Data cleaning and preprocessing
 
-- [ ] Define outlier rules using training data only; distinguish measurement errors from valid extreme wines.
-- [ ] Justify any removals, winsorization, or robust treatment.
-- [ ] Evaluate transformations for skewed variables.
-- [ ] Fit centering/scaling parameters on training data only and apply them unchanged to validation/test data.
-- [ ] Save the processed analysis data and a machine-readable preprocessing summary.
+- [~] Review the training-only outlier rules and distinction between measurement errors and valid extreme wines.
+- [~] Review and approve the justification for removals, winsorization, or robust treatment.
+- [~] Review the transformation choices for skewed variables.
+- [~] Verify that centering/scaling parameters are fitted on training data only and applied unchanged to validation/holdout data.
+- [~] Review the generated processed analysis data and machine-readable preprocessing summary.
 
 ### 3. Feature selection
 
-- [ ] Use at least one principled method, such as VIF/correlation screening or embedded Lasso selection.
-- [ ] Perform selection inside resampling to avoid optimistic estimates.
-- [ ] Report selected predictors, stability, and substantive interpretation.
+- [~] Review the implemented principled feature-selection methods.
+- [~] Verify that selection occurs inside resampling where required to avoid optimistic estimates.
+- [~] Review the selected predictors, stability results, and substantive interpretation.
 
 ### 4. Baseline and regularized models
 
-- [ ] Fit a defensible baseline model.
-- [ ] Fit Ridge regression with cross-validated regularization strength.
-- [ ] Fit Lasso regression with the same resampling folds.
-- [ ] Fit Elastic Net or justify why two regularized models are sufficient.
-- [ ] Plot coefficient paths and compare shrinkage/selection behaviour.
-- [ ] Record seeds, folds, tuning grids, fitted preprocessing objects, and model objects.
+- [~] Review the fitted baseline model and its justification.
+- [~] Review Ridge regression with cross-validated regularization strength.
+- [~] Review Lasso regression fitted with the shared resampling folds.
+- [~] Review Elastic Net and its tuning strategy.
+- [~] Review the coefficient paths and comparison of shrinkage/selection behaviour.
+- [~] Verify the recorded seeds, folds, tuning grids, fitted preprocessing objects, and model objects.
 
 ### 5. Held-out evaluation
 
-- [ ] Keep the held-out test target unused until every modelling decision is locked.
-- [ ] Compare all models on the identical test rows and metrics.
-- [ ] Add uncertainty estimates where practical.
-- [ ] Diagnose residual patterns and influential observations.
-- [ ] Discuss the bias-variance trade-off, practical error size, limitations, and honest negative results.
+- [~] Review the validation evidence that held-out outcomes remained unused until modelling decisions were locked.
+- [~] Review the comparison of all models on identical holdout rows and metrics.
+- [~] Review the uncertainty estimates and document any limitations.
+- [~] Review the residual and influential-observation diagnostics.
+- [~] Refine and approve the discussion of bias-variance trade-offs, practical error size, limitations, and honest negative results.
 
 ## Part 2 - Experimental-design extension
 
@@ -103,6 +112,11 @@ the presence of code.
 
 ## Part 1 ownership and review
 
+The section leads below remain responsible for subject-matter review. In
+addition, Loc completed the project framework and Triet completed the canonical
+Part 1 integration and successful locked-environment run; these project-level
+contributions should be reflected in the final contribution statement.
+
 | Section | Lead | Canonical stage | Reviewer |
 |---|---|---|---|
 | 1. Exploratory data analysis | Nguyễn Đình Thiên Lộc (`24125093`) | `analysis/01_eda_cleaning.R` (EDA outputs) | To assign |
@@ -118,7 +132,7 @@ Every result should have a second-person review, regardless of lead ownership.
 - [x] A clean clone restores dependencies without manual fixes.
 - [x] `Rscript --vanilla scripts/reproduce.R` passes locally.
 - [ ] CI is green on GitHub and required before merging.
-- [ ] The complete analysis runs top-to-bottom with fixed seeds.
-- [ ] No preprocessing, feature selection, or tuning uses held-out test outcomes.
+- [x] The complete Part 1 analysis runs top-to-bottom with fixed seeds under R 4.5.2.
+- [x] Local validation confirms that preprocessing, feature selection, and tuning do not use held-out outcomes.
 - [ ] The report PDF, source bundle, and presentation are generated and reviewed.
 - [ ] Every claim is traceable to code, output, or a cited source.
