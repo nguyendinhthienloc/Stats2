@@ -1,0 +1,28 @@
+R version 4.5.2 (2025-10-31)
+Platform: x86_64-conda-linux-gnu
+Running under: Fedora Linux 44 (Workstation Edition)
+
+Matrix products: default
+BLAS/LAPACK: /home/nguyenhongtantai/miniconda3/envs/stats2-r-4.5.2/lib/libopenblasp-r0.3.34.so;  LAPACK version 3.12.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: Asia/Ho_Chi_Minh
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] digest_0.6.39    codetools_0.2-20 fastmap_1.2.0    shape_1.4.6.1   
+ [5] xfun_0.60        Matrix_1.7-4     lattice_0.22-7   splines_4.5.2   
+ [9] iterators_1.0.14 knitr_1.51       htmltools_0.5.9  rmarkdown_2.31  
+[13] cli_3.6.6        foreach_1.5.2    grid_4.5.2       renv_1.2.4      
+[17] compiler_4.5.2   tools_4.5.2      evaluate_1.0.5   Rcpp_1.1.2      
+[21] survival_3.8-3   otel_0.2.0       rlang_1.3.0      glmnet_5.0      

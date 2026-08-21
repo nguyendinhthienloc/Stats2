@@ -1,0 +1,5 @@
+Completed: 2026-08-21 01:12:37 UTC
+Locked model: Lasso
+Observed holdout winner: OLS
+Holdout rows: 271
+Row-level holdout outcomes were not serialized.

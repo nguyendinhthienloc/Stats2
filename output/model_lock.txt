@@ -1,0 +1,4 @@
+Locked model: Lasso
+Selection metric: Five-fold CV RMSE
+Cross-validated RMSE: 0.671157
+Rule: Lowest CV RMSE; selected before holdout outcomes are reconstructed

@@ -1,0 +1,5 @@
+"Partition","Observations","Percent_of_unique"
+"Raw archive",1599,
+"Unique before split",1359,100
+"Training",1088,80.0588668138337
+"Holdout",271,19.9411331861663
