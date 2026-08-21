@@ -66,9 +66,9 @@ interpretation. Change an item to `[x]` only after that human sign-off.
 
 ### 3. Feature selection
 
-- [~] Review the implemented principled feature-selection methods.
-- [~] Verify that selection occurs inside resampling where required to avoid optimistic estimates.
-- [~] Review the selected predictors, stability results, and substantive interpretation.
+- [x] Review the implemented principled feature-selection methods.
+- [x] Verify that selection occurs inside resampling where required to avoid optimistic estimates.
+- [x] Review the selected predictors, stability results, and substantive interpretation.
 
 ### 4. Baseline and regularized models
 

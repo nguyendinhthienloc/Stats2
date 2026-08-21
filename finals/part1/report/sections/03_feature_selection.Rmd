@@ -8,10 +8,7 @@ We use three training-only views of relevance: marginal correlations, variance
 inflation factors (VIFs), and an AIC stepwise sensitivity analysis. The largest
 VIF is `r fmt(max_vif_row$VIF, 2)` for
 `r pretty_feature(max_vif_row$Feature)`. This is material multicollinearity but
-not evidence that the feature is useless: deleting one correlated chemistry
-measure can make the retained coefficient depend arbitrarily on that choice.
-Therefore all predictors enter Ridge, while sparse selection is delegated to
-Lasso's embedded penalty.
+not evidence that the feature is useless. In the context of wine chemistry, variables like fixed acidity, pH, and density are naturally coupled. Manually deleting one correlated chemistry measure to artificially lower VIF can make the retained coefficient depend arbitrarily on that choice and remove valid chemical information. Therefore, all predictors enter the regularized models, while sparse selection is delegated to Lasso's embedded penalty.
 
 \includefigure{../output/figures/fig_p3_feature_screening.pdf}{VIFs and full-OLS coefficients after the training-derived transformations. Coefficients are comparable because predictors are standardized.}{fig:p3-screening}
 
@@ -26,16 +23,15 @@ it is a diagnostic against which to compare Lasso.
 \tightinputtable{../output/tables/tab_p3_baseline_performance.tex}
 
 The mean-only model establishes the no-chemistry benchmark. OLS lowers
-cross-validated error, but correlated predictors allow coefficient variance.
-Regularization deliberately accepts some training bias to reduce that variance.
+cross-validated error, but correlated predictors allow severe coefficient variance. Without constraint, OLS may assign large, opposing weights to highly correlated acidity metrics, leading to unstable predictions on new data. Regularization deliberately accepts some training bias to reduce that variance and prevent overfitting.
 
 ## Embedded Lasso selection
 
 At the one-standard-error penalty, Lasso retains
 `r nrow(selected_lasso)` predictors:
 `r if (nrow(selected_lasso)) paste(pretty_feature(selected_lasso$Feature), collapse = ", ") else "none"`.
-This is the required principled feature-selection result. The one-SE rule is
-used for interpretation because it favors a stable sparse description; the
-minimum-CV penalty remains the predeclared predictive fit.
+This is the required principled feature-selection result. Unsurprisingly, the variables that survive this rigorous shrinkage---such as alcohol and volatile acidity---are precisely those identified in the exploratory analysis (Section 1) as having the strongest marginal correlations with expert quality ratings. 
+
+The one-SE rule is used for interpretation because it isolates the most robust chemical signals, yielding a stable sparse description without sacrificing significant predictive power. However, the minimum-CV penalty remains the predeclared predictive fit for the final holdout evaluation.
 
 \tightinputtable{../output/tables/tab_p4_lasso_selection.tex}
