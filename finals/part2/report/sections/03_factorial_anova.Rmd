@@ -1,0 +1,28 @@
+<!-- Part 2 Section 3 owner: Le Minh Thuan (24125105) -->
+
+## Factorial ANOVA and effect sizes
+
+We fit
+\[
+Y_{ijk}=\mu+\alpha_i+\beta_j+(\alpha\beta)_{ij}+\varepsilon_{ijk},
+\]
+where \(Y\) is mathematics score. Sum-to-zero contrasts make the main effects
+comparisons of equally weighted marginal cell means despite unequal sample
+sizes. The one-degree-of-freedom partial tests are Type-III-style tests from the
+full interaction model. Alongside (F) tests, we report score-point
+differences, 95% confidence intervals, and partial \(\eta^2\).
+
+\tightinputtable{../output/tables/tab_part2_key_findings_display.tex}
+
+Students who completed preparation averaged
+`r p2_fmt(p2_preparation$Estimate_points, 2)` points higher after equally
+weighting the lunch cells (95% CI
+`r p2_interval(p2_preparation$CI_low, p2_preparation$CI_high)`). The standard
+lunch group averaged `r p2_fmt(p2_lunch$Estimate_points, 2)` points higher than
+the free/reduced group (95% CI
+`r p2_interval(p2_lunch$CI_low, p2_lunch$CI_high)`). Both marginal nulls are
+rejected. The difference in preparation effects is
+`r p2_fmt(p2_interaction$Estimate_points, 2)` points and is not significant
+(\(p=`r p2_fmt(p2_interaction$P_value, 3)`\)); the data do not support effect
+modification by lunch category.
+

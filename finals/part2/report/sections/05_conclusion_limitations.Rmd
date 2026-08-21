@@ -1,0 +1,32 @@
+<!-- Part 2 Section 5 owner: Nguyen Bao Minh Triet (24125047) -->
+
+## Practical conclusion and design evaluation
+
+The lunch contrast is the larger observed association:
+`r p2_fmt(p2_lunch$Estimate_points, 2)` score points with partial
+\(\eta^2=`r p2_fmt(p2_lunch$Partial_eta_squared, 3)`\), compared with
+`r p2_fmt(p2_preparation$Estimate_points, 2)` points and partial
+\(\eta^2=`r p2_fmt(p2_preparation$Partial_eta_squared, 3)`\) for preparation.
+The interaction is practically small (partial
+\(\eta^2=`r p2_fmt(p2_interaction$Partial_eta_squared, 4)`\)) and its confidence
+interval includes differences in either direction. Reporting raw points as
+well as standardized effects keeps statistical significance separate from
+educational importance.
+
+These findings should guide a future experiment, not be presented as evidence
+that changing lunch category or enrolling a particular student in preparation
+will cause the reported score change. Preparation participation may reflect
+motivation or prior attainment, and lunch category may proxy household and
+school resources. Income, prior scores, attendance, school quality, and
+classroom clustering are unavailable. The Kaggle listing also provides no
+collection protocol sufficient to establish representativeness.
+
+An actionable next study would randomize access to a defined preparation
+program, block randomization by baseline score and lunch category, record
+school/class identifiers, and analyze score change from a pre-test. For the
+current data, the defensible conclusion is narrower: preparation completion and
+standard lunch are associated with higher mean mathematics scores, with no
+evidence that the preparation difference varies between lunch groups. All
+calculations and figures were generated in R [@RCore2026] through the canonical
+Stage 5 pipeline.
+

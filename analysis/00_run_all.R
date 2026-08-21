@@ -52,7 +52,12 @@ stage_artifacts <- list(
     file.path(paths$models, "holdout_summary.RData"),
     file.path(PROJECT_ROOT, "output", "HOLDOUT_COMPLETE.txt")
   ),
-  "05_part2_experimental_design.R" = character(0)
+  "05_part2_experimental_design.R" = c(
+    file.path(paths$processed, "student_performance_clean.csv"),
+    file.path(paths$tables, "tab_part2_anova.tex"),
+    file.path(paths$figures, "fig_part2_diagnostics.pdf"),
+    file.path(PROJECT_ROOT, "output", "part2_summary.RData")
+  )
 )
 
 run_analysis_pipeline <- function() {
@@ -113,7 +118,17 @@ run_analysis_pipeline <- function() {
     "tab_p4_enet_alpha_search", "tab_p4_coefficient_comparison",
     "tab_p4_lasso_selection", "tab_p4_model_lock",
     "tab_p5_holdout_performance", "tab_p5_holdout_display",
-    "tab_p5_error_by_quality", "tab_reproducibility_versions"
+    "tab_p5_error_by_quality", "tab_reproducibility_versions",
+    "tab_part2_data_audit", "tab_part2_variable_dictionary",
+    "tab_part2_hypotheses", "tab_part2_descriptive_statistics",
+    "tab_part2_descriptive_display",
+    "tab_part2_anova", "tab_part2_effect_estimates",
+    "tab_part2_cell_means", "tab_part2_model_fit",
+    "tab_part2_assumptions", "tab_part2_simple_effects",
+    "tab_part2_simple_effects_display",
+    "tab_part2_robust_sensitivity", "tab_part2_key_findings",
+    "tab_part2_key_findings_display",
+    "tab_part2_limitations"
   )
   figure_files <- c(
     "fig_p2_quality_distribution.pdf",
@@ -123,22 +138,29 @@ run_analysis_pipeline <- function() {
     "fig_p3_feature_screening.pdf", "fig_p4_cv_curves.pdf",
     "fig_p4_coefficient_paths.pdf", "fig_p4_coefficient_comparison.pdf",
     "fig_p5_actual_vs_predicted.pdf",
-    "fig_p5_locked_residual_diagnostics.pdf"
+    "fig_p5_locked_residual_diagnostics.pdf",
+    "fig_part2_histograms.pdf", "fig_part2_boxplots.pdf",
+    "fig_part2_interaction.pdf", "fig_part2_factorial_patterns.pdf",
+    "fig_part2_diagnostics.pdf"
   )
   artifact_paths <- c(
     file.path(paths$processed,
               c("shared_data.RData", "training_data.csv",
-                "holdout_predictors_no_outcome.csv", "split_manifest.csv")),
+                "holdout_predictors_no_outcome.csv", "split_manifest.csv",
+                "student_performance_clean.csv",
+                "part2_design_metadata.RData")),
     file.path(paths$figures, figure_files),
     file.path(paths$tables,
               as.vector(outer(table_stems, c(".csv", ".tex"), paste0))),
     file.path(paths$models,
               c("baseline_fits.RData", "regularized_fits.RData",
-                "holdout_summary.RData")),
+                "holdout_summary.RData", "part2_anova.RData",
+                "part2_diagnostics.RData")),
     file.path(paths$logs, "session_info.txt"),
     file.path(PROJECT_ROOT, "output",
               c("model_lock.csv", "model_lock.txt",
-                "HOLDOUT_COMPLETE.txt", "analysis_summary.RData"))
+                "HOLDOUT_COMPLETE.txt", "analysis_summary.RData",
+                "part2_summary.RData"))
   )
   artifact_paths <- unique(artifact_paths[file.exists(artifact_paths)])
   normalized_paths <- normalizePath(artifact_paths, winslash = "/",
@@ -165,7 +187,7 @@ run_analysis_pipeline <- function() {
     file.path(PROJECT_ROOT, "scripts", "validate_outputs.R"),
     envir = new.env(parent = globalenv())
   )
-  log_step("Part 1 completed and validated; Part 2 remains a documented scaffold")
+  log_step("Parts 1 and 2 completed and validated")
   invisible(stage_artifacts)
 }
 

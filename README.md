@@ -29,6 +29,8 @@ Part 1 is a regression analysis of the quality score. The locked protocol uses a
 | `data/processed/` | Reproducible derived datasets |
 | `output/` | Generated figures, tables, and model objects |
 | `report/` | Final report source and generated PDF |
+| `finals/part1/` | Part 1 implementation and report modules |
+| `finals/part2/` | Five owned Part 2 analysis/report modules and collaboration plan |
 | `presentation/` | Presentation source and final deck |
 | `scripts/` | Restore, reproduce, and validation commands |
 | `references/` | Course briefs, group assignment, notes, and labs |
@@ -38,8 +40,9 @@ The ordered scripts at the repository root are the canonical workflow. They
 incorporate the completed Part 1 modules under `finals/part1/`; do not run the
 retired nested entry points as a second pipeline. All source data, derived
 data, and generated artifacts use the root `data/` and `output/` directories;
-`finals/part1/` contains implementation and report source only. Part 2 remains
-an explicit TODO in `analysis/05_part2_experimental_design.R`.
+`finals/part1/` contains Part 1 implementation and report source only. Part 2
+source is split into five owned modules under `finals/part2/` and is integrated
+by `analysis/05_part2_experimental_design.R`.
 
 ## What to install
 
@@ -248,6 +251,23 @@ This ownership split mirrors `finals/part1/collaboration/WORK_SPLIT.md`. Ownersh
 | 5. Held-out evaluation | Nguyễn Hồng Tấn Tài (`24125078`) | `analysis/04_holdout_evaluation.R` |
 
 Each lead hands generated artifacts to the next section, and a second member reviews the code and statistical interpretation. Sections 1--4 must not inspect held-out outcomes.
+
+## Five Part 2 workstreams
+
+Part 2 uses all 1,000 Student Performance rows in an observational two-factor
+analysis of mathematics score by test preparation and lunch category. Dataset
+discovery is excluded from contribution credit. The Part 2 tasks compensate for
+the estimated Part 1 burden so every member has a combined target of 6.5
+planning units; see `finals/part2/collaboration/WORK_SPLIT.md` for the calculation,
+section contracts, and cross-review ring.
+
+| Section | Proposed owner | Canonical module |
+|---|---|---|
+| 1. Data audit, design, and hypotheses | Nguyen Dinh Thien Loc (`24125093`) | `finals/part2/R/01_data_audit_design.R` |
+| 2. Descriptive statistics and plots | Tran Le Anh Tuan (`24125107`) | `finals/part2/R/02_descriptive_visualization.R` |
+| 3. Factorial ANOVA and effect sizes | Le Minh Thuan (`24125105`) | `finals/part2/R/03_factorial_anova.R` |
+| 4. Diagnostics and adjusted follow-up | Nguyen Hong Tan Tai (`24125078`) | `finals/part2/R/04_diagnostics_posthoc.R` |
+| 5. Interpretation and integration | Nguyen Bao Minh Triet (`24125047`) | `finals/part2/R/05_interpretation_integration.R` |
 
 ## Continuous integration
 

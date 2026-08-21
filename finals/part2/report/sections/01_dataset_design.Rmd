@@ -1,0 +1,32 @@
+<!-- Part 2 Section 1 owner: Nguyen Dinh Thien Loc (24125093) -->
+
+## Dataset, design, and hypotheses
+
+The public *Students Performance in Exams* file contains 1,000 student records
+and eight variables [@KaggleStudentsPerformance]. The source data card does not
+document random assignment, school/classroom clustering, or a sampling frame.
+We therefore describe this as an **observational (2\times2) factorial
+analysis**, not a randomized experiment. All 1,000 rows are retained; there are
+no missing values or exact duplicate profiles, so neither imputation nor
+subsampling is needed.
+
+The pre-specified response is mathematics score (0--100). Factor A is test
+preparation (`none`, `completed`), and Factor B is lunch category
+(`free/reduced`, `standard`). These variables meet the brief's requirement of
+two categorical factors and a continuous response. Lunch is interpreted as a
+contextual socioeconomic proxy, not a manipulable treatment or a label of
+individual ability. Reading and writing scores are parallel outcomes and are
+not used as covariates because conditioning on simultaneous outcomes would
+change the research question. Gender, race/ethnicity group, and parental
+education are not additional factors in the primary model: adding them would
+replace the required focused two-factor question with a sparse, sensitive
+multi-factor analysis. Their omission also means the two reported associations
+remain vulnerable to confounding.
+
+The study asks whether mean mathematics score is associated with preparation,
+with lunch group, and with their interaction. At \(\alpha=0.05\), the three null
+hypotheses are: (i) equal preparation marginal means, (ii) equal lunch marginal
+means, and (iii) equal preparation differences across lunch groups. The
+alternatives are two-sided. Because assignment was not randomized, rejecting a
+null supports an adjusted group association within this factorial model, not a
+causal effect.

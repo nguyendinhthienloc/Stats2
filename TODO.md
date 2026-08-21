@@ -16,7 +16,9 @@ Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratifie
 - [x] Nguyễn Bảo Minh Triết integrated the Part 1 modules into the canonical workflow and ran Part 1 successfully under the locked R 4.5.2 environment (`af46786`; completed 2026-08-19).
 - [x] The successful Part 1 run generated the expected processed data, figures, tables, fitted models, holdout summary, and artifact manifest. The holdout boundary and generated artifacts passed local validation.
 - [~] Part 1 is computationally complete. Section leads and second reviewers still need to check the statistical interpretation, refine the report prose, and record their sign-off.
-- [ ] Part 2, the final report review, and the presentation remain to be completed.
+- [~] Part 2 is computationally complete and integrated into the report;
+  section owners and second reviewers still need to verify its interpretation.
+- [ ] The final report review and presentation remain to be completed.
 
 ## Milestone 0 - Repository and reproducibility
 
@@ -39,7 +41,9 @@ Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratifie
 - [x] Use project seed `4520803` and an 80/20 split stratified by observed quality score; keep holdout outcomes inaccessible before Stage 4.
 - [x] Use RMSE as the primary metric, with MAE and R-squared as secondary metrics.
 - [x] Use five fixed shared cross-validation folds; repeated cross-validation is not part of the locked primary workflow.
-- [ ] Select a separate real-world dataset for Part 2 with at least two categorical factors and a continuous response, or at least two two-level factors for a factorial design.
+- [x] Use the 1,000-row Student Performance data for an observational
+  `test_preparation` by `lunch` factorial analysis of `math_score`; do not make
+  randomized-experiment or causal claims.
 
 ## Part 1 - Wine Quality supervised-learning workflow
 
@@ -89,16 +93,16 @@ interpretation. Change an item to `[x]` only after that human sign-off.
 
 ## Part 2 - Experimental-design extension
 
-- [ ] Select and cite an appropriate external dataset.
-- [ ] Justify two-factor ANOVA or a `2^k` factorial design with `k >= 2`.
-- [ ] State research questions and null/alternative hypotheses before fitting models.
-- [ ] Produce descriptive statistics, boxplots, histograms, and interaction plots.
-- [ ] Check normality, homogeneity of variance, and independence assumptions.
-- [ ] Fit the ANOVA/factorial model and interpret main and interaction effects.
-- [ ] Perform residual and model-adequacy diagnostics.
-- [ ] Run Tukey HSD, Bonferroni, or another justified post-hoc procedure when warranted.
-- [ ] Separate statistical significance from practical significance.
-- [ ] Summarize limitations, improvements, and actionable conclusions.
+- [~] Review the Student Performance source citation and provenance limitation.
+- [~] Review the justification for observational two-factor ANOVA.
+- [~] Review the pre-specified research questions and three two-sided hypotheses.
+- [~] Review descriptive statistics, boxplots, histograms, and interaction plot.
+- [~] Review normality, Brown--Forsythe variance, independence, and influence checks.
+- [~] Review the effect-coded ANOVA, marginal effects, interaction, and partial eta-squared.
+- [~] Review residual/model-adequacy diagnostics and HC3 sensitivity.
+- [~] Review the Holm-adjusted simple contrasts and two-level post-hoc rationale.
+- [~] Review the separation of statistical and practical significance.
+- [~] Review non-causal limitations, improved experimental design, and actionable conclusion.
 
 ## Report, presentation, and submission
 

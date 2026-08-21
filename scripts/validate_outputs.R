@@ -1,5 +1,5 @@
 ###############################################################################
-# Validate the generated Part 1 interface after the canonical pipeline runs.
+# Validate generated Part 1 and Part 2 interfaces after the canonical run.
 ###############################################################################
 
 frame_sources <- vapply(sys.frames(), function(frame) {
@@ -25,7 +25,7 @@ if (!file.exists(script_file) && file.exists(basename(script_file))) {
 script_file <- normalizePath(script_file, winslash = "/", mustWork = TRUE)
 source(file.path(dirname(script_file), "..", "R", "setup.R"))
 
-log_step("Validating generated Part 1 artifacts")
+log_step("Validating generated Part 1 and Part 2 artifacts")
 required <- c(
   file.path(paths$processed, "shared_data.RData"),
   file.path(paths$processed, "training_data.csv"),
@@ -37,7 +37,13 @@ required <- c(
   file.path(PROJECT_ROOT, "output", "analysis_summary.RData"),
   file.path(PROJECT_ROOT, "output", "artifact_manifest.csv"),
   file.path(paths$tables, "tab_p5_holdout_display.tex"),
-  file.path(paths$figures, "fig_p5_locked_residual_diagnostics.pdf")
+  file.path(paths$figures, "fig_p5_locked_residual_diagnostics.pdf"),
+  file.path(paths$processed, "student_performance_clean.csv"),
+  file.path(paths$models, "part2_anova.RData"),
+  file.path(paths$models, "part2_diagnostics.RData"),
+  file.path(paths$tables, "tab_part2_anova.tex"),
+  file.path(paths$figures, "fig_part2_diagnostics.pdf"),
+  file.path(PROJECT_ROOT, "output", "part2_summary.RData")
 )
 missing <- required[!file.exists(required)]
 if (length(missing)) {
@@ -145,7 +151,30 @@ if (nrow(holdout$holdout_performance) != 5L ||
   stop("Holdout model comparison is incomplete.", call. = FALSE)
 }
 
+student <- utils::read.csv(
+  file.path(paths$processed, "student_performance_clean.csv"),
+  stringsAsFactors = FALSE
+)
+if (nrow(student) != 1000L || anyNA(student) ||
+    !all(c("math_score", "lunch", "test_preparation") %in% names(student)) ||
+    !setequal(unique(student$lunch), c("free/reduced", "standard")) ||
+    !setequal(unique(student$test_preparation), c("none", "completed"))) {
+  stop("The processed Part 2 dataset failed its contract.", call. = FALSE)
+}
+
+part2 <- new.env(parent = emptyenv())
+part2_objects <- load(
+  file.path(PROJECT_ROOT, "output", "part2_summary.RData"), envir = part2
+)
+if (!"part2_summary" %in% part2_objects ||
+    nrow(part2$part2_summary$anova) != 4L ||
+    nrow(part2$part2_summary$key_findings) != 3L ||
+    !identical(part2$part2_summary$design$observations, 1000L)) {
+  stop("The Part 2 report interface is incomplete.", call. = FALSE)
+}
+
 log_step(
-  "Generated outputs passed: 1,088 training rows, 271 holdout rows, locked ",
-  lock$Locked_model[[1L]], ", no serialized y_test"
+  "Generated outputs passed: Part 1 has 1,088 training and 271 holdout rows; ",
+  "Part 2 has 1,000 observational rows; locked Part 1 model is ",
+  lock$Locked_model[[1L]], "; no serialized y_test"
 )

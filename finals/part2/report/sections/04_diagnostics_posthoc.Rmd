@@ -1,0 +1,30 @@
+<!-- Part 2 Section 4 owner: Nguyen Hong Tan Tai (24125078) -->
+
+## Diagnostics, model adequacy, and follow-up comparisons
+
+\includefigure{../output/figures/fig_part2_diagnostics.pdf}{Residual, normal Q--Q, scale-location, and Cook's-distance diagnostics for the two-factor model.}{fig:part2-diagnostics}
+
+The Shapiro--Wilk test detects a modest non-Gaussian departure
+(\(W=`r p2_fmt(p2_shapiro$Statistic, 3)`\),
+\(p=`r p2_fmt(p2_shapiro$P_value, 3)`\)); at \(n=1000\), this test is sensitive
+to the discreteness and bounds of exam scores. The Brown--Forsythe test does not
+reject equal within-cell variances
+(\(F=`r p2_fmt(p2_bf$Statistic, 2)`\),
+\(p=`r p2_fmt(p2_bf$P_value, 3)`\)). The conventional \(4/n\) influence rule
+flags `r p2_influence_count` observations, but the maximum Cook's distance is
+only `r p2_fmt(p2_max_cook, 4)`. HC3 robust standard errors preserve the same
+decisions for both marginal effects and the interaction [@MacKinnonWhite1985].
+Independence remains unverifiable because school and classroom identifiers are
+absent; this is the main model-adequacy limitation.
+
+Each factor has only two levels, so a within-factor Tukey procedure would merely
+repeat its single main comparison. We instead report four scientifically direct
+simple contrasts and control their familywise error with Holm's method
+[@Holm1979].
+
+\tightinputtable{../output/tables/tab_part2_simple_effects_display.tex}
+
+All four simple contrasts remain significant after adjustment, but they are
+secondary descriptions; the non-significant interaction remains the formal
+test of whether the preparation association differs by lunch group.
+

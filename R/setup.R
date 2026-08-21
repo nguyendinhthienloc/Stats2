@@ -37,7 +37,17 @@ if (!nzchar(Sys.getenv("RENV_PROJECT", unset = ""))) {
       file.exists(file.path(project_libraries, "renv", "DESCRIPTION"))
     ]
     if (length(project_library) > 0L) {
-      .libPaths(c(project_library[[length(project_library)]], .libPaths()))
+      active_r_series <- paste0(
+        "R-", R.version$major, ".",
+        strsplit(R.version$minor, ".", fixed = TRUE)[[1L]][[1L]]
+      )
+      matching_library <- project_library[
+        basename(dirname(project_library)) == active_r_series
+      ]
+      if (length(matching_library)) {
+        project_library <- matching_library
+      }
+      .libPaths(c(project_library[[1L]], .libPaths()))
     }
   }
 }
@@ -51,6 +61,8 @@ paths <- list(
                       "winequality-red.csv"),
   raw_white = file.path(PROJECT_ROOT, "data", "raw", "wine_quality",
                         "winequality-white.csv"),
+  raw_student = file.path(PROJECT_ROOT, "data", "raw", "student_performance",
+                          "StudentsPerformance.csv"),
   processed = file.path(PROJECT_ROOT, "data", "processed"),
   figures = file.path(PROJECT_ROOT, "output", "figures"),
   tables = file.path(PROJECT_ROOT, "output", "tables"),

@@ -10,6 +10,7 @@ date: "Academic Year 2025--2026"
 bibliography:
   - references.bib
   - ../finals/part1/report/references.bib
+  - ../finals/part2/report/references.bib
 link-citations: true
 output:
   pdf_document:
@@ -26,10 +27,12 @@ geometry: margin=0.78in
 ---
 
 \begin{abstract}
-This report currently completes Part 1 of the Group 8 final project. We predict
-red Vinho Verde quality from 11 physicochemical measurements with a locked,
-leakage-controlled comparison of OLS, Ridge, Lasso, and Elastic Net. Part 2,
-the separate experimental-design extension, remains explicitly pending.
+This report completes both components of the Group 8 final project. Part 1
+predicts red Vinho Verde quality from 11 physicochemical measurements with a
+locked, leakage-controlled comparison of OLS, Ridge, Lasso, and Elastic Net.
+Part 2 uses an observational two-factor analysis of student mathematics scores
+by test preparation and lunch category, with diagnostics, robust sensitivity
+checks, and explicitly non-causal interpretation.
 \end{abstract}
 
 ```{r setup, include=FALSE}
@@ -55,8 +58,37 @@ max_vif_row <- analysis_summary$feature_screening[
 ]
 selected_lasso <- subset(analysis_summary$lasso_selection, Selected == "Yes")
 
+part2_file <- file.path(PROJECT_ROOT, "output", "part2_summary.RData")
+if (!file.exists(part2_file)) {
+  stop("Part 2 output is missing. Run source('analysis/00_run_all.R').")
+}
+load(part2_file)
+
+p2_find <- function(label) {
+  part2_summary$key_findings[
+    part2_summary$key_findings$Finding == label, , drop = FALSE
+  ]
+}
+p2_preparation <- p2_find("Test-preparation association")
+p2_lunch <- p2_find("Lunch-group association")
+p2_interaction <- p2_find("Preparation-by-lunch interaction")
+p2_shapiro <- subset(part2_summary$assumptions,
+                     Assumption == "Residual normality")
+p2_bf <- subset(part2_summary$assumptions,
+                Assumption == "Homogeneity of variance")
+p2_influence <- subset(part2_summary$assumptions,
+                       Assumption == "Influential observations")
+p2_max_cook <- p2_influence$Statistic[[1L]]
+p2_influence_count <- as.integer(sub(
+  ".*4/n: ([0-9]+);.*", "\\1", p2_influence$Assessment[[1L]]
+))
+
 fmt <- function(x, digits = 3L) formatC(x, digits = digits, format = "f")
 pretty_feature <- function(x) gsub("_", " ", x)
+p2_fmt <- fmt
+p2_interval <- function(lower, upper) {
+  sprintf("[%s, %s]", p2_fmt(lower, 2L), p2_fmt(upper, 2L))
+}
 ```
 
 # Part 1: Wine Quality (Red)
@@ -84,15 +116,36 @@ for (section in section_files) {
 
 # Part 2: Experimental-design extension
 
-TODO: Select and justify the separate dataset; state hypotheses; complete the
-two-factor ANOVA or \(2^k\) factorial analysis; check assumptions; report
-interactions and post-hoc comparisons where justified; and interpret practical
-significance and limitations.
+```{r part2-sections}
+part2_sections <- file.path(
+  PROJECT_ROOT, "finals", "part2", "report", "sections",
+  c(
+    "01_dataset_design.Rmd",
+    "02_descriptive_statistics.Rmd",
+    "03_factorial_anova.Rmd",
+    "04_diagnostics_posthoc.Rmd",
+    "05_conclusion_limitations.Rmd"
+  )
+)
+for (section in part2_sections) {
+  cat(
+    knitr::knit_child(section, envir = knitr::knit_global(), quiet = TRUE),
+    sep = "\n"
+  )
+}
+```
 
-# Contributions
+# Contributions and review
 
-TODO: Replace the workstream ownership plan with a statement of the work each
-member actually completed and reviewed.
+Part 2 is divided into five owned sections: dataset audit/design and hypotheses
+(Nguyen Dinh Thien Loc), descriptive analysis (Tran Le Anh Tuan), factorial
+ANOVA (Le Minh Thuan), diagnostics and adjusted follow-up comparisons (Nguyen
+Hong Tan Tai), and practical interpretation/integration (Nguyen Bao Minh
+Triet). Dataset discovery is deliberately excluded from contribution credit.
+The detailed compensating workload plan is in
+`finals/part2/collaboration/WORK_SPLIT.md`. **TODO:** before submission, replace
+this plan with work each member actually completed and record second-person
+review sign-off.
 
 ```{r appendix}
 appendix_file <- file.path(
