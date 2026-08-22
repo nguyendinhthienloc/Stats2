@@ -1,0 +1,10 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Keep raw datasets and binary files immutable and binary across all platforms
+data/raw/** -text
+*.csv -text
+*.zip -text
+*.pdf -text
+*.pptx -text
+*.RData -text
