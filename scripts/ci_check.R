@@ -124,8 +124,15 @@ stopifnot(
   setequal(unique(student$lunch), c("free/reduced", "standard")),
   setequal(unique(student$`test preparation course`), c("none", "completed"))
 )
-student_md5 <- tolower(unname(tools::md5sum(paths$raw_student)))
-if (!identical(student_md5, "c1c7dc8a373fe3e5fe854c5e87d2e4f1")) {
+student_raw <- readBin(paths$raw_student, what = "raw",
+                       n = file.size(paths$raw_student))
+student_text <- rawToChar(student_raw)
+student_text <- gsub("\\r\\n?", "\\n", student_text, perl = TRUE)
+student_normalized <- tempfile(fileext = ".csv")
+on.exit(unlink(student_normalized), add = TRUE)
+writeBin(charToRaw(student_text), student_normalized)
+student_md5 <- tolower(unname(tools::md5sum(student_normalized)))
+if (!identical(student_md5, "ec06a4da16a0122c33133593ef1cef1a")) {
   stop("The immutable Student Performance source checksum changed.",
        call. = FALSE)
 }
