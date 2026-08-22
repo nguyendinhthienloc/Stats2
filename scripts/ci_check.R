@@ -127,12 +127,12 @@ stopifnot(
 student_raw <- readBin(paths$raw_student, what = "raw",
                        n = file.size(paths$raw_student))
 student_text <- rawToChar(student_raw)
-student_text <- gsub("\\r\\n?", "\\n", student_text, perl = TRUE)
+student_text <- gsub("\\r\\n?", "\n", student_text, perl = TRUE)
 student_normalized <- tempfile(fileext = ".csv")
 on.exit(unlink(student_normalized), add = TRUE)
 writeBin(charToRaw(student_text), student_normalized)
 student_md5 <- tolower(unname(tools::md5sum(student_normalized)))
-if (!identical(student_md5, "ec06a4da16a0122c33133593ef1cef1a")) {
+if (!identical(student_md5, "f7a3b96762c57dbff85d27aeb50d28fb")) {
   stop("The immutable Student Performance source checksum changed.",
        call. = FALSE)
 }
