@@ -2,8 +2,8 @@
 
 ## Dataset, design, and hypotheses
 
-The public *Students Performance in Exams* file contains 1,000 student records
-and eight variables [@KaggleStudentsPerformance]. The source data card does not
+The Timothy Adeyemi Kaggle listing for *Students Performance in Exams* contains
+1,000 student records and eight variables [@KaggleStudentsPerformance]. Its data card does not
 document random assignment, school/classroom clustering, or a sampling frame.
 We therefore describe this as an **observational (2\times2) factorial
 analysis**, not a randomized experiment. All 1,000 rows are retained; there are

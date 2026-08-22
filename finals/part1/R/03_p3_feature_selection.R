@@ -45,7 +45,21 @@ ols_prediction <- stats::predict(ols_fit, newdata = model_frame)
 mean_training_score <- score_regression(y_train, mean_prediction)
 ols_training_score <- score_regression(y_train, ols_prediction)
 mean_cv_score <- cv_mean_baseline(y_train, foldid)
-ols_cv_score <- cv_ols_foldclean(train_data, foldid, log_features)
+ols_cv_score <- cv_ols_foldclean(train_data, foldid, log_features = NULL)
+
+ols_cook <- stats::cooks.distance(ols_fit)
+ols_leverage <- stats::hatvalues(ols_fit)
+cook_threshold <- 4 / nrow(model_frame)
+leverage_threshold <- 2 * length(stats::coef(ols_fit)) / nrow(model_frame)
+influence_audit <- data.frame(
+  Diagnostic = c("Cook's distance", "Leverage"),
+  Reference_rule = c("4/n", "2p/n, including intercept"),
+  Threshold = c(cook_threshold, leverage_threshold),
+  Flagged_rows = c(sum(ols_cook > cook_threshold),
+                   sum(ols_leverage > leverage_threshold)),
+  Maximum = c(max(ols_cook), max(ols_leverage)),
+  stringsAsFactors = FALSE
+)
 
 baseline_performance <- data.frame(
   Model = c("Mean", "OLS"),
@@ -78,6 +92,12 @@ save_table_artifacts(
   "AIC stepwise selection used as a sensitivity analysis.",
   "p3-stepwise-sensitivity", digits = 2
 )
+save_table_artifacts(
+  influence_audit, "tab_p3_influence_audit",
+  "Training-set OLS influence audit; flagged rows are reviewed and retained.",
+  "p3-influence-audit", digits = 4
+)
+
 
 open_pdf("fig_p3_feature_screening.pdf", width = 9, height = 5.5)
 graphics::par(mfrow = c(1, 2), mar = c(4.2, 7.2, 2.7, 0.8))
@@ -107,7 +127,7 @@ grDevices::dev.off()
 save(
   ols_fit, stepwise_fit, stepwise_features, feature_screening,
   baseline_performance, mean_training_score, ols_training_score,
-  mean_cv_score, ols_cv_score,
+  mean_cv_score, ols_cv_score, influence_audit, ols_cook, ols_leverage,
   file = file.path(MODEL_DIR, "baseline_fits.RData")
 )
 

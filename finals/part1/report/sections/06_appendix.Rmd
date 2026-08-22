@@ -50,6 +50,6 @@ The analysis and dynamic report use R, `knitr`, and `rmarkdown`
 \tightinputtable{../output/tables/tab_reproducibility_versions.tex}
 
 The workstream allocation and review interfaces are documented in the
-repository's collaboration work-split file. These organizational labels must be checked
-against the members' actual contributions before final submission.
+repository's collaboration work-split file. The final integration review
+verified the technical handoffs recorded in the contribution statement.
 

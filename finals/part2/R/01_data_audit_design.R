@@ -124,9 +124,9 @@ save_part2_table(
 )
 
 design_metadata <- list(
-  source = "Kaggle: Students Performance in Exams",
+  source = "Kaggle: Students Performance in Exams (Timothy Adeyemi)",
   source_url = paste0(
-    "https://www.kaggle.com/datasets/spscientist/",
+    "https://www.kaggle.com/datasets/timothyadeyemi/",
     "students-performance-in-exams"
   ),
   source_md5 = unname(tools::md5sum(paths$raw_student)),

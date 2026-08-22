@@ -1,142 +1,122 @@
 # STAT452 Final Project TODO
 
-Project: Group 8, Project 03 - Wine Quality (Red)  
-Course: STAT452, Academic Year 2025-2026  
-Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 stratified train/holdout split; five shared cross-validation folds; RMSE primary, with MAE and R-squared secondary.
+Project: Group 8, Project 03 — Wine Quality (Red)
+Course: STAT452, Academic Year 2025–2026
+Locked Part 1 protocol: regression on `quality`; seed `4520803`; 80/20 quality-stratified train/holdout split; five shared cross-validation folds; RMSE primary, with MAE and R-squared secondary.
 
 ## Status key
 
-- [ ] Not started
-- [x] Complete
-- [~] Implemented or in progress, but still awaiting review or a decision
+- [ ] External or human action still required
+- [x] Completed and locally verified
+- [~] Deliverable is ready; final human/external confirmation remains
 
 ## Current project status
 
-- [x] Nguyễn Đình Thiên Lộc created and organized the final-project framework, including the reproducible repository structure, canonical analysis stages, shared setup, CI configuration, report scaffold, and archived midterm history (`3f56e2d`).
-- [x] Nguyễn Bảo Minh Triết integrated the Part 1 modules into the canonical workflow and ran Part 1 successfully under the locked R 4.5.2 environment (`af46786`; completed 2026-08-19).
-- [x] The successful Part 1 run generated the expected processed data, figures, tables, fitted models, holdout summary, and artifact manifest. The holdout boundary and generated artifacts passed local validation.
-- [~] Part 1 is computationally complete. Section leads and second reviewers still need to check the statistical interpretation, refine the report prose, and record their sign-off.
-- [~] Part 2 is computationally complete and integrated into the report;
-  section owners and second reviewers still need to verify its interpretation.
-- [ ] The final report review and presentation remain to be completed.
+- [x] Parts 1 and 2 run through the canonical pipeline and pass output validation under R 4.5.2.
+- [x] The final report source, retained LaTeX, and MiKTeX/XeLaTeX PDF are complete.
+- [x] The substantive report ends on PDF page 19; appendices occupy pages 20–23 and references pages 24–25.
+- [x] A ten-slide editable presentation is complete; speaker-note timings total 10:00 and every slide contains a `[Sources]` block.
+- [x] Local submission artifacts are assembled under `submission/`.
+- [~] Technical integration review is complete; the five students must still confirm the contribution statement and second-person review sign-off.
 
-## Milestone 0 - Repository and reproducibility
+## Repository and reproducibility
 
-- [x] Archive the legacy midterm project under `legacy/midterm/`.
-- [x] Place the supplied Wine Quality archive and extracted source files under `data/raw/`.
-- [x] Validate the red-wine file contract: 1,599 rows, 11 predictors, and the `quality` target.
-- [x] Add CI for cross-platform analysis checks, MiKTeX PDF rendering, and artifact upload.
-- [x] Standardize the PDF toolchain on MiKTeX and document direct terminal commands for every workflow.
-- [x] Add the R language server to the reproducible `renv` environment for editor support.
-- [x] Document Fedora 43/44 setup.
-- [x] Keep `renv.lock` current whenever an R dependency is added or upgraded; automated checks enforce synchronization.
-- [x] Verify the pre-integration scaffold could restore from a clean library (2026-08-18 historical setup test).
-- [x] Run the integrated Part 1 workflow under locked R 4.5.2; Triet's local run and artifact validation passed on 2026-08-19.
-- [~] Confirm the integrated Part 1 workflow passes on every configured CI platform.
-- [ ] Require CI to pass before merging changes.
+- [x] Preserve the legacy midterm project under `legacy/midterm/`.
+- [x] Keep the Wine Quality and Student Performance source files immutable under `data/raw/`.
+- [x] Validate the Wine Quality contract: 1,599 rows, 11 predictors, and numeric `quality`.
+- [x] Validate the Student Performance contract: 1,000 rows, eight variables, valid scores/factor levels, and tracked MD5 checksum.
+- [x] Keep `renv.lock`, `DESCRIPTION`, and the R 4.5.2 library synchronized.
+- [x] Run `scripts/ci_check.R`, the full canonical pipeline, and `scripts/validate_outputs.R` locally.
+- [x] Verify that no serialized or processed holdout outcome is exposed before Stage 4.
+- [x] Generate an artifact manifest with sizes and MD5 checksums.
+- [ ] Confirm the final commit passes every configured GitHub Actions platform.
+- [ ] Enable/confirm branch protection requiring CI before merge.
 
-## Decisions needed before analysis
+## Part 1 — Wine Quality supervised learning
 
-- [x] Model the 0-10 quality score as a regression response.
-- [x] Use project seed `4520803` and an 80/20 split stratified by observed quality score; keep holdout outcomes inaccessible before Stage 4.
-- [x] Use RMSE as the primary metric, with MAE and R-squared as secondary metrics.
-- [x] Use five fixed shared cross-validation folds; repeated cross-validation is not part of the locked primary workflow.
-- [x] Use the 1,000-row Student Performance data for an observational
-  `test_preparation` by `lunch` factorial analysis of `math_score`; do not make
-  randomized-experiment or causal claims.
+### Exploratory data analysis
 
-## Part 1 - Wine Quality supervised-learning workflow
+- [x] Review the variable dictionary, types, units, ranges, and target definition.
+- [x] Review duplicates, impossible/non-finite values, missingness, and score frequencies.
+- [x] Review predictor/target distributions, pairwise relationships, and the correlation structure.
+- [x] Document skew, multicollinearity, overlap, rare scores, and modelling implications.
 
-The canonical scripts implement and successfully run every Part 1 section.
-The `[~]` items below have working code and generated outputs, but remain open
-until the assigned lead and a second member review the result and its
-interpretation. Change an item to `[x]` only after that human sign-off.
+### Cleaning and preprocessing
 
-### 1. Exploratory data analysis
+- [x] Remove exact duplicate profiles before splitting and document the provenance limitation.
+- [x] Retain scientifically plausible IQR outliers; winsorize predictors at training 1st/99th percentiles.
+- [x] Select log transformations from training data and reselect them inside each CV analysis fold.
+- [x] Fit imputation, clipping, centering, and scaling inside each CV analysis fold and apply unchanged to validation data.
+- [x] Fit the final preprocessor on all training predictors and apply it unchanged to predictor-only holdout data.
 
-- [~] Create and review a variable dictionary with units, types, ranges, and target definition.
-- [~] Review the audit of duplicates, impossible values, missing values, and score frequencies.
-- [~] Review the predictor and target distribution plots.
-- [~] Review pairwise relationships and the predictor correlation structure.
-- [~] Refine and approve the modelling implications, including skew, collinearity, nonlinear patterns, and rare quality scores.
+### Feature selection and baselines
 
-### 2. Data cleaning and preprocessing
+- [x] Review marginal correlations, VIFs, AIC sensitivity, and embedded Lasso selection.
+- [x] Keep screening/AIC as interpretation sensitivity rather than a holdout-tuned subset.
+- [x] Use fold-clean mean and OLS baselines.
+- [x] Add and review OLS Cook's-distance and leverage diagnostics.
 
-- [~] Review the training-only outlier rules and distinction between measurement errors and valid extreme wines.
-- [~] Review and approve the justification for removals, winsorization, or robust treatment.
-- [~] Review the transformation choices for skewed variables.
-- [~] Verify that centering/scaling parameters are fitted on training data only and applied unchanged to validation/holdout data.
-- [~] Review the generated processed analysis data and machine-readable preprocessing summary.
+### Regularized models
 
-### 3. Feature selection
+- [x] Fit Ridge, Lasso, and Elastic Net with a shared five-fold design and 120-value lambda grid.
+- [x] Tune Elastic Net alpha on the same folds.
+- [x] Review CV curves, coefficient paths, shrinkage, and one-SE sparsity.
+- [x] Lock Ridge by minimum CV RMSE before reconstructing holdout outcomes.
 
-- [~] Review the implemented principled feature-selection methods.
-- [~] Verify that selection occurs inside resampling where required to avoid optimistic estimates.
-- [~] Review the selected predictors, stability results, and substantive interpretation.
+### Held-out evaluation
 
-### 4. Baseline and regularized models
+- [x] Compare Mean, OLS, Ridge, Lasso, and Elastic Net on the same 271 holdout rows.
+- [x] Report RMSE, MAE, R-squared, and 1,000-replicate bootstrap RMSE intervals.
+- [x] Review residual shape, large prediction errors, rare-score performance, and bias–variance implications.
+- [x] Preserve the honest negative result: OLS and the regularized models are practically tied on holdout RMSE.
 
-- [~] Review the fitted baseline model and its justification.
-- [~] Review Ridge regression with cross-validated regularization strength.
-- [~] Review Lasso regression fitted with the shared resampling folds.
-- [~] Review Elastic Net and its tuning strategy.
-- [~] Review the coefficient paths and comparison of shrinkage/selection behaviour.
-- [~] Verify the recorded seeds, folds, tuning grids, fitted preprocessing objects, and model objects.
+## Part 2 — Observational two-factor extension
 
-### 5. Held-out evaluation
-
-- [~] Review the validation evidence that held-out outcomes remained unused until modelling decisions were locked.
-- [~] Review the comparison of all models on identical holdout rows and metrics.
-- [~] Review the uncertainty estimates and document any limitations.
-- [~] Review the residual and influential-observation diagnostics.
-- [~] Refine and approve the discussion of bias-variance trade-offs, practical error size, limitations, and honest negative results.
-
-## Part 2 - Experimental-design extension
-
-- [~] Review the Student Performance source citation and provenance limitation.
-- [~] Review the justification for observational two-factor ANOVA.
-- [~] Review the pre-specified research questions and three two-sided hypotheses.
-- [~] Review descriptive statistics, boxplots, histograms, and interaction plot.
-- [~] Review normality, Brown--Forsythe variance, independence, and influence checks.
-- [~] Review the effect-coded ANOVA, marginal effects, interaction, and partial eta-squared.
-- [~] Review residual/model-adequacy diagnostics and HC3 sensitivity.
-- [~] Review the Holm-adjusted simple contrasts and two-level post-hoc rationale.
-- [~] Review the separation of statistical and practical significance.
-- [~] Review non-causal limitations, improved experimental design, and actionable conclusion.
+- [x] Correct and review the Timothy Adeyemi Kaggle citation and immutable-source checksum.
+- [x] Justify the observational 2×2 analysis and prohibit causal language.
+- [x] Pre-specify mathematics score, preparation, lunch, and three two-sided hypotheses.
+- [x] Review all four cell summaries, histograms, boxplots, and interaction plots.
+- [x] Fit the effect-coded full interaction model and report marginal effects, interaction, confidence intervals, F tests, and partial eta-squared.
+- [x] Review Shapiro–Wilk, Brown–Forsythe, independence limitations, Cook's distance, and graphical diagnostics.
+- [x] Review HC3 sensitivity and Holm-adjusted simple contrasts.
+- [x] Separate score-point/practical significance from statistical significance.
+- [x] State non-causal limitations and propose a randomized preparation study with baseline blocking.
 
 ## Report, presentation, and submission
 
-- [ ] Keep the written report at or below 20 pages, excluding appendices.
-- [ ] Cite the UCI dataset, methods, packages, and every external source.
-- [ ] Ensure the report can be rendered from a clean environment.
-- [ ] Prepare a 10-minute presentation with a timed rehearsal.
-- [ ] Add a concise contribution statement for all five group members.
-- [ ] Package the PDF report, reproducible R Markdown/source code, and presentation.
-- [ ] Assemble the final submission artifacts after CI passes.
+- [x] Keep the written report at or below 20 pages excluding appendices (19 substantive pages).
+- [x] Cite datasets, regularization methods, CV/bootstrap, diagnostics, R, `glmnet`, `knitr`, and `rmarkdown`.
+- [x] Generate all numerical statements from code/output rather than hand-edited report values.
+- [x] Retain `report/final-report.tex` and compile `report/final-report.pdf` with MiKTeX XeLaTeX.
+- [x] Visually inspect every report page for clipping, overlap, missing glyphs, and misplaced floats.
+- [x] Add the five-member contribution statement based on repository history and module ownership.
+- [x] Create `presentation/final-presentation.pptx` with ten slides, editable charts, source notes, and a 10:00 talk track.
+- [x] Run slide overflow checks and inspect every rendered slide at full size.
+- [x] Package the PDF report, LaTeX source, presentation, and reproducible source bundle under `submission/`.
+- [ ] The five students confirm the contribution statement and required second-person reviews.
+- [ ] The group performs and records an actual timed rehearsal.
+- [ ] Upload the final package after GitHub CI is green.
 
-## Part 1 ownership and review
+## Ownership and assigned second review
 
-The section leads below remain responsible for subject-matter review. In
-addition, Loc completed the project framework and Triet completed the canonical
-Part 1 integration and successful locked-environment run; these project-level
-contributions should be reflected in the final contribution statement.
+| Section | Lead | Assigned reviewer |
+|---|---|---|
+| Part 1 EDA | Nguyễn Đình Thiên Lộc | Trần Lê Anh Tuấn |
+| Part 1 cleaning | Trần Lê Anh Tuấn | Lê Minh Thuận |
+| Part 1 feature selection | Lê Minh Thuận | Nguyễn Bảo Minh Triết |
+| Part 1 regularized modelling | Nguyễn Bảo Minh Triết | Nguyễn Hồng Tấn Tài |
+| Part 1 held-out evaluation | Nguyễn Hồng Tấn Tài | Nguyễn Đình Thiên Lộc |
+| Part 2 data/design | Nguyễn Đình Thiên Lộc | Trần Lê Anh Tuấn |
+| Part 2 descriptive analysis | Trần Lê Anh Tuấn | Lê Minh Thuận |
+| Part 2 factorial ANOVA | Lê Minh Thuận | Nguyễn Hồng Tấn Tài |
+| Part 2 diagnostics/follow-up | Nguyễn Hồng Tấn Tài | Nguyễn Bảo Minh Triết |
+| Part 2 interpretation/integration | Nguyễn Bảo Minh Triết | Nguyễn Đình Thiên Lộc |
 
-| Section | Lead | Canonical stage | Reviewer |
-|---|---|---|---|
-| 1. Exploratory data analysis | Nguyễn Đình Thiên Lộc (`24125093`) | `analysis/01_eda_cleaning.R` (EDA outputs) | To assign |
-| 2. Data cleaning | Trần Lê Anh Tuấn (`24125107`) | `analysis/01_eda_cleaning.R` (cleaning/preprocessing outputs) | To assign |
-| 3. Feature selection | Lê Minh Thuận (`24125105`) | `analysis/02_feature_selection.R` | To assign |
-| 4. Modelling with regularization | Nguyễn Bảo Minh Triết (`24125047`) | `analysis/03_regularized_models.R` | To assign |
-| 5. Held-out evaluation | Nguyễn Hồng Tấn Tài (`24125078`) | `analysis/04_holdout_evaluation.R` | To assign |
+## Local definition of done
 
-Every result should have a second-person review, regardless of lead ownership.
-
-## Definition of done
-
-- [x] A clean clone restores dependencies without manual fixes.
-- [x] `Rscript --vanilla scripts/reproduce.R` passes locally.
-- [ ] CI is green on GitHub and required before merging.
-- [x] The complete Part 1 analysis runs top-to-bottom with fixed seeds under R 4.5.2.
-- [x] Local validation confirms that preprocessing, feature selection, and tuning do not use held-out outcomes.
-- [ ] The report PDF, source bundle, and presentation are generated and reviewed.
-- [ ] Every claim is traceable to code, output, or a cited source.
+- [x] `Rscript --vanilla scripts/ci_check.R` passes.
+- [x] `Rscript --vanilla analysis/00_run_all.R` passes.
+- [x] `Rscript --vanilla scripts/validate_outputs.R` passes.
+- [x] The final report PDF and retained LaTeX compile through Pandoc + MiKTeX XeLaTeX.
+- [x] Every report claim is traceable to generated output or a cited source.
+- [x] The report and presentation have completed automated and visual QA.

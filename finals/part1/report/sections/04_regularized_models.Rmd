@@ -13,7 +13,7 @@ For standardized transformed predictors, all regularized candidates minimize
 Ridge uses $\alpha=0$ [@Hoerl1970], Lasso $\alpha=1$ [@Tibshirani1996],
 and Elastic Net searches $\alpha\in\{0.25,0.50,0.75\}$ [@Zou2005]. For each
 alpha, 120 decreasing $\lambda$ values from 100 to $10^{-4}$ use identical
-folds. Coordinate-descent fits are produced with `glmnet` [@Friedman2010].
+folds [@Hastie2009]. Coordinate-descent fits use `glmnet` [@Friedman2010].
 
 ## Cross-validation and shrinkage
 

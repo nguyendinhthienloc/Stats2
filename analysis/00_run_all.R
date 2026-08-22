@@ -114,6 +114,7 @@ run_analysis_pipeline <- function() {
     "tab_p2_outlier_audit", "tab_p2_transformation_plan",
     "tab_p2_target_correlations", "tab_p3_feature_screening",
     "tab_p3_baseline_performance", "tab_p3_stepwise_sensitivity",
+    "tab_p3_influence_audit",
     "tab_p4_regularized_summary", "tab_p4_regularized_display",
     "tab_p4_enet_alpha_search", "tab_p4_coefficient_comparison",
     "tab_p4_lasso_selection", "tab_p4_model_lock",

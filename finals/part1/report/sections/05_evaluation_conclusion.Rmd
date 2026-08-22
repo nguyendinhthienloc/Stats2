@@ -12,8 +12,8 @@ On the same `r analysis_summary$config$holdout_rows` rows, the pre-locked
 The observed lowest holdout RMSE belongs to **`r best_row$Model`**
 (`r fmt(best_row$Holdout_RMSE)`). We retain the CV lock as the confirmatory
 choice even if this ranking differs: selecting by the holdout would make its
-error optimistic. The bootstrap intervals are wide enough that small ranking
-differences should not be overinterpreted.
+error optimistic. Fixed-seed nonparametric bootstrap RMSE intervals
+[@EfronTibshirani1993] show that small ranking differences are not decisive.
 
 \includefigure{../output/figures/fig_p5_actual_vs_predicted.pdf}{Held-out predictions from the four fitted regression models. The diagonal denotes perfect prediction.}{fig:p5-predictions}
 
@@ -23,7 +23,7 @@ imbalance and squared-error fitting, not simply from regularization.
 
 ## Diagnostics and bias--variance trade-off
 
-\includefigure{../output/figures/fig_p5_locked_residual_diagnostics.pdf}{Residual checks for the pre-locked model on the untouched holdout set. These diagnostics describe generalization and were not used to retune the model.}{fig:p5-residuals}
+\includefigure{../output/figures/fig_p5_locked_residual_diagnostics.pdf}{Residual-shape and absolute-error checks for the pre-locked model on the untouched holdout set. The dashed line in the final panel is twice the model RMSE. These diagnostics describe generalization and were not used to retune the model.}{fig:p5-residuals}
 
 OLS has the least shrinkage and therefore the lowest regularization bias but the
 greatest sensitivity to correlated predictors. Ridge reduces coefficient

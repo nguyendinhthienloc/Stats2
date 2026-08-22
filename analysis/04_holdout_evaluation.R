@@ -167,8 +167,8 @@ for (name in plot_models) {
 }
 grDevices::dev.off()
 
-open_pdf("fig_p5_locked_residual_diagnostics.pdf", width = 10, height = 4.3)
-graphics::par(mfrow = c(1, 3), mar = c(4.1, 4.1, 2.5, 0.8))
+open_pdf("fig_p5_locked_residual_diagnostics.pdf", width = 8.5, height = 7)
+graphics::par(mfrow = c(2, 2), mar = c(4.1, 4.1, 2.5, 0.8))
 graphics::plot(
   locked_prediction, locked_residual, pch = 16, cex = 0.65,
   col = grDevices::adjustcolor(MODEL_COLORS[[locked_name]], alpha.f = 0.55),
@@ -186,6 +186,14 @@ graphics::hist(
   xlab = "Residual", ylab = "Count", main = "Residual distribution"
 )
 graphics::abline(v = 0, lty = 2, col = "#25313C")
+graphics::plot(
+  seq_along(locked_residual), abs(locked_residual), pch = 16, cex = 0.55,
+  col = grDevices::adjustcolor(MODEL_COLORS[[locked_name]], alpha.f = 0.55),
+  xlab = "Holdout observation", ylab = "Absolute residual",
+  main = "Large prediction errors"
+)
+graphics::abline(h = 2 * sqrt(mean(locked_residual^2)), lty = 2, col = "#D1495B")
+
 grDevices::dev.off()
 
 observed_holdout_winner <- holdout_performance$Model[[1]]
@@ -216,6 +224,7 @@ analysis_summary <- list(
   correlations = correlation_quality,
   feature_screening = feature_screening,
   stepwise_features = stepwise_features,
+  influence_audit = influence_audit,
   baseline_performance = baseline_performance,
   regularized_summary = regularized_summary,
   lasso_selection = lasso_selection,

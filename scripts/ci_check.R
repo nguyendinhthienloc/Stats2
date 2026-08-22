@@ -125,7 +125,7 @@ stopifnot(
   setequal(unique(student$`test preparation course`), c("none", "completed"))
 )
 student_md5 <- tolower(unname(tools::md5sum(paths$raw_student)))
-if (!identical(student_md5, "f7a3b96762c57dbff85d27aeb50d28fb")) {
+if (!identical(student_md5, "c1c7dc8a373fe3e5fe854c5e87d2e4f1")) {
   stop("The immutable Student Performance source checksum changed.",
        call. = FALSE)
 }

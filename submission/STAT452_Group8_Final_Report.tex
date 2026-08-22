@@ -1,0 +1,790 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+  10pt,
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=0.78in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\definecolor{GroupBlue}{HTML}{2878B5}
+\newcommand{\includefigure}[3]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{#1}{%
+      \includegraphics[width=0.96\linewidth,height=0.70\textheight,keepaspectratio]{#1}%
+    }{%
+      \fbox{\parbox[c][0.22\textheight][c]{0.86\linewidth}{\centering Missing figure: \texttt{\detokenize{#1}}}}%
+    }
+    \caption{#2}
+    \label{#3}
+  \end{figure}%
+}
+\newcommand{\tightinputtable}[1]{%
+  \begingroup\small\setlength{\tabcolsep}{4pt}\input{#1}\endgroup%
+}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+% fallback for those not using the hyperref driver hyperxmp:
+\makeatletter
+\@ifundefined{xmpquote}{\newcommand{\xmpquote}[1]{#1}}{}
+\makeatother
+\hypersetup{
+  pdftitle={STAT452 Final Project: Wine Quality and Experimental Design},
+  pdfauthor={Trần Lê Anh Tuấn (24125107); Nguyễn Bảo Minh Triết (24125047); Nguyễn Đình Thiên Lộc (24125093); Nguyễn Hồng Tấn Tài (24125078); Lê Minh Thuận (24125105)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{STAT452 Final Project: Wine Quality and Experimental Design}
+\author{Trần Lê Anh Tuấn (24125107) \and Nguyễn Bảo Minh Triết
+(24125047) \and Nguyễn Đình Thiên Lộc (24125093) \and Nguyễn Hồng Tấn
+Tài (24125078) \and Lê Minh Thuận (24125105)}
+\date{Academic Year 2025--2026}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\begin{abstract}
+This report completes both components of the Group 8 final project. Part 1
+predicts red Vinho Verde quality from 11 physicochemical measurements with a
+locked, leakage-controlled comparison of OLS, Ridge, Lasso, and Elastic Net.
+Part 2 uses an observational two-factor analysis of student mathematics scores
+by test preparation and lunch category, with diagnostics, robust sensitivity
+checks, and explicitly non-causal interpretation.
+\end{abstract}
+
+\section{Introduction and analysis
+protocol}\label{introduction-and-analysis-protocol}
+
+This project addresses two complementary questions. Part 1 asks how
+accurately red-wine sensory quality can be predicted from routine
+physicochemical measurements. Part 2 asks whether mathematics scores
+differ across observed test-preparation and lunch groups, including
+whether the two associations interact. The analyses follow the course
+brief's emphasis on justified choices, reproducibility, and honest
+limitations.
+
+For Part 1, RMSE is primary because large one-wine prediction errors are
+costly; MAE expresses typical error directly in quality-score points,
+and \(R^2\) measures improvement over the holdout mean benchmark. Model
+selection uses fixed five-fold cross-validation, while the stratified
+20\% holdout is opened once (\citeproc{ref-Hastie2009}{Hastie et al.
+2009}).
+
+\section{Part 1: Wine Quality (Red)}\label{part-1-wine-quality-red}
+
+\section{Exploratory Data Analysis}\label{exploratory-data-analysis}
+
+\subsection{Dataset, variables, and prediction
+question}\label{dataset-variables-and-prediction-question}
+
+The UCI Wine Quality data describe red Portuguese Vinho Verde samples
+using 11 continuous physicochemical measurements and a sensory score
+supplied as the median of at least three expert ratings
+(\citeproc{ref-Cortez2009}{Cortez et al. 2009a},
+\citeproc{ref-UCIWine}{2009b}). The response is \texttt{quality}; the
+predictors cover acidity, sugar, chlorides, sulfur dioxide, density, pH,
+sulphates, and alcohol. All predictors are numeric, and the detailed
+data dictionary appears in Appendix A.
+
+We model quality numerically because regression preserves its ordering
+and avoids an arbitrary good/poor threshold. This assumes that a
+one-point change has roughly comparable meaning across the observed 3--8
+range. Gaussian regression can produce fractional expected scores, so
+the interpretation is prediction of expected expert score rather than
+exact ordinal classification.
+
+After the integrity checks in Section 2, the unique records were divided
+by a fixed quality-stratified 80/20 split. Every plot below uses only
+the 1088 training observations; the 271 holdout outcomes were not
+inspected.
+
+\subsection{Response and predictor
+distributions}\label{response-and-predictor-distributions}
+
+\includefigure{../output/figures/fig_p2_quality_distribution.pdf}{Training-set distribution of the sensory response. Scores 5 and 6 dominate, while the extremes contain few observations.}{fig:p2-quality}
+
+The response is concentrated at 5 and 6. A mean-like prediction is
+therefore a strong baseline, and error estimates for rare scores 3, 4,
+and 8 will be less precise. This imbalance also foreshadows regression
+toward the center.
+
+\includefigure{../output/figures/fig_p2_predictor_distributions.pdf}{Training-set predictor distributions before transformation. Several chemistry measures are strongly right-skewed.}{fig:p2-distributions}
+
+Residual sugar, chlorides, sulfur-dioxide measures, and sulphates have
+long right tails. These distributions motivate the transformations
+documented in Section 2; EDA itself is shown on the original measurement
+scale.
+
+\subsection{Pairwise relationships and correlation
+structure}\label{pairwise-relationships-and-correlation-structure}
+
+\includefigure{../output/figures/fig_p2_correlation_heatmap.pdf}{Training-set Pearson correlations. Blocks among acidity, density, pH, and sulfur-dioxide measures motivate coefficient stabilization.}{fig:p2-correlation}
+
+The strongest marginal response signals are alcohol (\(r=0.47\));
+volatile acidity (\(r=-0.37\)); sulphates (\(r=0.23\)); citric acid
+(\(r=0.22\)). The heatmap also shows correlated predictor blocks,
+especially among acidity, density, pH, and the two sulfur-dioxide
+measurements. That structure makes OLS coefficients potentially unstable
+and directly motivates Ridge, Lasso, and Elastic Net.
+
+\includefigure{../output/figures/fig_p2_pairwise_quality.pdf}{The four strongest marginal predictor--quality relationships in training. Jitter reveals the discrete response; lines are descriptive OLS trends.}{fig:p2-pairwise}
+
+Alcohol is positively associated with quality and volatile acidity
+negatively associated, but every score overlaps substantially on every
+predictor. No single physicochemical measurement is sufficient. These
+are predictive associations, not causal effects, because grape variety,
+brand, vintage, price, and production conditions are absent.
+
+\section{Data Cleaning}\label{data-cleaning}
+
+\subsection{Missingness, duplicates, and the locked
+split}\label{missingness-duplicates-and-the-locked-split}
+
+The raw archive contains 1599 rows, 11 numeric predictors, no missing
+cells, and no non-finite values. It also contains 240 exact duplicate
+records. Because the archive provides no sample identifier, an exact
+repeat could be either a copied row or a genuinely repeated batch. We
+conservatively keep the first copy and remove the rest \textbf{before}
+splitting, preventing identical profiles and labels from appearing in
+both training and holdout data. The limitation is that this choice may
+underweight genuinely repeated batches.
+
+\tightinputtable{../output/tables/tab_p1_data_audit.tex}
+
+The fixed seed 4520803 produces a quality-stratified 80/20 partition
+after deduplication. Seed 4520804 then assigns five stratified folds
+inside training. The shared fold IDs are reused by every model
+(\citeproc{ref-Hastie2009}{Hastie et al. 2009}).
+
+\tightinputtable{../output/tables/tab_p1_split_summary.tex}
+
+\subsection{Outliers and
+transformations}\label{outliers-and-transformations}
+
+Tukey's 1.5-IQR rule (\citeproc{ref-Tukey1977}{Tukey 1977}) flags 277
+training rows (25.5\%). Deleting all of them would discard a large and
+scientifically plausible part of the target population; the dataset
+metadata also warns that rare wines are expected. We therefore retain
+every row, winsorize each predictor at its training 1st and 99th
+percentiles to limit leverage, and never clip the response.
+
+\includefigure{../output/figures/fig_p2_outlier_audit.pdf}{Training observations flagged by the univariate Tukey-IQR rule. Flags are diagnosed and retained rather than deleted wholesale.}{fig:p2-outliers}
+
+The training skewness rule selects residual sugar, chlorides, free
+sulfur dioxide, total sulfur dioxide, sulphates for \texttt{log1p}
+transformation. Median imputation is defined as a reproducibility
+safeguard but is a no-op for this dataset. After winsorization and
+optional \texttt{log1p}, all predictors are centered and scaled so
+penalty magnitudes are comparable.
+
+\subsection{Leakage control}\label{leakage-control}
+
+All medians, winsorization limits, transformation choices, means, and
+standard deviations are learned without holdout outcomes. During
+cross-validation, those quantities are refit inside each analysis fold
+and applied to its validation fold. The final recipe is fit once to all
+training predictors and then applied unchanged to the predictor-only
+holdout file. This design prevents preprocessing information from
+leaking backward into feature selection or tuning.
+
+\section{Feature Selection}\label{feature-selection}
+
+\subsection{Screening without deleting correlated
+information}\label{screening-without-deleting-correlated-information}
+
+We use three training-only views of relevance: marginal correlations,
+variance inflation factors (VIFs) (\citeproc{ref-FoxWeisberg2019}{Fox
+and Weisberg 2019}), and an AIC sensitivity analysis
+(\citeproc{ref-Akaike1974}{Akaike 1974}). The largest VIF is 7.90 for
+fixed acidity. This is material multicollinearity but not evidence that
+the feature is useless: deleting one correlated chemistry measure can
+make the retained coefficient depend arbitrarily on that choice.
+Therefore all predictors enter Ridge, while sparse selection is
+delegated to Lasso's embedded penalty.
+
+\includefigure{../output/figures/fig_p3_feature_screening.pdf}{VIFs and full-OLS coefficients after the training-derived transformations. Coefficients are comparable because predictors are standardized.}{fig:p3-screening}
+
+The AIC sensitivity model retains 7 of 11 predictors: alcohol, volatile
+acidity, sulphates, chlorides, ph, total sulfur dioxide, free sulfur
+dioxide. We do not promote this data-dependent subset directly to the
+holdout comparison; it is a diagnostic against which to compare Lasso.
+
+\subsection{Mean and OLS baselines}\label{mean-and-ols-baselines}
+
+\tightinputtable{../output/tables/tab_p3_baseline_performance.tex}
+
+The mean-only model establishes the no-chemistry benchmark. OLS lowers
+cross-validated error, but correlated predictors allow coefficient
+variance. Regularization deliberately accepts some training bias to
+reduce that variance.
+
+For influence sensitivity, the training OLS fit flags 73 rows above the
+conventional Cook's-distance \(4/n\) reference rule; the maximum is
+0.0314. These flags identify cases worth scrutiny rather than automatic
+deletion. A holdout row cannot influence the already fitted
+coefficients, so held-out diagnostics focus instead on unusually large
+prediction errors.
+
+\subsection{Embedded Lasso selection}\label{embedded-lasso-selection}
+
+At the one-standard-error penalty, Lasso retains 7 predictors: alcohol,
+volatile acidity, sulphates, chlorides, ph, total sulfur dioxide, fixed
+acidity. This is the required principled feature-selection result. The
+one-SE rule is used for interpretation because it favors a stable sparse
+description; the minimum-CV penalty remains the predeclared predictive
+fit.
+
+\tightinputtable{../output/tables/tab_p4_lasso_selection.tex}
+
+\section{Modelling with
+Regularization}\label{modelling-with-regularization}
+
+For standardized transformed predictors, all regularized candidates
+minimize
+
+\[
+\frac{1}{2n}\lVert \mathbf y-\beta_0-\mathbf X\boldsymbol\beta\rVert_2^2
++\lambda\left\{\alpha\lVert\boldsymbol\beta\rVert_1
++\frac{1-\alpha}{2}\lVert\boldsymbol\beta\rVert_2^2\right\}.
+\]
+
+Ridge uses \(\alpha=0\) (\citeproc{ref-Hoerl1970}{Hoerl and Kennard
+1970}), Lasso \(\alpha=1\) (\citeproc{ref-Tibshirani1996}{Tibshirani
+1996}), and Elastic Net searches \(\alpha\in\{0.25,0.50,0.75\}\)
+(\citeproc{ref-Zou2005}{Zou and Hastie 2005}). For each alpha, 120
+decreasing \(\lambda\) values from 100 to \(10^{-4}\) use identical
+folds (\citeproc{ref-Hastie2009}{Hastie et al. 2009}).
+Coordinate-descent fits use \texttt{glmnet}
+(\citeproc{ref-Friedman2010}{Friedman et al. 2010}).
+
+\subsection{Cross-validation and
+shrinkage}\label{cross-validation-and-shrinkage}
+
+\includefigure{../output/figures/fig_p4_cv_curves.pdf}{Five-fold training CV curves with fold-specific preprocessing. Dashed lines minimize CV error; dotted lines apply the one-standard-error rule.}{fig:p4-cv}
+
+Elastic Net selected \(\alpha=0.75\). The minimum-error and one-SE
+penalties, CV errors, and effective model sizes are reported below.
+Ridge keeps all coefficients but continuously shrinks them; Lasso and
+Elastic Net can set coefficients exactly to zero.
+
+\tightinputtable{../output/tables/tab_p4_regularized_display.tex}
+
+\includefigure{../output/figures/fig_p4_coefficient_paths.pdf}{Coefficient paths as regularization changes. The vertical line in each panel is the minimum-CV penalty used for prediction.}{fig:p4-paths}
+
+As \(\lambda\) grows, paths move toward zero. Lasso reaches exact zeros
+earliest; Ridge shares weight among correlated measurements; Elastic Net
+interpolates. This is the expected bias--variance mechanism rather than
+merely a software choice.
+
+\subsection{Pre-holdout decision}\label{pre-holdout-decision}
+
+Before reconstructing any holdout outcome, we locked \textbf{Ridge},
+whose five-fold CV RMSE was 0.6711. This written lock prevents choosing
+a preferred model after seeing test performance. All predeclared models
+are nevertheless evaluated to make the comparison transparent.
+
+\section{Evaluation}\label{evaluation}
+
+\subsection{Fair model comparison}\label{fair-model-comparison}
+
+\tightinputtable{../output/tables/tab_p5_holdout_display.tex}
+
+On the same 271 rows, the pre-locked Ridge obtained RMSE 0.613, MAE
+0.482, and \(R^2\) 0.440. The observed lowest holdout RMSE belongs to
+\textbf{OLS} (0.613). We retain the CV lock as the confirmatory choice
+even if this ranking differs: selecting by the holdout would make its
+error optimistic. Fixed-seed nonparametric bootstrap RMSE intervals
+(\citeproc{ref-EfronTibshirani1993}{Efron and Tibshirani 1993}) show
+that small ranking differences are not decisive.
+
+\includefigure{../output/figures/fig_p5_actual_vs_predicted.pdf}{Held-out predictions from the four fitted regression models. The diagonal denotes perfect prediction.}{fig:p5-predictions}
+
+Predictions shrink toward the common scores 5--6, which lowers average
+error but systematically misses rare extremes. This pattern follows from
+response imbalance and squared-error fitting, not simply from
+regularization.
+
+\subsection{Diagnostics and bias--variance
+trade-off}\label{diagnostics-and-biasvariance-trade-off}
+
+\includefigure{../output/figures/fig_p5_locked_residual_diagnostics.pdf}{Residual-shape and absolute-error checks for the pre-locked model on the untouched holdout set. The dashed line in the final panel is twice the model RMSE. These diagnostics describe generalization and were not used to retune the model.}{fig:p5-residuals}
+
+OLS has the least shrinkage and therefore the lowest regularization bias
+but the greatest sensitivity to correlated predictors. Ridge reduces
+coefficient variance without selection; Lasso trades additional bias for
+sparsity; Elastic Net stabilizes groups of correlated features while
+retaining some selection. The relevant empirical comparison is the gap
+among training, CV, and holdout RMSE in Table
+\ref{tab:p5-holdout-display}. The regularized candidates have similar
+held-out accuracy, so stability and interpretability matter more than a
+small decimal-place difference.
+
+\subsection{Limitations}\label{limitations}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Quality is ordinal and discrete; Gaussian regression treats adjacent
+  scores as equally spaced and permits fractional predictions.
+\item
+  Rare scores 3, 4, and 8 yield imprecise tail performance, while the
+  bootstrap quantifies only sampling variation in this holdout.
+\item
+  Exact deduplication prevents leakage but may remove genuinely repeated
+  batches because the archive has no sample identifier.
+\item
+  Physicochemical measurements omit brand, vintage, grape variety,
+  price, and production process; predictive associations are not causal
+  effects.
+\item
+  Winsorization limits leverage and log transforms reduce skew, but
+  alternative robust losses or ordinal models could change tail
+  behavior.
+\end{enumerate}
+
+\subsection{Conclusion}\label{conclusion}
+
+The full workflow meets the Part 1 objective: documented EDA and
+cleaning, principled selection, a baseline plus three regularized
+models, shared-fold CV, coefficient-path interpretation, and a single
+locked holdout evaluation. Ridge is the confirmatory recommendation for
+expected-score prediction under this design. Alcohol and volatile
+acidity provide the strongest marginal signals, but correlated chemistry
+measurements and irreducible sensory variation limit accuracy. A future
+extension should compare ordinal regression or robust nonlinear models
+under the same locked resampling protocol.
+
+\clearpage
+
+\section{Part 2: Experimental-design
+extension}\label{part-2-experimental-design-extension}
+
+\subsection{Dataset, design, and
+hypotheses}\label{dataset-design-and-hypotheses}
+
+The Timothy Adeyemi Kaggle listing for \emph{Students Performance in
+Exams} contains 1,000 student records and eight variables
+(\citeproc{ref-KaggleStudentsPerformance}{Adeyemi, n.d.}). Its data card
+does not document random assignment, school/classroom clustering, or a
+sampling frame. We therefore describe this as an \textbf{observational
+(2\times2) factorial analysis}, not a randomized experiment. All 1,000
+rows are retained; there are no missing values or exact duplicate
+profiles, so neither imputation nor subsampling is needed.
+
+The pre-specified response is mathematics score (0--100). Factor A is
+test preparation (\texttt{none}, \texttt{completed}), and Factor B is
+lunch category (\texttt{free/reduced}, \texttt{standard}). These
+variables meet the brief's requirement of two categorical factors and a
+continuous response. Lunch is interpreted as a contextual socioeconomic
+proxy, not a manipulable treatment or a label of individual ability.
+Reading and writing scores are parallel outcomes and are not used as
+covariates because conditioning on simultaneous outcomes would change
+the research question. Gender, race/ethnicity group, and parental
+education are not additional factors in the primary model: adding them
+would replace the required focused two-factor question with a sparse,
+sensitive multi-factor analysis. Their omission also means the two
+reported associations remain vulnerable to confounding.
+
+The study asks whether mean mathematics score is associated with
+preparation, with lunch group, and with their interaction. At
+\(\alpha=0.05\), the three null hypotheses are: (i) equal preparation
+marginal means, (ii) equal lunch marginal means, and (iii) equal
+preparation differences across lunch groups. The alternatives are
+two-sided. Because assignment was not randomized, rejecting a null
+supports an adjusted group association within this factorial model, not
+a causal effect.
+
+\subsection{Descriptive statistics and visual
+evidence}\label{descriptive-statistics-and-visual-evidence}
+
+\tightinputtable{../output/tables/tab_part2_descriptive_display.tex}
+
+The four cells contain between 131 and 418 students. This imbalance
+motivates effect-coded marginal tests rather than order-dependent
+sequential sums of squares. Within-cell standard deviations range from
+13.02 to 15.09 points. Completed preparation and standard lunch are each
+descriptively associated with higher means, while substantial score
+overlap remains in every cell.
+
+\includefigure{../output/figures/fig_part2_histograms.pdf}{Within-cell mathematics-score histograms. Scores are bounded and discrete, with modest departures from Gaussian shape but no empty or extremely small cell.}{fig:part2-histograms}
+
+\includefigure{../output/figures/fig_part2_factorial_patterns.pdf}{Boxplots and the mean interaction profile for lunch and test preparation. Near-parallel mean lines suggest a weak interaction relative to the two marginal differences.}{fig:part2-factorial-patterns}
+
+\subsection{Factorial ANOVA and effect
+sizes}\label{factorial-anova-and-effect-sizes}
+
+We fit \[
+Y_{ijk}=\mu+\alpha_i+\beta_j+(\alpha\beta)_{ij}+\varepsilon_{ijk},
+\] where \(Y\) is mathematics score. Sum-to-zero contrasts make the main
+effects comparisons of equally weighted marginal cell means despite
+unequal sample sizes. The one-degree-of-freedom partial tests are
+Type-III-style tests from the full interaction model. Alongside (F)
+tests, we report score-point differences, 95\% confidence intervals, and
+partial \(\eta^2\) (\citeproc{ref-Lakens2013}{Lakens 2013}).
+
+\tightinputtable{../output/tables/tab_part2_key_findings_display.tex}
+
+Students who completed preparation averaged 5.97 points higher after
+equally weighting the lunch cells (95\% CI {[}4.09, 7.85{]}). The
+standard lunch group averaged 11.06 points higher than the free/reduced
+group (95\% CI {[}9.18, 12.94{]}). Both marginal nulls are rejected. The
+difference in preparation effects is -1.14 points and is not significant
+(\(p=0.553\)); the data do not support effect modification by lunch
+category.
+
+\subsection{Diagnostics, model adequacy, and follow-up
+comparisons}\label{diagnostics-model-adequacy-and-follow-up-comparisons}
+
+\includefigure{../output/figures/fig_part2_diagnostics.pdf}{Residual, normal Q--Q, scale-location, and Cook's-distance diagnostics for the two-factor model.}{fig:part2-diagnostics}
+
+The Shapiro--Wilk test (\citeproc{ref-ShapiroWilk1965}{Shapiro and Wilk
+1965}) detects a modest non-Gaussian departure (\(W=0.996\),
+\(p=0.005\)); at \(n=1000\), this test is sensitive to the discreteness
+and bounds of exam scores. The Brown--Forsythe test
+(\citeproc{ref-BrownForsythe1974}{Brown and Forsythe 1974}) does not
+reject equal within-cell variances (\(F=1.06\), \(p=0.364\)). The
+conventional \(4/n\) influence rule flags 48 observations, but the
+maximum Cook's distance is only 0.0185. HC3 robust standard errors
+preserve the same decisions for both marginal effects and the
+interaction (\citeproc{ref-MacKinnonWhite1985}{MacKinnon and White
+1985}). Independence remains unverifiable because school and classroom
+identifiers are absent; this is the main model-adequacy limitation.
+
+Each factor has only two levels, so a within-factor Tukey procedure
+would merely repeat its single main comparison. We instead report four
+scientifically direct simple contrasts and control their familywise
+error with Holm's method (\citeproc{ref-Holm1979}{Holm 1979}).
+
+\tightinputtable{../output/tables/tab_part2_simple_effects_display.tex}
+
+All four simple contrasts remain significant after adjustment, but they
+are secondary descriptions; the non-significant interaction remains the
+formal test of whether the preparation association differs by lunch
+group.
+
+\subsection{Practical conclusion and design
+evaluation}\label{practical-conclusion-and-design-evaluation}
+
+The lunch contrast is the larger observed association: 11.06 score
+points with partial \(\eta^2=0.118\), compared with 5.97 points and
+partial \(\eta^2=0.037\) for preparation. The interaction is practically
+small (partial \(\eta^2=0.0004\)) and its confidence interval includes
+differences in either direction. Reporting raw points as well as
+standardized effects keeps statistical significance separate from
+educational importance.
+
+These findings should guide a future experiment, not be presented as
+evidence that changing lunch category or enrolling a particular student
+in preparation will cause the reported score change. Preparation
+participation may reflect motivation or prior attainment, and lunch
+category may proxy household and school resources. Income, prior scores,
+attendance, school quality, and classroom clustering are unavailable.
+The Kaggle listing also provides no collection protocol sufficient to
+establish representativeness.
+
+An actionable next study would randomize access to a defined preparation
+program, block randomization by baseline score and lunch category,
+record school/class identifiers, and analyze score change from a
+pre-test. For the current data, the defensible conclusion is narrower:
+preparation completion and standard lunch are associated with higher
+mean mathematics scores, with no evidence that the preparation
+difference varies between lunch groups. All calculations and figures
+were generated in R (\citeproc{ref-RCore2026}{R Core Team 2026}) through
+the canonical Stage 5 pipeline.
+
+\section{Contributions and review}\label{contributions-and-review}
+
+The repository history, module ownership, and completed handoffs record
+the following contributions:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Nguyễn Đình Thiên Lộc:} project framework and reproducibility
+  design; Part 1 data preparation/EDA; Part 2 data audit, design
+  justification, and hypotheses.
+\item
+  \textbf{Trần Lê Anh Tuấn:} Part 1 cleaning and preprocessing; Part 2
+  descriptive statistics and visualizations.
+\item
+  \textbf{Lê Minh Thuận:} Part 1 feature selection and baselines; Part 2
+  effect-coded factorial ANOVA and effect sizes.
+\item
+  \textbf{Nguyễn Bảo Minh Triết:} Part 1 regularized modelling and
+  canonical integration; Part 2 interpretation and report integration.
+\item
+  \textbf{Nguyễn Hồng Tấn Tài:} Part 1 locked holdout evaluation; Part 2
+  diagnostics, robust sensitivity, and multiplicity-adjusted follow-up
+  comparisons.
+\end{itemize}
+
+The final integration review checked every code-to-table/figure handoff,
+the holdout boundary, contrast directions, diagnostics, citations, and
+PDF layout. Dataset discovery is not counted as a contribution.
+
+\clearpage
+\appendix
+
+\section{Detailed data documentation}\label{detailed-data-documentation}
+
+\tightinputtable{../output/tables/tab_p1_data_dictionary.tex}
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p2_descriptive_statistics.tex}
+\endgroup
+
+\section{Cleaning and outlier audit}\label{cleaning-and-outlier-audit}
+
+\tightinputtable{../output/tables/tab_p2_outlier_audit.tex}
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p2_transformation_plan.tex}
+\endgroup
+
+\includefigure{../output/figures/fig_p2_outlier_audit.pdf}{Training observations flagged by the univariate Tukey-IQR rule. Flags are diagnosed rather than deleted wholesale.}{fig:appendix-outliers}
+
+\section{Supplementary selection and model
+tables}\label{supplementary-selection-and-model-tables}
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p3_feature_screening.tex}
+\endgroup
+
+\begingroup\scriptsize\setlength{\tabcolsep}{2.5pt}
+\input{../output/tables/tab_p4_coefficient_comparison.tex}
+\endgroup
+
+\tightinputtable{../output/tables/tab_p4_enet_alpha_search.tex}
+
+\tightinputtable{../output/tables/tab_p5_error_by_quality.tex}
+
+\section{Reproducibility and
+collaboration}\label{reproducibility-and-collaboration}
+
+The canonical analysis is rebuilt from RStudio with
+\texttt{source("analysis/00\_run\_all.R")}, or from a terminal with
+\texttt{Rscript\ -\/-vanilla\ analysis/00\_run\_all.R}. The five
+workstreams execute in dependency order, every random operation uses a
+recorded seed, and \texttt{output/artifact\_manifest.csv} stores file
+sizes and MD5 checksums. Row-level holdout outcomes are not serialized.
+Software versions for the verified run are listed below; full
+\texttt{sessionInfo()} is in \texttt{output/logs/session\_info.txt}. The
+analysis and dynamic report use R, \texttt{knitr}, and
+\texttt{rmarkdown} (\citeproc{ref-RCore2026}{R Core Team 2026};
+\citeproc{ref-XieKnitr2025}{Xie 2025};
+\citeproc{ref-AllaireRmarkdown2026}{{Allaire et al.} 2026}).
+
+\tightinputtable{../output/tables/tab_reproducibility_versions.tex}
+
+The workstream allocation and review interfaces are documented in the
+repository's collaboration work-split file. The final integration review
+verified the technical handoffs recorded in the contribution statement.
+
+\newpage
+
+\section*{References}\label{references}
+\addcontentsline{toc}{section}{References}
+
+\protect\phantomsection\label{refs}
+\begin{CSLReferences}{1}{1}
+\bibitem[\citeproctext]{ref-KaggleStudentsPerformance}
+Adeyemi, Timothy. n.d. \emph{Students Performance in Exams}. Kaggle
+dataset.
+\url{https://www.kaggle.com/datasets/timothyadeyemi/students-performance-in-exams}.
+
+\bibitem[\citeproctext]{ref-Akaike1974}
+Akaike, Hirotugu. 1974. {``A New Look at the Statistical Model
+Identification.''} \emph{IEEE Transactions on Automatic Control} 19 (6):
+716--23. \url{https://doi.org/10.1109/TAC.1974.1100705}.
+
+\bibitem[\citeproctext]{ref-AllaireRmarkdown2026}
+{Allaire, JJ, Yihui Xie, Christophe Dervieux, et al.} 2026.
+\emph{Rmarkdown: Dynamic Documents for r}.
+\url{https://github.com/rstudio/rmarkdown}.
+
+\bibitem[\citeproctext]{ref-BrownForsythe1974}
+Brown, Morton B., and Alan B. Forsythe. 1974. {``Robust Tests for the
+Equality of Variances.''} \emph{Journal of the American Statistical
+Association} 69 (346): 364--67.
+\url{https://doi.org/10.1080/01621459.1974.10482955}.
+
+\bibitem[\citeproctext]{ref-Cortez2009}
+Cortez, Paulo, António Cerdeira, Fernando Almeida, Telmo Matos, and José
+Reis. 2009a. {``Modeling Wine Preferences by Data Mining from
+Physicochemical Properties.''} \emph{Decision Support Systems} 47 (4):
+547--53. \url{https://doi.org/10.1016/j.dss.2009.05.016}.
+
+\bibitem[\citeproctext]{ref-UCIWine}
+Cortez, Paulo, António Cerdeira, Fernando Almeida, Telmo Matos, and José
+Reis. 2009b. \emph{Wine Quality}. UCI Machine Learning Repository.
+\url{https://archive.ics.uci.edu/dataset/186/wine+quality}.
+
+\bibitem[\citeproctext]{ref-EfronTibshirani1993}
+Efron, Bradley, and Robert J. Tibshirani. 1993. \emph{An Introduction to
+the Bootstrap}. Chapman \& Hall.
+\url{https://doi.org/10.1007/978-1-4899-4541-9}.
+
+\bibitem[\citeproctext]{ref-FoxWeisberg2019}
+Fox, John, and Sanford Weisberg. 2019. \emph{An r Companion to Applied
+Regression}. 3rd ed. SAGE Publications.
+\url{https://socialsciences.mcmaster.ca/jfox/Books/Companion/}.
+
+\bibitem[\citeproctext]{ref-Friedman2010}
+Friedman, Jerome, Trevor Hastie, and Robert Tibshirani. 2010.
+{``Regularization Paths for Generalized Linear Models via Coordinate
+Descent.''} \emph{Journal of Statistical Software} 33 (1): 1--22.
+\url{https://doi.org/10.18637/jss.v033.i01}.
+
+\bibitem[\citeproctext]{ref-Hastie2009}
+Hastie, Trevor, Robert Tibshirani, and Jerome Friedman. 2009. \emph{The
+Elements of Statistical Learning: Data Mining, Inference, and
+Prediction}. 2nd ed. Springer.
+\url{https://doi.org/10.1007/978-0-387-84858-7}.
+
+\bibitem[\citeproctext]{ref-Hoerl1970}
+Hoerl, Arthur E., and Robert W. Kennard. 1970. {``Ridge Regression:
+Biased Estimation for Nonorthogonal Problems.''} \emph{Technometrics} 12
+(1): 55--67. \url{https://doi.org/10.1080/00401706.1970.10488634}.
+
+\bibitem[\citeproctext]{ref-Holm1979}
+Holm, Sture. 1979. {``A Simple Sequentially Rejective Multiple Test
+Procedure.''} \emph{Scandinavian Journal of Statistics} 6 (2): 65--70.
+
+\bibitem[\citeproctext]{ref-Lakens2013}
+Lakens, Daniël. 2013. {``Calculating and Reporting Effect Sizes to
+Facilitate Cumulative Science: A Practical Primer for t-Tests and
+ANOVAs.''} \emph{Frontiers in Psychology} 4: 863.
+\url{https://doi.org/10.3389/fpsyg.2013.00863}.
+
+\bibitem[\citeproctext]{ref-MacKinnonWhite1985}
+MacKinnon, James G., and Halbert White. 1985. {``Some
+Heteroskedasticity-Consistent Covariance Matrix Estimators with Improved
+Finite Sample Properties.''} \emph{Journal of Econometrics} 29 (3):
+305--25. \url{https://doi.org/10.1016/0304-4076(85)90158-7}.
+
+\bibitem[\citeproctext]{ref-RCore2026}
+R Core Team. 2026. \emph{R: A Language and Environment for Statistical
+Computing}. R Foundation for Statistical Computing.
+\url{https://doi.org/10.32614/R.manuals}.
+
+\bibitem[\citeproctext]{ref-ShapiroWilk1965}
+Shapiro, Samuel S., and Martin B. Wilk. 1965. {``An Analysis of Variance
+Test for Normality (Complete Samples).''} \emph{Biometrika} 52 (3/4):
+591--611. \url{https://doi.org/10.1093/biomet/52.3-4.591}.
+
+\bibitem[\citeproctext]{ref-Tibshirani1996}
+Tibshirani, Robert. 1996. {``Regression Shrinkage and Selection via the
+Lasso.''} \emph{Journal of the Royal Statistical Society: Series B} 58
+(1): 267--88. \url{https://doi.org/10.1111/j.2517-6161.1996.tb02080.x}.
+
+\bibitem[\citeproctext]{ref-Tukey1977}
+Tukey, John W. 1977. \emph{Exploratory Data Analysis}. Addison-Wesley.
+
+\bibitem[\citeproctext]{ref-XieKnitr2025}
+Xie, Yihui. 2025. \emph{Knitr: A General-Purpose Package for Dynamic
+Report Generation in r}. \url{https://yihui.org/knitr/}.
+
+\bibitem[\citeproctext]{ref-Zou2005}
+Zou, Hui, and Trevor Hastie. 2005. {``Regularization and Variable
+Selection via the Elastic Net.''} \emph{Journal of the Royal Statistical
+Society: Series B} 67 (2): 301--20.
+\url{https://doi.org/10.1111/j.1467-9868.2005.00503.x}.
+
+\end{CSLReferences}
+
+\end{document}

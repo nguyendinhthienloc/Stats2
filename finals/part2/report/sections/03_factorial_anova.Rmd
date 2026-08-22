@@ -10,7 +10,7 @@ where \(Y\) is mathematics score. Sum-to-zero contrasts make the main effects
 comparisons of equally weighted marginal cell means despite unequal sample
 sizes. The one-degree-of-freedom partial tests are Type-III-style tests from the
 full interaction model. Alongside (F) tests, we report score-point
-differences, 95% confidence intervals, and partial \(\eta^2\).
+differences, 95% confidence intervals, and partial \(\eta^2\) [@Lakens2013].
 
 \tightinputtable{../output/tables/tab_part2_key_findings_display.tex}
 

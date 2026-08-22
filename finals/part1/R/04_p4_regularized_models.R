@@ -25,7 +25,7 @@ for (i in seq_along(alpha_grid)) {
   log_info("P4 CV alpha=", alpha)
   cv_results[[i]] <- cv_regularized_foldclean(
     train_data, foldid, alpha = alpha, lambda = lambda_grid,
-    log_features = log_features
+    log_features = NULL
   )
 }
 

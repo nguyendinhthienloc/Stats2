@@ -4,10 +4,10 @@
 
 \includefigure{../output/figures/fig_part2_diagnostics.pdf}{Residual, normal Q--Q, scale-location, and Cook's-distance diagnostics for the two-factor model.}{fig:part2-diagnostics}
 
-The Shapiro--Wilk test detects a modest non-Gaussian departure
+The Shapiro--Wilk test [@ShapiroWilk1965] detects a modest non-Gaussian departure
 (\(W=`r p2_fmt(p2_shapiro$Statistic, 3)`\),
 \(p=`r p2_fmt(p2_shapiro$P_value, 3)`\)); at \(n=1000\), this test is sensitive
-to the discreteness and bounds of exam scores. The Brown--Forsythe test does not
+to the discreteness and bounds of exam scores. The Brown--Forsythe test [@BrownForsythe1974] does not
 reject equal within-cell variances
 (\(F=`r p2_fmt(p2_bf$Statistic, 2)`\),
 \(p=`r p2_fmt(p2_bf$P_value, 3)`\)). The conventional \(4/n\) influence rule

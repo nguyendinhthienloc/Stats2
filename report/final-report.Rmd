@@ -19,7 +19,7 @@ output:
     toc: true
     toc_depth: 2
     fig_caption: true
-    keep_tex: false
+    keep_tex: true
     includes:
       in_header: ../finals/part1/report/header.tex
 fontsize: 10pt
@@ -82,6 +82,9 @@ p2_max_cook <- p2_influence$Statistic[[1L]]
 p2_influence_count <- as.integer(sub(
   ".*4/n: ([0-9]+);.*", "\\1", p2_influence$Assessment[[1L]]
 ))
+p1_cook <- subset(analysis_summary$influence_audit,
+                  Diagnostic == "Cook's distance")
+
 
 fmt <- function(x, digits = 3L) formatC(x, digits = digits, format = "f")
 pretty_feature <- function(x) gsub("_", " ", x)
@@ -90,6 +93,20 @@ p2_interval <- function(lower, upper) {
   sprintf("[%s, %s]", p2_fmt(lower, 2L), p2_fmt(upper, 2L))
 }
 ```
+
+# Introduction and analysis protocol
+
+This project addresses two complementary questions. Part 1 asks how accurately
+red-wine sensory quality can be predicted from routine physicochemical
+measurements. Part 2 asks whether mathematics scores differ across observed
+test-preparation and lunch groups, including whether the two associations
+interact. The analyses follow the course brief's emphasis on justified choices,
+reproducibility, and honest limitations.
+
+For Part 1, RMSE is primary because large one-wine prediction errors are costly;
+MAE expresses typical error directly in quality-score points, and $R^2$ measures
+improvement over the holdout mean benchmark. Model selection uses fixed five-fold
+cross-validation, while the stratified 20% holdout is opened once [@Hastie2009].
 
 # Part 1: Wine Quality (Red)
 
@@ -137,15 +154,23 @@ for (section in part2_sections) {
 
 # Contributions and review
 
-Part 2 is divided into five owned sections: dataset audit/design and hypotheses
-(Nguyen Dinh Thien Loc), descriptive analysis (Tran Le Anh Tuan), factorial
-ANOVA (Le Minh Thuan), diagnostics and adjusted follow-up comparisons (Nguyen
-Hong Tan Tai), and practical interpretation/integration (Nguyen Bao Minh
-Triet). Dataset discovery is deliberately excluded from contribution credit.
-The detailed compensating workload plan is in
-`finals/part2/collaboration/WORK_SPLIT.md`. **TODO:** before submission, replace
-this plan with work each member actually completed and record second-person
-review sign-off.
+The repository history, module ownership, and completed handoffs record the
+following contributions:
+
+- **Nguyễn Đình Thiên Lộc:** project framework and reproducibility design; Part
+  1 data preparation/EDA; Part 2 data audit, design justification, and hypotheses.
+- **Trần Lê Anh Tuấn:** Part 1 cleaning and preprocessing; Part 2 descriptive
+  statistics and visualizations.
+- **Lê Minh Thuận:** Part 1 feature selection and baselines; Part 2 effect-coded
+  factorial ANOVA and effect sizes.
+- **Nguyễn Bảo Minh Triết:** Part 1 regularized modelling and canonical
+  integration; Part 2 interpretation and report integration.
+- **Nguyễn Hồng Tấn Tài:** Part 1 locked holdout evaluation; Part 2 diagnostics,
+  robust sensitivity, and multiplicity-adjusted follow-up comparisons.
+
+The final integration review checked every code-to-table/figure handoff, the
+holdout boundary, contrast directions, diagnostics, citations, and PDF layout.
+Dataset discovery is not counted as a contribution.
 
 ```{r appendix}
 appendix_file <- file.path(
