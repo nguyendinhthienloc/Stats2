@@ -18,13 +18,13 @@ choice may underweight genuinely repeated batches.
 The fixed seed `r analysis_summary$config$seed_split` produces a
 quality-stratified 80/20 partition after deduplication. Seed
 `r analysis_summary$config$seed_folds` then assigns five stratified folds inside
-training. The shared fold IDs are reused by every model.
+training. The shared fold IDs are reused by every model [@Hastie2009].
 
 \tightinputtable{../output/tables/tab_p1_split_summary.tex}
 
 ## Outliers and transformations
 
-Tukey's 1.5-IQR rule flags `r analysis_summary$rows_with_any_iqr_flag` training
+Tukey's 1.5-IQR rule [@Tukey1977] flags `r analysis_summary$rows_with_any_iqr_flag` training
 rows (`r fmt(100 * analysis_summary$rows_with_any_iqr_flag / analysis_summary$config$training_rows, 1)`%).
 Deleting all of them would discard a large and scientifically plausible part of
 the target population; the dataset metadata also warns that rare wines are

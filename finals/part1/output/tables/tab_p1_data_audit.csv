@@ -1,8 +1,0 @@
-"Check","Result","Decision"
-"Raw observations","1599","Validated against UCI metadata"
-"Numeric predictors","11","All retained"
-"Missing cells","0","None to impute"
-"Non-finite numeric cells","0","None"
-"Exact duplicate rows removed","240","Remove before splitting to prevent duplicate leakage"
-"Unique observations","1359","Analysis population"
-"Observed quality range","3--8","Treat as numeric regression response"

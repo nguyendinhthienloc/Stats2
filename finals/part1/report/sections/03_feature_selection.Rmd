@@ -5,7 +5,8 @@
 ## Screening without deleting correlated information
 
 We use three training-only views of relevance: marginal correlations, variance
-inflation factors (VIFs), and an AIC stepwise sensitivity analysis. The largest
+inflation factors (VIFs) [@FoxWeisberg2019], and an AIC sensitivity analysis
+[@Akaike1974]. The largest
 VIF is `r fmt(max_vif_row$VIF, 2)` for
 `r pretty_feature(max_vif_row$Feature)`. This is material multicollinearity but
 not evidence that the feature is useless. In the context of wine chemistry, variables like fixed acidity, pH, and density are naturally coupled. Manually deleting one correlated chemistry measure to artificially lower VIF can make the retained coefficient depend arbitrarily on that choice and remove valid chemical information. Therefore, all predictors enter the regularized models, while sparse selection is delegated to Lasso's embedded penalty.
@@ -24,6 +25,13 @@ it is a diagnostic against which to compare Lasso.
 
 The mean-only model establishes the no-chemistry benchmark. OLS lowers
 cross-validated error, but correlated predictors allow severe coefficient variance. Without constraint, OLS may assign large, opposing weights to highly correlated acidity metrics, leading to unstable predictions on new data. Regularization deliberately accepts some training bias to reduce that variance and prevent overfitting.
+
+For influence sensitivity, the training OLS fit flags
+`r p1_cook$Flagged_rows[[1L]]` rows above the conventional Cook's-distance
+$4/n$ reference rule; the maximum is `r fmt(p1_cook$Maximum[[1L]], 4)`.
+These flags identify cases worth scrutiny rather than automatic deletion. A
+holdout row cannot influence the already fitted coefficients, so held-out
+diagnostics focus instead on unusually large prediction errors.
 
 ## Embedded Lasso selection
 

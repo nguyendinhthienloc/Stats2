@@ -107,13 +107,22 @@ sample_skewness <- function(x) {
 }
 
 fit_preprocessor <- function(data, predictors = PREDICTORS,
-                             log_features = character(0),
+                             log_features = NULL,
                              winsor_probs = WINSOR_PROBS) {
   x <- as.data.frame(data[predictors], check.names = FALSE)
   medians <- vapply(x, stats::median, numeric(1), na.rm = TRUE)
   for (name in predictors) {
     missing <- is.na(x[[name]]) | !is.finite(x[[name]])
     x[[name]][missing] <- medians[[name]]
+  }
+
+  # A NULL value means that transformation selection belongs to this analysis
+  # sample. This is used inside cross-validation so validation-fold predictor
+  # distributions cannot influence the transformation choice.
+  if (is.null(log_features)) {
+    raw_skewness <- vapply(x, sample_skewness, numeric(1))
+    nonnegative <- vapply(x, function(value) min(value) >= 0, logical(1))
+    log_features <- names(raw_skewness)[raw_skewness > 1 & nonnegative]
   }
 
   limits <- vapply(x, stats::quantile, numeric(2), probs = winsor_probs,
@@ -198,16 +207,18 @@ select_lambda <- function(lambda, fold_mse) {
 }
 
 cv_regularized_foldclean <- function(train_data, foldid, alpha, lambda,
-                                     log_features) {
+                                     log_features = NULL) {
   lambda <- sort(as.numeric(lambda), decreasing = TRUE)
   folds <- sort(unique(foldid))
   fold_mse <- matrix(NA_real_, nrow = length(folds), ncol = length(lambda))
+  fold_log_features <- vector("list", length(folds))
 
   for (i in seq_along(folds)) {
     validation <- which(foldid == folds[[i]])
     analysis <- which(foldid != folds[[i]])
     recipe <- fit_preprocessor(train_data[analysis, , drop = FALSE],
                                log_features = log_features)
+    fold_log_features[[i]] <- recipe$log_features
     x_analysis <- apply_preprocessor(train_data[analysis, , drop = FALSE], recipe)
     x_validation <- apply_preprocessor(train_data[validation, , drop = FALSE], recipe)
     fit <- glmnet::glmnet(
@@ -221,10 +232,11 @@ cv_regularized_foldclean <- function(train_data, foldid, alpha, lambda,
   }
 
   selected <- select_lambda(lambda, fold_mse)
-  c(list(alpha = alpha, lambda = lambda, fold_mse = fold_mse), selected)
+  c(list(alpha = alpha, lambda = lambda, fold_mse = fold_mse,
+         fold_log_features = fold_log_features), selected)
 }
 
-cv_ols_foldclean <- function(train_data, foldid, log_features) {
+cv_ols_foldclean <- function(train_data, foldid, log_features = NULL) {
   folds <- sort(unique(foldid))
   fold_scores <- matrix(NA_real_, nrow = length(folds), ncol = 3L,
                         dimnames = list(NULL, c("RMSE", "MAE", "R2")))
@@ -289,6 +301,7 @@ save_table_tex <- function(x, filename, caption, label, digits = 3,
     row.names = FALSE
   )
   tex <- as.character(tex)
+  tex <- sub("\\begin{table}", "\\begin{table}[H]", tex, fixed = TRUE)
   wide_tables <- c(
     "tab_p1_data_dictionary.tex", "tab_p3_feature_screening.tex",
     "tab_p5_holdout_display.tex"

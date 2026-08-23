@@ -1,0 +1,20 @@
+<!-- Part 2 Section 2 owner: Tran Le Anh Tuan (24125107) -->
+
+## Descriptive statistics and visual evidence
+
+\tightinputtable{../output/tables/tab_part2_descriptive_display.tex}
+
+The four cells contain between
+`r min(part2_summary$descriptive$N)` and
+`r max(part2_summary$descriptive$N)` students. This imbalance motivates
+effect-coded marginal tests rather than order-dependent sequential sums of
+squares. Within-cell standard deviations range from
+`r p2_fmt(min(part2_summary$descriptive$SD), 2)` to
+`r p2_fmt(max(part2_summary$descriptive$SD), 2)` points. Completed preparation
+and standard lunch are each descriptively associated with higher means, while
+substantial score overlap remains in every cell.
+
+\includefigure{../output/figures/fig_part2_histograms.pdf}{Within-cell mathematics-score histograms. Scores are bounded and discrete, with modest departures from Gaussian shape but no empty or extremely small cell.}{fig:part2-histograms}
+
+\includefigure{../output/figures/fig_part2_factorial_patterns.pdf}{Boxplots and the mean interaction profile for lunch and test preparation. Near-parallel mean lines suggest a weak interaction relative to the two marginal differences.}{fig:part2-factorial-patterns}
+

@@ -34,15 +34,32 @@ required_paths <- c(
   "R/part1_helpers.R",
   "analysis/00_run_all.R",
   "analysis/04_holdout_evaluation.R",
+  "analysis/05_part2_experimental_design.R",
   "report/final-report.Rmd",
   ".github/workflows/ci.yml",
   "data/raw/source/wine-quality.zip",
-  "data/raw/wine_quality/winequality-red.csv"
+  "data/raw/wine_quality/winequality-red.csv",
+  "data/raw/student_performance/StudentsPerformance.csv",
+  "finals/part2/R/01_data_audit_design.R",
+  "finals/part2/R/05_interpretation_integration.R",
+  "finals/part2/collaboration/WORK_SPLIT.md"
 )
 missing_paths <- required_paths[!file.exists(file.path(PROJECT_ROOT, required_paths))]
 if (length(missing_paths)) {
   stop("Missing required paths: ", paste(missing_paths, collapse = ", "),
        call. = FALSE)
+}
+
+duplicate_snapshot_paths <- file.path(
+  PROJECT_ROOT, "finals", "part1", c("data", "output")
+)
+if (any(dir.exists(duplicate_snapshot_paths))) {
+  stop(
+    "Noncanonical duplicate tree(s) found: ",
+    paste(duplicate_snapshot_paths[dir.exists(duplicate_snapshot_paths)],
+          collapse = ", "),
+    call. = FALSE
+  )
 }
 
 log_step("Checking renv lockfile synchronization")
@@ -90,6 +107,36 @@ stopifnot(
   all(wine$quality >= 0 & wine$quality <= 10)
 )
 
+log_step("Validating the Part 2 Student Performance dataset")
+student <- utils::read.csv(paths$raw_student, check.names = FALSE)
+expected_student_columns <- c(
+  "gender", "race/ethnicity", "parental level of education", "lunch",
+  "test preparation course", "math score", "reading score", "writing score"
+)
+student_scores <- student[c("math score", "reading score", "writing score")]
+stopifnot(
+  nrow(student) == 1000L,
+  ncol(student) == 8L,
+  identical(names(student), expected_student_columns),
+  !anyNA(student),
+  all(student_scores >= 0),
+  all(student_scores <= 100),
+  setequal(unique(student$lunch), c("free/reduced", "standard")),
+  setequal(unique(student$`test preparation course`), c("none", "completed"))
+)
+student_raw <- readBin(paths$raw_student, what = "raw",
+                       n = file.size(paths$raw_student))
+student_text <- rawToChar(student_raw)
+student_text <- gsub("\\r\\n?", "\n", student_text, perl = TRUE)
+student_normalized <- tempfile(fileext = ".csv")
+on.exit(unlink(student_normalized), add = TRUE)
+writeBin(charToRaw(student_text), student_normalized)
+student_md5 <- tolower(unname(tools::md5sum(student_normalized)))
+if (!identical(student_md5, "f7a3b96762c57dbff85d27aeb50d28fb")) {
+  stop("The immutable Student Performance source checksum changed.",
+       call. = FALSE)
+}
+
 log_step("Parsing active R source files")
 r_files <- c(
   list.files(file.path(PROJECT_ROOT, "R"), pattern = "[.]R$",
@@ -97,6 +144,8 @@ r_files <- c(
   list.files(file.path(PROJECT_ROOT, "analysis"), pattern = "[.]R$",
              recursive = TRUE, full.names = TRUE),
   list.files(file.path(PROJECT_ROOT, "finals", "part1", "R"),
+             pattern = "[.]R$", recursive = TRUE, full.names = TRUE),
+  list.files(file.path(PROJECT_ROOT, "finals", "part2", "R"),
              pattern = "[.]R$", recursive = TRUE, full.names = TRUE),
   list.files(file.path(PROJECT_ROOT, "scripts"), pattern = "[.]R$",
              recursive = TRUE, full.names = TRUE)

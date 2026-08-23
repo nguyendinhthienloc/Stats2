@@ -1,6 +1,11 @@
 # Presentation
 
-Create the 10-minute final presentation here. The preferred final filename is `final-presentation.pdf`; the release workflow includes it automatically when present.
+The completed editable 10-minute deck is `final-presentation.pptx`. It contains
+ten slides, speaker-note timings totalling 10:00, and a `[Sources]` block on
+every slide. The deck was rendered slide-by-slide and passed the presentation
+overflow check.
+
+If the submission portal requires PDF slides, export the verified PPTX from
 
 Suggested timing:
 

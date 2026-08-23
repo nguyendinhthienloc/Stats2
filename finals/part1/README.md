@@ -20,9 +20,8 @@ Rscript --vanilla analysis/00_run_all.R
 
 The canonical runner reads immutable inputs from root `data/raw/`, writes
 derived interfaces to `data/processed/`, and writes figures, tables,
-models, logs, and manifests to root `output/`. Do not invoke the nested
-`R/00_run_all.R` or `R/00_build_part1.R`; those pre-merge entry
-points are retired.
+models, logs, and manifests to root `output/`. The pre-merge nested runners
+and duplicate holdout script have been removed; use the root entry point.
 
 ## Five reviewable workstreams
 
@@ -38,10 +37,9 @@ Detailed ownership and cross-review expectations are in
 the final contribution statement must reflect what members actually completed
 and reviewed.
 
-## Historical artifacts
+## Generated artifacts
 
-Tracked files already present under `finals/part1/output/` are a
-pre-merge snapshot made with the old nested configuration. They are retained
-only as review history and are not canonical results. In particular, do not
-mix their model lock or metrics with artifacts regenerated under root
-`output/` and seed `4520803`.
+No data or generated results are stored in this module directory. The
+canonical runner reads root `data/raw/`, writes derived interfaces to root
+`data/processed/`, and writes every generated artifact to root `output/`.
+Do not recreate `finals/part1/data/` or `finals/part1/output/`.

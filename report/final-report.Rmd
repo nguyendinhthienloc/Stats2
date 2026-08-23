@@ -10,6 +10,7 @@ date: "Academic Year 2025--2026"
 bibliography:
   - references.bib
   - ../finals/part1/report/references.bib
+  - ../finals/part2/report/references.bib
 link-citations: true
 output:
   pdf_document:
@@ -18,7 +19,7 @@ output:
     toc: true
     toc_depth: 2
     fig_caption: true
-    keep_tex: false
+    keep_tex: true
     includes:
       in_header: ../finals/part1/report/header.tex
 fontsize: 10pt
@@ -26,10 +27,12 @@ geometry: margin=0.78in
 ---
 
 \begin{abstract}
-This report currently completes Part 1 of the Group 8 final project. We predict
-red Vinho Verde quality from 11 physicochemical measurements with a locked,
-leakage-controlled comparison of OLS, Ridge, Lasso, and Elastic Net. Part 2,
-the separate experimental-design extension, remains explicitly pending.
+This report completes both components of the Group 8 final project. Part 1
+predicts red Vinho Verde quality from 11 physicochemical measurements with a
+locked, leakage-controlled comparison of OLS, Ridge, Lasso, and Elastic Net.
+Part 2 uses an observational two-factor analysis of student mathematics scores
+by test preparation and lunch category, with diagnostics, robust sensitivity
+checks, and explicitly non-causal interpretation.
 \end{abstract}
 
 ```{r setup, include=FALSE}
@@ -55,9 +58,55 @@ max_vif_row <- analysis_summary$feature_screening[
 ]
 selected_lasso <- subset(analysis_summary$lasso_selection, Selected == "Yes")
 
+part2_file <- file.path(PROJECT_ROOT, "output", "part2_summary.RData")
+if (!file.exists(part2_file)) {
+  stop("Part 2 output is missing. Run source('analysis/00_run_all.R').")
+}
+load(part2_file)
+
+p2_find <- function(label) {
+  part2_summary$key_findings[
+    part2_summary$key_findings$Finding == label, , drop = FALSE
+  ]
+}
+p2_preparation <- p2_find("Test-preparation association")
+p2_lunch <- p2_find("Lunch-group association")
+p2_interaction <- p2_find("Preparation-by-lunch interaction")
+p2_shapiro <- subset(part2_summary$assumptions,
+                     Assumption == "Residual normality")
+p2_bf <- subset(part2_summary$assumptions,
+                Assumption == "Homogeneity of variance")
+p2_influence <- subset(part2_summary$assumptions,
+                       Assumption == "Influential observations")
+p2_max_cook <- p2_influence$Statistic[[1L]]
+p2_influence_count <- as.integer(sub(
+  ".*4/n: ([0-9]+);.*", "\\1", p2_influence$Assessment[[1L]]
+))
+p1_cook <- subset(analysis_summary$influence_audit,
+                  Diagnostic == "Cook's distance")
+
+
 fmt <- function(x, digits = 3L) formatC(x, digits = digits, format = "f")
 pretty_feature <- function(x) gsub("_", " ", x)
+p2_fmt <- fmt
+p2_interval <- function(lower, upper) {
+  sprintf("[%s, %s]", p2_fmt(lower, 2L), p2_fmt(upper, 2L))
+}
 ```
+
+# Introduction and analysis protocol
+
+This project addresses two complementary questions. Part 1 asks how accurately
+red-wine sensory quality can be predicted from routine physicochemical
+measurements. Part 2 asks whether mathematics scores differ across observed
+test-preparation and lunch groups, including whether the two associations
+interact. The analyses follow the course brief's emphasis on justified choices,
+reproducibility, and honest limitations.
+
+For Part 1, RMSE is primary because large one-wine prediction errors are costly;
+MAE expresses typical error directly in quality-score points, and $R^2$ measures
+improvement over the holdout mean benchmark. Model selection uses fixed five-fold
+cross-validation, while the stratified 20% holdout is opened once [@Hastie2009].
 
 # Part 1: Wine Quality (Red)
 
@@ -84,15 +133,44 @@ for (section in section_files) {
 
 # Part 2: Experimental-design extension
 
-TODO: Select and justify the separate dataset; state hypotheses; complete the
-two-factor ANOVA or \(2^k\) factorial analysis; check assumptions; report
-interactions and post-hoc comparisons where justified; and interpret practical
-significance and limitations.
+```{r part2-sections}
+part2_sections <- file.path(
+  PROJECT_ROOT, "finals", "part2", "report", "sections",
+  c(
+    "01_dataset_design.Rmd",
+    "02_descriptive_statistics.Rmd",
+    "03_factorial_anova.Rmd",
+    "04_diagnostics_posthoc.Rmd",
+    "05_conclusion_limitations.Rmd"
+  )
+)
+for (section in part2_sections) {
+  cat(
+    knitr::knit_child(section, envir = knitr::knit_global(), quiet = TRUE),
+    sep = "\n"
+  )
+}
+```
 
-# Contributions
+# Contributions and review
 
-TODO: Replace the workstream ownership plan with a statement of the work each
-member actually completed and reviewed.
+The repository history, module ownership, and completed handoffs record the
+following contributions:
+
+- **Nguyễn Đình Thiên Lộc:** project framework and reproducibility design; Part
+  1 data preparation/EDA; Part 2 data audit, design justification, and hypotheses.
+- **Trần Lê Anh Tuấn:** Part 1 cleaning and preprocessing; Part 2 descriptive
+  statistics and visualizations.
+- **Lê Minh Thuận:** Part 1 feature selection and baselines; Part 2 effect-coded
+  factorial ANOVA and effect sizes.
+- **Nguyễn Bảo Minh Triết:** Part 1 regularized modelling and canonical
+  integration; Part 2 interpretation and report integration.
+- **Nguyễn Hồng Tấn Tài:** Part 1 locked holdout evaluation; Part 2 diagnostics,
+  robust sensitivity, and multiplicity-adjusted follow-up comparisons.
+
+The final integration review checked every code-to-table/figure handoff, the
+holdout boundary, contrast directions, diagnostics, citations, and PDF layout.
+Dataset discovery is not counted as a contribution.
 
 ```{r appendix}
 appendix_file <- file.path(

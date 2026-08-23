@@ -1,372 +1,42 @@
 ###############################################################################
-# File:        setup.R
-# Owner:       ALL (shared configuration)
-# Description: Portable configuration and reusable helpers for Part 1.
+# Compatibility setup for the Part 1 presentation source.
+# The canonical configuration, data, and outputs all live at project root.
 ###############################################################################
 
 frame_sources <- vapply(sys.frames(), function(frame) {
   value <- frame$ofile
-  if (is.null(value) || !length(value)) NA_character_ else as.character(value[[1]])
-}, character(1))
+  if (is.null(value) || !length(value)) NA_character_ else as.character(value[[1L]])
+}, character(1L))
 setup_frames <- frame_sources[
-  !is.na(frame_sources) & grepl("(^|[/\\])setup[.]R$", frame_sources,
-                                ignore.case = TRUE)
+  !is.na(frame_sources) &
+    basename(frame_sources) == "setup.R" &
+    basename(dirname(frame_sources)) == "part1"
 ]
-setup_source <- if (length(setup_frames)) tail(setup_frames, 1L) else NULL
-if (is.null(setup_source) || !nzchar(setup_source)) {
-  candidates <- c(
-    "setup.R",
-    file.path("finals", "part1", "setup.R"),
-    file.path("..", "setup.R")
-  )
-  setup_source <- candidates[file.exists(candidates)][1]
-}
-if (is.na(setup_source) || !nzchar(setup_source)) {
+setup_candidates <- unique(c(
+  setup_frames,
+  file.path(getwd(), "setup.R"),
+  file.path(getwd(), "..", "setup.R"),
+  file.path(getwd(), "finals", "part1", "setup.R")
+))
+setup_candidates <- setup_candidates[file.exists(setup_candidates)]
+if (!length(setup_candidates)) {
   stop("Cannot locate finals/part1/setup.R", call. = FALSE)
 }
 
-SETUP_FILE <- normalizePath(setup_source, winslash = "/", mustWork = TRUE)
-PART1_ROOT <- normalizePath(dirname(SETUP_FILE), winslash = "/", mustWork = TRUE)
-PROJECT_ROOT <- normalizePath(file.path(PART1_ROOT, "..", ".."),
-                              winslash = "/", mustWork = TRUE)
-if (!identical(normalizePath(getwd(), winslash = "/"), PART1_ROOT)) {
-  setwd(PART1_ROOT)
-}
-
-required_packages <- c("glmnet", "knitr", "rmarkdown")
-missing_packages <- required_packages[
-  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
-]
-if (length(missing_packages) > 0L) {
-  stop(
-    "Missing R package(s): ", paste(missing_packages, collapse = ", "),
-    ". Install them before running the Part 1 pipeline.",
-    call. = FALSE
-  )
-}
-
-SEED_SPLIT <- 452031L
-SEED_FOLDS <- 452032L
-SEED_BOOTSTRAP <- 452033L
-HOLDOUT_FRACTION <- 0.20
-N_FOLDS <- 5L
-WINSOR_PROBS <- c(0.01, 0.99)
-TARGET <- "quality"
-PREDICTORS <- c(
-  "fixed_acidity", "volatile_acidity", "citric_acid", "residual_sugar",
-  "chlorides", "free_sulfur_dioxide", "total_sulfur_dioxide", "density",
-  "ph", "sulphates", "alcohol"
+SETUP_FILE <- normalizePath(setup_candidates[[1L]], winslash = "/",
+                            mustWork = TRUE)
+PART1_ROOT <- normalizePath(dirname(SETUP_FILE), winslash = "/",
+                           mustWork = TRUE)
+ROOT_SETUP <- normalizePath(
+  file.path(PART1_ROOT, "..", "..", "R", "setup.R"),
+  winslash = "/", mustWork = TRUE
 )
+source(ROOT_SETUP)
+source(file.path(PROJECT_ROOT, "R", "part1_helpers.R"))
 
-OUTPUT_DIR <- file.path(PART1_ROOT, "output")
-FIGURE_DIR <- file.path(OUTPUT_DIR, "figures")
-TABLE_DIR <- file.path(OUTPUT_DIR, "tables")
-MODEL_DIR <- file.path(OUTPUT_DIR, "models")
-LOG_DIR <- file.path(OUTPUT_DIR, "logs")
-DATA_DIR <- file.path(PART1_ROOT, "data")
 REPORT_DIR <- file.path(PART1_ROOT, "report")
 PRESENTATION_DIR <- file.path(PART1_ROOT, "presentation")
 
-ensure_dirs <- function() {
-  dirs <- c(
-    DATA_DIR, OUTPUT_DIR, FIGURE_DIR, TABLE_DIR, MODEL_DIR, LOG_DIR,
-    REPORT_DIR, PRESENTATION_DIR
-  )
-  invisible(vapply(dirs, dir.create, logical(1), recursive = TRUE,
-                   showWarnings = FALSE))
-}
-
-log_line <- function(level, ...) {
-  cat(sprintf(">>> [%s] %-5s %s\n", format(Sys.time(), "%H:%M:%S"), level,
-              paste0(..., collapse = "")))
-}
-log_step <- function(...) log_line("STEP", ...)
-log_info <- function(...) log_line("INFO", ...)
-log_warn <- function(...) log_line("WARN", ...)
-abort_run <- function(...) stop(paste0(..., collapse = ""), call. = FALSE)
-
-snake_case <- function(x) {
-  x <- tolower(trimws(x))
-  x <- gsub("[^a-z0-9]+", "_", x)
-  gsub("(^_+|_+$)", "", x)
-}
-
-read_red_wine <- function() {
-  archive <- file.path(PROJECT_ROOT, "final_resources", "wine+quality.zip")
-  local_csv <- file.path(DATA_DIR, "winequality-red.csv")
-
-  if (file.exists(archive)) {
-    wine <- utils::read.csv(
-      unz(archive, "winequality-red.csv"),
-      sep = ";", check.names = FALSE, stringsAsFactors = FALSE
-    )
-  } else if (file.exists(local_csv)) {
-    wine <- utils::read.csv(
-      local_csv, sep = ";", check.names = FALSE, stringsAsFactors = FALSE
-    )
-  } else {
-    abort_run("Red-wine data not found in final_resources or finals/part1/data")
-  }
-
-  names(wine) <- snake_case(names(wine))
-  expected <- c(PREDICTORS, TARGET)
-  if (!identical(names(wine), expected)) {
-    abort_run("Unexpected red-wine schema: ", paste(names(wine), collapse = ", "))
-  }
-  if (nrow(wine) != 1599L || any(!vapply(wine, is.numeric, logical(1)))) {
-    abort_run("Red-wine data failed the expected 1599-row numeric schema check")
-  }
-  wine$source_row <- seq_len(nrow(wine))
-  wine
-}
-
-deduplicate_wine <- function(wine) {
-  analytical <- c(PREDICTORS, TARGET)
-  keep <- !duplicated(wine[analytical])
-  unique_wine <- wine[keep, c("source_row", analytical), drop = FALSE]
-  rownames(unique_wine) <- NULL
-  unique_wine$record_id <- sprintf("RW%04d", seq_len(nrow(unique_wine)))
-  unique_wine[, c("record_id", "source_row", analytical), drop = FALSE]
-}
-
-stratified_holdout_indices <- function(y, fraction, seed) {
-  set.seed(seed)
-  groups <- split(seq_along(y), y)
-  selected <- unlist(lapply(groups, function(index) {
-    n_take <- max(1L, min(length(index) - 1L,
-                         as.integer(round(length(index) * fraction))))
-    sample(index, size = n_take, replace = FALSE)
-  }), use.names = FALSE)
-  sort(as.integer(selected))
-}
-
-stratified_folds <- function(y, k, seed) {
-  set.seed(seed)
-  foldid <- integer(length(y))
-  for (index in split(seq_along(y), y)) {
-    shuffled <- sample(index, length(index), replace = FALSE)
-    foldid[shuffled] <- rep(seq_len(k), length.out = length(index))
-  }
-  foldid
-}
-
-sample_skewness <- function(x) {
-  x <- x[is.finite(x)]
-  if (length(x) < 3L || stats::sd(x) == 0) return(0)
-  z <- (x - mean(x)) / stats::sd(x)
-  mean(z^3)
-}
-
-fit_preprocessor <- function(data, predictors = PREDICTORS,
-                             log_features = character(0),
-                             winsor_probs = WINSOR_PROBS) {
-  x <- as.data.frame(data[predictors], check.names = FALSE)
-  medians <- vapply(x, stats::median, numeric(1), na.rm = TRUE)
-  for (name in predictors) {
-    missing <- is.na(x[[name]]) | !is.finite(x[[name]])
-    x[[name]][missing] <- medians[[name]]
-  }
-
-  limits <- vapply(x, stats::quantile, numeric(2), probs = winsor_probs,
-                   na.rm = TRUE, names = FALSE, type = 7)
-  rownames(limits) <- c("lower", "upper")
-  for (name in predictors) {
-    x[[name]] <- pmin(pmax(x[[name]], limits["lower", name]),
-                      limits["upper", name])
-  }
-
-  invalid_logs <- log_features[
-    !log_features %in% predictors |
-      vapply(log_features, function(name) any(x[[name]] < 0), logical(1))
-  ]
-  if (length(invalid_logs) > 0L) {
-    abort_run("Cannot log1p-transform: ", paste(invalid_logs, collapse = ", "))
-  }
-  for (name in log_features) x[[name]] <- log1p(x[[name]])
-
-  centers <- vapply(x, mean, numeric(1))
-  scales <- vapply(x, stats::sd, numeric(1))
-  if (any(!is.finite(scales) | scales <= 0)) {
-    abort_run("Preprocessor found a zero-variance or non-finite predictor")
-  }
-
-  structure(list(
-    predictors = predictors,
-    medians = medians,
-    limits = limits,
-    log_features = log_features,
-    centers = centers,
-    scales = scales,
-    winsor_probs = winsor_probs
-  ), class = "wine_preprocessor")
-}
-
-apply_preprocessor <- function(data, recipe) {
-  x <- as.data.frame(data[recipe$predictors], check.names = FALSE)
-  for (name in recipe$predictors) {
-    missing <- is.na(x[[name]]) | !is.finite(x[[name]])
-    x[[name]][missing] <- recipe$medians[[name]]
-    x[[name]] <- pmin(pmax(x[[name]], recipe$limits["lower", name]),
-                      recipe$limits["upper", name])
-  }
-  for (name in recipe$log_features) x[[name]] <- log1p(x[[name]])
-  x <- sweep(as.matrix(x), 2L, recipe$centers, FUN = "-")
-  x <- sweep(x, 2L, recipe$scales, FUN = "/")
-  colnames(x) <- recipe$predictors
-  x
-}
-
-score_regression <- function(observed, predicted) {
-  observed <- as.numeric(observed)
-  predicted <- as.numeric(predicted)
-  if (length(observed) != length(predicted) ||
-      any(!is.finite(c(observed, predicted)))) {
-    abort_run("Regression scores require equal-length finite vectors")
-  }
-  residual <- observed - predicted
-  ss_total <- sum((observed - mean(observed))^2)
-  c(
-    RMSE = sqrt(mean(residual^2)),
-    MAE = mean(abs(residual)),
-    R2 = if (ss_total == 0) NA_real_ else 1 - sum(residual^2) / ss_total
-  )
-}
-
-select_lambda <- function(lambda, fold_mse) {
-  cv_mse <- colMeans(fold_mse)
-  cv_se <- apply(fold_mse, 2L, stats::sd) / sqrt(nrow(fold_mse))
-  min_index <- which.min(cv_mse)
-  eligible <- which(cv_mse <= cv_mse[min_index] + cv_se[min_index])
-  one_se_index <- eligible[which.max(lambda[eligible])]
-  list(
-    cv_mse = cv_mse,
-    cv_se = cv_se,
-    lambda_min = lambda[min_index],
-    lambda_1se = lambda[one_se_index],
-    min_index = min_index,
-    one_se_index = one_se_index
-  )
-}
-
-cv_regularized_foldclean <- function(train_data, foldid, alpha, lambda,
-                                     log_features) {
-  lambda <- sort(as.numeric(lambda), decreasing = TRUE)
-  folds <- sort(unique(foldid))
-  fold_mse <- matrix(NA_real_, nrow = length(folds), ncol = length(lambda))
-
-  for (i in seq_along(folds)) {
-    validation <- which(foldid == folds[[i]])
-    analysis <- which(foldid != folds[[i]])
-    recipe <- fit_preprocessor(train_data[analysis, , drop = FALSE],
-                               log_features = log_features)
-    x_analysis <- apply_preprocessor(train_data[analysis, , drop = FALSE], recipe)
-    x_validation <- apply_preprocessor(train_data[validation, , drop = FALSE], recipe)
-    fit <- glmnet::glmnet(
-      x_analysis, train_data[[TARGET]][analysis], alpha = alpha,
-      lambda = lambda, family = "gaussian", standardize = FALSE,
-      intercept = TRUE
-    )
-    prediction <- stats::predict(fit, newx = x_validation, s = lambda)
-    errors <- sweep(prediction, 1L, train_data[[TARGET]][validation], FUN = "-")
-    fold_mse[i, ] <- colMeans(errors^2)
-  }
-
-  selected <- select_lambda(lambda, fold_mse)
-  c(list(alpha = alpha, lambda = lambda, fold_mse = fold_mse), selected)
-}
-
-cv_ols_foldclean <- function(train_data, foldid, log_features) {
-  folds <- sort(unique(foldid))
-  fold_scores <- matrix(NA_real_, nrow = length(folds), ncol = 3L,
-                        dimnames = list(NULL, c("RMSE", "MAE", "R2")))
-  squared_error <- numeric(nrow(train_data))
-  absolute_error <- numeric(nrow(train_data))
-
-  for (i in seq_along(folds)) {
-    validation <- which(foldid == folds[[i]])
-    analysis <- which(foldid != folds[[i]])
-    recipe <- fit_preprocessor(train_data[analysis, , drop = FALSE],
-                               log_features = log_features)
-    x_analysis <- apply_preprocessor(train_data[analysis, , drop = FALSE], recipe)
-    x_validation <- apply_preprocessor(train_data[validation, , drop = FALSE], recipe)
-    fit <- stats::lm.fit(cbind(`(Intercept)` = 1, x_analysis),
-                         train_data[[TARGET]][analysis])
-    prediction <- as.numeric(cbind(1, x_validation) %*% fit$coefficients)
-    observed <- train_data[[TARGET]][validation]
-    fold_scores[i, ] <- score_regression(observed, prediction)
-    squared_error[validation] <- (observed - prediction)^2
-    absolute_error[validation] <- abs(observed - prediction)
-  }
-
-  c(
-    RMSE = sqrt(mean(squared_error)),
-    MAE = mean(absolute_error),
-    R2 = 1 - sum(squared_error) /
-      sum((train_data[[TARGET]] - mean(train_data[[TARGET]]))^2)
-  )
-}
-
-cv_mean_baseline <- function(y, foldid) {
-  prediction <- numeric(length(y))
-  for (fold in sort(unique(foldid))) {
-    validation <- which(foldid == fold)
-    prediction[validation] <- mean(y[-validation])
-  }
-  score_regression(y, prediction)
-}
-
-compute_vif <- function(x) {
-  x <- as.data.frame(x, check.names = FALSE)
-  vapply(names(x), function(name) {
-    others <- setdiff(names(x), name)
-    fit <- stats::lm(x[[name]] ~ ., data = x[others])
-    r_squared <- summary(fit)$r.squared
-    1 / (1 - r_squared)
-  }, numeric(1))
-}
-
-nonzero_count <- function(fit, lambda, tolerance = 1e-8) {
-  coefficients <- as.matrix(stats::coef(fit, s = lambda))[-1, 1]
-  sum(abs(coefficients) > tolerance)
-}
-
-save_table_tex <- function(x, filename, caption, label, digits = 3,
-                           align = NULL) {
-  ensure_dirs()
-  path <- file.path(TABLE_DIR, filename)
-  tex <- knitr::kable(
-    x, format = "latex", booktabs = TRUE, caption = caption,
-    label = label, digits = digits, escape = TRUE, align = align
-  )
-  writeLines(as.character(tex), path, useBytes = TRUE)
-  invisible(path)
-}
-
-save_table_artifacts <- function(x, stem, caption, label, digits = 3,
-                                 align = NULL) {
-  ensure_dirs()
-  utils::write.csv(x, file.path(TABLE_DIR, paste0(stem, ".csv")),
-                   row.names = FALSE, na = "")
-  save_table_tex(x, paste0(stem, ".tex"), caption, label, digits, align)
-}
-
-open_pdf <- function(filename, width = 7, height = 5) {
-  ensure_dirs()
-  grDevices::pdf(file.path(FIGURE_DIR, filename), width = width, height = height,
-                 family = "serif", useDingbats = FALSE)
-  graphics::par(
-    mar = c(4.3, 4.4, 2.7, 1.0), mgp = c(2.5, 0.8, 0),
-    tcl = -0.25, las = 1, bty = "l", col.axis = "#25313C",
-    col.lab = "#25313C", col.main = "#17212B"
-  )
-}
-
-MODEL_COLORS <- c(
-  "Mean" = "#7F8C8D", "OLS" = "#2C3E50", "Ridge" = "#2878B5",
-  "Lasso" = "#D1495B", "Elastic Net" = "#2A9D8F"
+log_info(
+  "Part 1 compatibility setup loaded | canonical root=", PROJECT_ROOT
 )
-
-ensure_dirs()
-log_info("Part 1 setup loaded | root=", PART1_ROOT,
-         " | R=", as.character(getRversion()),
-         " | glmnet=", as.character(utils::packageVersion("glmnet")))

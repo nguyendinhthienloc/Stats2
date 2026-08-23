@@ -1,5 +1,0 @@
-Completed: 2026-08-18 13:57:18 UTC
-Locked model: Ridge
-Observed holdout winner: OLS
-Holdout rows: 271
-Row-level holdout outcomes were not serialized.

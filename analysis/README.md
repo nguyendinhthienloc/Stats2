@@ -18,6 +18,12 @@ Rscript --vanilla analysis/00_run_all.R
 2. `02_feature_selection.R` -- Part 1 section 3: baseline and feature-selection diagnostics.
 3. `03_regularized_models.R` -- Part 1 section 4: Ridge, Lasso, Elastic Net, and the pre-holdout model lock.
 4. `04_holdout_evaluation.R` -- Part 1 section 5: the only stage allowed to inspect holdout outcomes.
-5. `05_part2_experimental_design.R` -- Part 2 scaffold; dataset choice and analysis remain TODO.
+5. `05_part2_experimental_design.R` -- Part 2 Student Performance two-factor
+   analysis, including the audit, descriptive work, ANOVA, diagnostics,
+   multiplicity-adjusted follow-up, and practical interpretation.
 
-The root stages are the canonical integration of the completed Part 1 work under `finals/part1/`. Individual numbered files may be run during development only after their upstream artifacts exist. Generated files in `data/processed/` and `output/` are disposable build artifacts: never hand-edit them.
+The root stages integrate the completed Part 1 work under `finals/part1/` and
+the five owned Part 2 modules under `finals/part2/R/`. Individual numbered files
+may be run during development only after their upstream artifacts exist.
+Generated files in `data/processed/` and `output/` are disposable build
+artifacts: never hand-edit them.
