@@ -49,11 +49,6 @@ small decimal-place difference.
 
 ## Conclusion
 
-The full workflow meets the Part 1 objective: documented EDA and cleaning,
-principled selection, a baseline plus three regularized models, shared-fold CV,
-coefficient-path interpretation, and a single locked holdout evaluation.
-`r locked_model` is the confirmatory recommendation for expected-score
-prediction under this design. Alcohol and volatile acidity provide the strongest
-marginal signals, but correlated chemistry measurements and irreducible sensory
-variation limit accuracy. A future extension should compare ordinal regression
-or robust nonlinear models under the same locked resampling protocol.
+Routine physicochemical measurements provide moderate predictive power for red Vinho Verde quality, accounting for approximately 44% of the variance in expert ratings ($R^2 \approx 0.44$, holdout $\text{RMSE} \approx 0.613$). Alcohol content and volatile acidity serve as the primary chemical signals, showing the strongest positive and negative associations with quality, respectively. Across all evaluated linear architectures—OLS, Ridge, Lasso, and Elastic Net—generalization performance is practically identical on the locked holdout set. However, Ridge is retained as the confirmatory recommendation because $L_2$ shrinkage stabilizes coefficient variance in the presence of substantial multicollinearity (e.g., fixed acidity $\text{VIF} \approx 7.9$) without discarding correlated chemical dimensions.
+
+The primary predictive bottleneck stems from the severe concentration of sensory scores at classes 5 and 6, coupled with the inherent loss of treating discrete, bounded ratings as continuous Gaussian targets. This induces strong regression toward the mean and limits accuracy on rare, extreme wines (scores 3, 4, and 8). Future modeling on this benchmark should prioritize cumulative link (ordinal) models or robust non-linear ensembles under the same strict leakage-controlled resampling protocol.
