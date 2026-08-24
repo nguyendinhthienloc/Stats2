@@ -64,6 +64,15 @@ save_part2_table(
   "Two-factor ANOVA results with point-scale and standardized effect sizes.",
   "tab:part2-key-findings-display", digits = 3L
 )
+key_findings_tex <- file.path(paths$tables, 'tab_part2_key_findings_display.tex')
+key_findings_tex_lines <- readLines(key_findings_tex, warn = FALSE)
+math_delimiter <- rawToChar(as.raw(36L))
+key_findings_tex_lines <- sub(
+  'Partial eta2',
+  paste0('Partial ', math_delimiter, '\\eta^2', math_delimiter),
+  key_findings_tex_lines, fixed = TRUE
+)
+writeLines(key_findings_tex_lines, key_findings_tex, useBytes = TRUE)
 
 limitations <- data.frame(
   Limitation = c(
