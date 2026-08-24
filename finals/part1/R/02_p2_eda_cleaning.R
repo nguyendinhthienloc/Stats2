@@ -133,16 +133,23 @@ graphics::par(mfrow = c(3, 4), mar = c(3.1, 3.1, 2.1, 0.7),
 for (name in PREDICTORS) {
   graphics::hist(
     train_data[[name]], breaks = "FD", col = "#B9D7EA", border = "white",
-    main = gsub("_", " ", name), xlab = "", ylab = "Count"
+    main = display_variable_name(name), xlab = "", ylab = "Count"
   )
 }
 graphics::plot.new()
 graphics::text(0.5, 0.6, "Training data only", cex = 1.1, font = 2)
-graphics::text(0.5, 0.43, paste("log1p selected:", paste(log_features, collapse = ", ")),
-               cex = 0.72)
+log_feature_note <- paste(
+  strwrap(
+    paste("log1p selected:", paste(display_variable_name(log_features), collapse = ", ")),
+    width = 42
+  ),
+  collapse = "\n"
+)
+graphics::text(0.5, 0.41, log_feature_note, cex = 0.72)
 grDevices::dev.off()
 
 open_pdf("fig_p2_correlation_heatmap.pdf", width = 8.5, height = 7.5)
+graphics::par(mar = c(9.2, 9.4, 3.0, 1.0))
 ordered_names <- c(PREDICTORS, TARGET)
 image_matrix <- correlation_matrix[rev(ordered_names), ordered_names]
 palette <- grDevices::colorRampPalette(c("#B2182B", "#F7F7F7", "#2166AC"))(101)
@@ -152,9 +159,9 @@ graphics::image(
   xlab = "", ylab = "", main = "Training correlation structure"
 )
 graphics::axis(1, at = seq_along(ordered_names),
-               labels = gsub("_", " ", ordered_names), las = 2, cex.axis = 0.66)
+               labels = display_variable_name(ordered_names), las = 2, cex.axis = 0.66)
 graphics::axis(2, at = seq_along(ordered_names),
-               labels = gsub("_", " ", rev(ordered_names)), las = 2,
+               labels = display_variable_name(rev(ordered_names)), las = 2,
                cex.axis = 0.66)
 graphics::box()
 grDevices::dev.off()
@@ -169,7 +176,7 @@ for (name in top_relationships) {
   graphics::plot(
     x, jittered_quality, pch = 16, cex = 0.5,
     col = grDevices::adjustcolor("#2878B5", alpha.f = 0.32),
-    xlab = gsub("_", " ", name), ylab = "Quality",
+    xlab = display_variable_name(name), ylab = "Quality",
     main = sprintf("r = %.2f", target_correlations[[name]])
   )
   graphics::abline(stats::lm(y_train ~ x), col = "#D1495B", lwd = 2)
@@ -177,9 +184,11 @@ for (name in top_relationships) {
 grDevices::dev.off()
 
 open_pdf("fig_p2_outlier_audit.pdf", width = 8, height = 5.5)
+graphics::par(mar = c(4.3, 9.0, 2.7, 1.0))
 ordered_outliers <- outlier_audit[order(outlier_audit$IQR_Flags), ]
 graphics::barplot(
-  ordered_outliers$IQR_Flags, names.arg = gsub("_", " ", ordered_outliers$Variable),
+  ordered_outliers$IQR_Flags,
+  names.arg = display_variable_name(ordered_outliers$Variable),
   horiz = TRUE, las = 1, col = "#E9C46A", border = NA,
   xlab = "Training observations beyond 1.5 x IQR fences",
   main = "Outlier flags are common and distributed across variables",

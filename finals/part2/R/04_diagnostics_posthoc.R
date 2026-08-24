@@ -44,7 +44,7 @@ assumptions <- data.frame(
 save_part2_table(
   assumptions, "tab_part2_assumptions",
   "Assumption and model-adequacy checks.",
-  "tab:part2-assumptions", digits = 4L
+  "part2-assumptions", digits = 4L
 )
 
 open_part2_pdf("fig_part2_diagnostics.pdf", width = 8, height = 7)
@@ -103,7 +103,7 @@ save_part2_table(
                      "Holm_P_value", "CI_low", "CI_high")],
   "tab_part2_simple_effects",
   "Simple two-level contrasts with Holm-adjusted p-values.",
-  "tab:part2-simple-effects", digits = 4L
+  "part2-simple-effects", digits = 4L
 )
 simple_display <- data.frame(
   Contrast = simple_effects$Contrast,
@@ -115,7 +115,7 @@ simple_display <- data.frame(
 save_part2_table(
   simple_display, "tab_part2_simple_effects_display",
   "Follow-up simple effects with Holm-adjusted p-values.",
-  "tab:part2-simple-display", digits = 3L
+  "part2-simple-display", digits = 3L
 )
 
 robust_covariance <- hc3_vcov(anova_fit)
@@ -135,7 +135,7 @@ save_part2_table(
                          "CI_low", "CI_high")],
   "tab_part2_robust_sensitivity",
   "HC3 heteroskedasticity-robust sensitivity analysis.",
-  "tab:part2-robust", digits = 4L
+  "part2-robust", digits = 4L
 )
 
 save(

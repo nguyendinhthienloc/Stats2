@@ -105,7 +105,7 @@ run_analysis_pipeline <- function() {
   save_table_tex(
     package_versions, "tab_reproducibility_versions.tex",
     caption = "Software versions used for the verified run.",
-    label = "tab:reproducibility-versions", digits = 2L
+    label = "reproducibility-versions", digits = 2L
   )
 
   table_stems <- c(

@@ -45,7 +45,7 @@ key_findings <- do.call(
 save_part2_table(
   key_findings, "tab_part2_key_findings",
   "Confirmatory results, raw-point effects, and practical effect sizes.",
-  "tab:part2-key-findings", digits = 4L
+  "part2-key-findings", digits = 4L
 )
 key_findings_display <- data.frame(
   Effect = key_findings$Finding,
@@ -55,14 +55,14 @@ key_findings_display <- data.frame(
   ),
   F = anova_table$F_value[seq_len(3L)],
   p = vapply(key_findings$P_value, format_part2_p, character(1L)),
-  `Partial eta2` = key_findings$Partial_eta_squared,
+  `Partial eta2` = sprintf("%.4f", key_findings$Partial_eta_squared),
   check.names = FALSE,
   stringsAsFactors = FALSE
 )
 save_part2_table(
   key_findings_display, "tab_part2_key_findings_display",
   "Two-factor ANOVA results with point-scale and standardized effect sizes.",
-  "tab:part2-key-findings-display", digits = 3L
+  "part2-key-findings-display", digits = 3L
 )
 key_findings_tex <- file.path(paths$tables, 'tab_part2_key_findings_display.tex')
 key_findings_tex_lines <- readLines(key_findings_tex, warn = FALSE)
@@ -99,7 +99,7 @@ limitations <- data.frame(
 save_part2_table(
   limitations, "tab_part2_limitations",
   "Limitations and design improvements.",
-  "tab:part2-limitations", digits = 0L
+  "part2-limitations", digits = 0L
 )
 
 part2_summary <- list(

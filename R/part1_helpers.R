@@ -332,13 +332,21 @@ save_table_artifacts <- function(x, stem, caption, label, digits = 3,
 
 open_pdf <- function(filename, width = 7, height = 5) {
   ensure_dirs()
-  grDevices::pdf(file.path(FIGURE_DIR, filename), width = width, height = height,
-                 family = "serif", useDingbats = FALSE)
+  grDevices::cairo_pdf(
+    file.path(FIGURE_DIR, filename), width = width, height = height,
+    family = "serif"
+  )
   graphics::par(
     mar = c(4.3, 4.4, 2.7, 1.0), mgp = c(2.5, 0.8, 0),
     tcl = -0.25, las = 1, bty = "l", col.axis = "#25313C",
     col.lab = "#25313C", col.main = "#17212B"
   )
+}
+
+display_variable_name <- function(x) {
+  labels <- gsub("_", " ", x, fixed = TRUE)
+  labels[labels == "ph"] <- "pH"
+  labels
 }
 
 MODEL_COLORS <- c(

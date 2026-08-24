@@ -27,7 +27,7 @@ descriptive <- cbind(
 save_part2_table(
   descriptive, "tab_part2_descriptive_statistics",
   "Math-score summaries for the four factorial cells.",
-  "tab:part2-descriptive", digits = 2L
+  "part2-descriptive", digits = 2L
 )
 descriptive_display <- descriptive[
   , c("Design_cell", "N", "Mean", "Median", "SD", "Minimum", "Maximum")
@@ -36,7 +36,7 @@ names(descriptive_display) <- c("Cell", "n", "Mean", "Median", "SD", "Min", "Max
 save_part2_table(
   descriptive_display, "tab_part2_descriptive_display",
   "Math-score summaries for the four factorial cells.",
-  "tab:part2-descriptive-display", digits = 2L
+  "part2-descriptive-display", digits = 2L
 )
 
 cell_palette <- c("#4477AA", "#66CCEE", "#CC6677", "#AA3377")

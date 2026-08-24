@@ -80,7 +80,7 @@ audit <- data.frame(
 save_part2_table(
   audit, "tab_part2_data_audit",
   "Student Performance data-integrity audit.",
-  "tab:part2-data-audit", digits = 0L
+  "part2-data-audit", digits = 0L
 )
 
 dictionary <- data.frame(
@@ -100,7 +100,7 @@ dictionary <- data.frame(
 save_part2_table(
   dictionary, "tab_part2_variable_dictionary",
   "Variables in the pre-specified two-factor analysis.",
-  "tab:part2-variable-dictionary", digits = 0L
+  "part2-variable-dictionary", digits = 0L
 )
 
 hypotheses <- data.frame(
@@ -120,7 +120,7 @@ hypotheses <- data.frame(
 save_part2_table(
   hypotheses, "tab_part2_hypotheses",
   "Pre-specified hypotheses for the two-factor model.",
-  "tab:part2-hypotheses", digits = 0L
+  "part2-hypotheses", digits = 0L
 )
 
 design_metadata <- list(

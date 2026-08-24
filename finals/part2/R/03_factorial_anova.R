@@ -45,14 +45,14 @@ anova_table <- data.frame(
 save_part2_table(
   anova_table, "tab_part2_anova",
   "Effect-coded two-factor ANOVA for math score.",
-  "tab:part2-anova", digits = 4L
+  "part2-anova", digits = 4L
 )
 save_part2_table(
   effects[, c("Effect", "Estimate", "SE", "Df", "t", "P_value",
               "CI_low", "CI_high")],
   "tab_part2_effect_estimates",
   "Pre-specified marginal effects and interaction in math-score points.",
-  "tab:part2-effects", digits = 3L
+  "part2-effects", digits = 3L
 )
 
 cell_grid <- part2_cell_grid()
@@ -75,7 +75,7 @@ save_part2_table(
                      "CI_low", "CI_high")],
   "tab_part2_cell_means",
   "Estimated means for the four observed factorial cells.",
-  "tab:part2-cell-means", digits = 2L
+  "part2-cell-means", digits = 2L
 )
 
 model_fit <- data.frame(
@@ -88,7 +88,7 @@ model_fit <- data.frame(
 )
 save_part2_table(
   model_fit, "tab_part2_model_fit",
-  "Two-factor model fit summary.", "tab:part2-model-fit", digits = 3L
+  "Two-factor model fit summary.", "part2-model-fit", digits = 3L
 )
 
 save(

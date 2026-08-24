@@ -1,0 +1,34 @@
+\contentsline {section}{\numberline {1}Introduction and analysis protocol}{1}{section.1}%
+\contentsline {section}{\numberline {2}Part 1: Wine Quality (Red)}{1}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Exploratory Data Analysis}{1}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}Dataset, variables, and prediction question}{1}{subsubsection.2.1.1}%
+\contentsline {subsubsection}{\numberline {2.1.2}Response and predictor distributions}{2}{subsubsection.2.1.2}%
+\contentsline {subsubsection}{\numberline {2.1.3}Pairwise relationships and correlation structure}{4}{subsubsection.2.1.3}%
+\contentsline {subsection}{\numberline {2.2}Data Cleaning}{5}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Missingness, duplicates, and the locked split}{5}{subsubsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.2}Outliers and transformations}{6}{subsubsection.2.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.3}Leakage control}{7}{subsubsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.3}Feature Selection}{7}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}Screening without deleting correlated information}{7}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}Mean and OLS baselines}{8}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}Embedded Lasso selection}{8}{subsubsection.2.3.3}%
+\contentsline {subsection}{\numberline {2.4}Modelling with Regularization}{9}{subsection.2.4}%
+\contentsline {subsubsection}{\numberline {2.4.1}Cross-validation and shrinkage}{9}{subsubsection.2.4.1}%
+\contentsline {subsubsection}{\numberline {2.4.2}Pre-holdout decision}{10}{subsubsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.5}Evaluation}{10}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}Fair model comparison}{10}{subsubsection.2.5.1}%
+\contentsline {subsubsection}{\numberline {2.5.2}Diagnostics and bias--variance trade-off}{12}{subsubsection.2.5.2}%
+\contentsline {subsubsection}{\numberline {2.5.3}Limitations}{12}{subsubsection.2.5.3}%
+\contentsline {subsubsection}{\numberline {2.5.4}Conclusion}{13}{subsubsection.2.5.4}%
+\contentsline {section}{\numberline {3}Part 2: Experimental Design Extension}{14}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Dataset, design, and hypotheses}{14}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Descriptive statistics and visual evidence}{14}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Factorial ANOVA and effect sizes}{16}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Diagnostics, model adequacy, and follow-up comparisons}{17}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Practical conclusion and design evaluation}{18}{subsection.3.5}%
+\contentsline {section}{\numberline {4}Contributions and review}{18}{section.4}%
+\contentsline {section}{\numberline {A}Detailed data documentation}{19}{appendix.A}%
+\contentsline {section}{\numberline {B}Cleaning and outlier audit}{20}{appendix.B}%
+\contentsline {section}{\numberline {C}Supplementary selection and model tables}{21}{appendix.C}%
+\contentsline {section}{\numberline {D}Reproducibility and collaboration}{22}{appendix.D}%
+\contentsline {section}{References}{23}{section*.2}%

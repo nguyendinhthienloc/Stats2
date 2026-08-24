@@ -53,9 +53,9 @@ save_part2_table <- function(data, stem, caption, label, digits = 3L) {
 
 open_part2_pdf <- function(filename, width = 7, height = 5) {
   ensure_dirs()
-  grDevices::pdf(
+  grDevices::cairo_pdf(
     file.path(paths$figures, filename), width = width, height = height,
-    family = "serif", useDingbats = FALSE
+    family = "serif"
   )
   graphics::par(
     mar = c(4.3, 4.4, 2.8, 1.0), mgp = c(2.5, 0.8, 0),

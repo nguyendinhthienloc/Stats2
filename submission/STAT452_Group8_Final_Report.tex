@@ -13,14 +13,31 @@
   \usepackage[T1]{fontenc}
   \usepackage[utf8]{inputenc}
   \usepackage{textcomp} % provide euro and other symbols
+  \usepackage{lmodern}
 \else % if luatex or xetex
-  \usepackage{unicode-math} % this also loads fontspec
-  \defaultfontfeatures{Scale=MatchLowercase}
-  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
-\fi
-\usepackage{lmodern}
-\ifPDFTeX\else
-  % xetex/luatex font selection
+  \usepackage{fontspec}
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+  \IfFontExistsTF{Times New Roman}{%
+    \setmainfont{Times New Roman}%
+  }{%
+    \setmainfont{TeX Gyre Termes}%
+  }
+  \IfFontExistsTF{Arial}{%
+    \setsansfont{Arial}%
+  }{%
+    \setsansfont{TeX Gyre Heros}%
+  }
+  \IfFontExistsTF{Consolas}{%
+    \setmonofont{Consolas}%
+  }{%
+    \setmonofont{TeX Gyre Cursor}%
+  }
+  \IfFontExistsTF{TeX Gyre Termes Math}{%
+    \setmathfont{TeX Gyre Termes Math}%
+  }{%
+    \setmathfont{Latin Modern Math}%
+  }
 \fi
 % Use upquote if available, for straight quotes in verbatim environments
 \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
@@ -104,8 +121,7 @@
     }{%
       \fbox{\parbox[c][0.22\textheight][c]{0.86\linewidth}{\centering Missing figure: \texttt{\detokenize{#1}}}}%
     }
-    \caption{#2}
-    \label{#3}
+    \caption{#2}\label{#3}
   \end{figure}%
 }
 \newcommand{\tightinputtable}[1]{%
@@ -153,8 +169,8 @@ whether the two associations interact. The analyses follow the course
 brief's emphasis on justified choices, reproducibility, and honest
 limitations.
 
-For Part 1, RMSE is primary because large one-wine prediction errors are
-costly; MAE expresses typical error directly in quality-score points,
+For Part 1, RMSE is primary because it weights larger one-wine prediction
+errors more heavily; MAE expresses typical error directly in quality-score points,
 and \(R^2\) measures improvement over the holdout mean benchmark. Model
 selection uses fixed five-fold cross-validation, while the stratified
 20\% holdout is opened once (\citeproc{ref-Hastie2009}{Hastie et al.
@@ -162,9 +178,9 @@ selection uses fixed five-fold cross-validation, while the stratified
 
 \section{Part 1: Wine Quality (Red)}\label{part-1-wine-quality-red}
 
-\section{Exploratory Data Analysis}\label{exploratory-data-analysis}
+\subsection{Exploratory Data Analysis}\label{exploratory-data-analysis}
 
-\subsection{Dataset, variables, and prediction
+\subsubsection{Dataset, variables, and prediction
 question}\label{dataset-variables-and-prediction-question}
 
 The UCI Wine Quality data describe red Portuguese Vinho Verde samples
@@ -183,12 +199,12 @@ range. Gaussian regression can produce fractional expected scores, so
 the interpretation is prediction of expected expert score rather than
 exact ordinal classification.
 
-After the integrity checks in Section 2, the unique records were divided
+After the integrity checks in Section~\ref{data-cleaning}, the unique records were divided
 by a fixed quality-stratified 80/20 split. Every plot below uses only
 the 1088 training observations; the 271 holdout outcomes were not
 inspected.
 
-\subsection{Response and predictor
+\subsubsection{Response and predictor
 distributions}\label{response-and-predictor-distributions}
 
 \includefigure{../output/figures/fig_p2_quality_distribution.pdf}{Training-set distribution of the sensory response. Scores 5 and 6 dominate, while the extremes contain few observations.}{fig:p2-quality}
@@ -202,10 +218,10 @@ toward the center.
 
 Residual sugar, chlorides, sulfur-dioxide measures, and sulphates have
 long right tails. These distributions motivate the transformations
-documented in Section 2; EDA itself is shown on the original measurement
+documented in Section~\ref{data-cleaning}; EDA itself is shown on the original measurement
 scale.
 
-\subsection{Pairwise relationships and correlation
+\subsubsection{Pairwise relationships and correlation
 structure}\label{pairwise-relationships-and-correlation-structure}
 
 \includefigure{../output/figures/fig_p2_correlation_heatmap.pdf}{Training-set Pearson correlations. Blocks among acidity, density, pH, and sulfur-dioxide measures motivate coefficient stabilization.}{fig:p2-correlation}
@@ -225,9 +241,9 @@ predictor. No single physicochemical measurement is sufficient. These
 are predictive associations, not causal effects, because grape variety,
 brand, vintage, price, and production conditions are absent.
 
-\section{Data Cleaning}\label{data-cleaning}
+\subsection{Data Cleaning}\label{data-cleaning}
 
-\subsection{Missingness, duplicates, and the locked
+\subsubsection{Missingness, duplicates, and the locked
 split}\label{missingness-duplicates-and-the-locked-split}
 
 The raw archive contains 1599 rows, 11 numeric predictors, no missing
@@ -248,7 +264,7 @@ inside training. The shared fold IDs are reused by every model
 
 \tightinputtable{../output/tables/tab_p1_split_summary.tex}
 
-\subsection{Outliers and
+\subsubsection{Outliers and
 transformations}\label{outliers-and-transformations}
 
 Tukey's 1.5-IQR rule (\citeproc{ref-Tukey1977}{Tukey 1977}) flags 277
@@ -267,7 +283,7 @@ safeguard but is a no-op for this dataset. After winsorization and
 optional \texttt{log1p}, all predictors are centered and scaled so
 penalty magnitudes are comparable.
 
-\subsection{Leakage control}\label{leakage-control}
+\subsubsection{Leakage control}\label{leakage-control}
 
 All medians, winsorization limits, transformation choices, means, and
 standard deviations are learned without holdout outcomes. During
@@ -277,9 +293,9 @@ training predictors and then applied unchanged to the predictor-only
 holdout file. This design prevents preprocessing information from
 leaking backward into feature selection or tuning.
 
-\section{Feature Selection}\label{feature-selection}
+\subsection{Feature Selection}\label{feature-selection}
 
-\subsection{Screening without deleting correlated
+\subsubsection{Screening without deleting correlated
 information}\label{screening-without-deleting-correlated-information}
 
 We use three training-only views of relevance: marginal correlations,
@@ -295,11 +311,11 @@ delegated to Lasso's embedded penalty.
 \includefigure{../output/figures/fig_p3_feature_screening.pdf}{VIFs and full-OLS coefficients after the training-derived transformations. Coefficients are comparable because predictors are standardized.}{fig:p3-screening}
 
 The AIC sensitivity model retains 7 of 11 predictors: alcohol, volatile
-acidity, sulphates, chlorides, ph, total sulfur dioxide, free sulfur
+acidity, sulphates, chlorides, pH, total sulfur dioxide, free sulfur
 dioxide. We do not promote this data-dependent subset directly to the
 holdout comparison; it is a diagnostic against which to compare Lasso.
 
-\subsection{Mean and OLS baselines}\label{mean-and-ols-baselines}
+\subsubsection{Mean and OLS baselines}\label{mean-and-ols-baselines}
 
 \tightinputtable{../output/tables/tab_p3_baseline_performance.tex}
 
@@ -315,10 +331,10 @@ deletion. A holdout row cannot influence the already fitted
 coefficients, so held-out diagnostics focus instead on unusually large
 prediction errors.
 
-\subsection{Embedded Lasso selection}\label{embedded-lasso-selection}
+\subsubsection{Embedded Lasso selection}\label{embedded-lasso-selection}
 
 At the one-standard-error penalty, Lasso retains 7 predictors: alcohol,
-volatile acidity, sulphates, chlorides, ph, total sulfur dioxide, fixed
+volatile acidity, sulphates, chlorides, pH, total sulfur dioxide, fixed
 acidity. This is the required principled feature-selection result. The
 one-SE rule is used for interpretation because it favors a stable sparse
 description; the minimum-CV penalty remains the predeclared predictive
@@ -326,7 +342,7 @@ fit.
 
 \tightinputtable{../output/tables/tab_p4_lasso_selection.tex}
 
-\section{Modelling with
+\subsection{Modelling with
 Regularization}\label{modelling-with-regularization}
 
 For standardized transformed predictors, all regularized candidates
@@ -347,7 +363,7 @@ folds (\citeproc{ref-Hastie2009}{Hastie et al. 2009}).
 Coordinate-descent fits use \texttt{glmnet}
 (\citeproc{ref-Friedman2010}{Friedman et al. 2010}).
 
-\subsection{Cross-validation and
+\subsubsection{Cross-validation and
 shrinkage}\label{cross-validation-and-shrinkage}
 
 \includefigure{../output/figures/fig_p4_cv_curves.pdf}{Five-fold training CV curves with fold-specific preprocessing. Dashed lines minimize CV error; dotted lines apply the one-standard-error rule.}{fig:p4-cv}
@@ -366,16 +382,16 @@ earliest; Ridge shares weight among correlated measurements; Elastic Net
 interpolates. This is the expected bias--variance mechanism rather than
 merely a software choice.
 
-\subsection{Pre-holdout decision}\label{pre-holdout-decision}
+\subsubsection{Pre-holdout decision}\label{pre-holdout-decision}
 
 Before reconstructing any holdout outcome, we locked \textbf{Ridge},
 whose five-fold CV RMSE was 0.6711. This written lock prevents choosing
 a preferred model after seeing test performance. All predeclared models
 are nevertheless evaluated to make the comparison transparent.
 
-\section{Evaluation}\label{evaluation}
+\subsection{Evaluation}\label{evaluation}
 
-\subsection{Fair model comparison}\label{fair-model-comparison}
+\subsubsection{Fair model comparison}\label{fair-model-comparison}
 
 \tightinputtable{../output/tables/tab_p5_holdout_display.tex}
 
@@ -394,7 +410,7 @@ error but systematically misses rare extremes. This pattern follows from
 response imbalance and squared-error fitting, not simply from
 regularization.
 
-\subsection{Diagnostics and bias--variance
+\subsubsection{Diagnostics and bias--variance
 trade-off}\label{diagnostics-and-biasvariance-trade-off}
 
 \includefigure{../output/figures/fig_p5_locked_residual_diagnostics.pdf}{Residual-shape and absolute-error checks for the pre-locked model on the untouched holdout set. The dashed line in the final panel is twice the model RMSE. These diagnostics describe generalization and were not used to retune the model.}{fig:p5-residuals}
@@ -404,12 +420,11 @@ but the greatest sensitivity to correlated predictors. Ridge reduces
 coefficient variance without selection; Lasso trades additional bias for
 sparsity; Elastic Net stabilizes groups of correlated features while
 retaining some selection. The relevant empirical comparison is the gap
-among training, CV, and holdout RMSE in Table
-\ref{tab:p5-holdout-display}. The regularized candidates have similar
+among training, CV, and holdout RMSE in Table~\ref{tab:p5-holdout-display}. The regularized candidates have similar
 held-out accuracy, so stability and interpretability matter more than a
 small decimal-place difference.
 
-\subsection{Limitations}\label{limitations}
+\subsubsection{Limitations}\label{limitations}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -433,7 +448,7 @@ small decimal-place difference.
   behavior.
 \end{enumerate}
 
-\subsection{Conclusion}\label{conclusion}
+\subsubsection{Conclusion}\label{conclusion}
 
 Routine physicochemical measurements provide moderate predictive power
 for red Vinho Verde quality, accounting for approximately 44\% of the
@@ -450,7 +465,7 @@ in the presence of substantial multicollinearity (e.g., fixed acidity
 dimensions.
 
 The primary predictive bottleneck stems from the severe concentration of
-sensory scores at classes 5 and 6, coupled with the inherent loss of
+sensory scores at 5 and 6, coupled with the inherent loss of
 treating discrete, bounded ratings as continuous Gaussian targets. This
 induces strong regression toward the mean and limits accuracy on rare,
 extreme wines (scores 3, 4, and 8). Future modeling on this benchmark
@@ -459,8 +474,8 @@ ensembles under the same strict leakage-controlled resampling protocol.
 
 \clearpage
 
-\section{Part 2: Experimental-design
-extension}\label{part-2-experimental-design-extension}
+\section{Part 2: Experimental Design
+Extension}\label{part-2-experimental-design-extension}
 
 \subsection{Dataset, design, and
 hypotheses}\label{dataset-design-and-hypotheses}
@@ -470,7 +485,7 @@ Exams} contains 1,000 student records and eight variables
 (\citeproc{ref-KaggleStudentsPerformance}{Adeyemi, n.d.}). Its data card
 does not document random assignment, school/classroom clustering, or a
 sampling frame. We therefore describe this as an \textbf{observational
-(2\times2) factorial analysis}, not a randomized experiment. All 1,000
+\(2 \times 2\) factorial analysis}, not a randomized experiment. All 1,000
 rows are retained; there are no missing values or exact duplicate
 profiles, so neither imputation nor subsampling is needed.
 
@@ -517,7 +532,7 @@ overlap remains in every cell.
 sizes}\label{factorial-anova-and-effect-sizes}
 
 We fit \[
-Y_{ijk}=\mu+\alpha_i+\beta_j+(\alpha\beta)_{ij}+\varepsilon_{ijk},
+Y_{ijk}=\mu+\alpha_i+\beta_j+{(\alpha\beta)}_{ij}+\varepsilon_{ijk},
 \] where \(Y\) is mathematics score. Sum-to-zero contrasts make the main
 effects comparisons of equally weighted marginal cell means despite
 unequal sample sizes. The one-degree-of-freedom partial tests are
@@ -527,10 +542,10 @@ partial \(\eta^2\) (\citeproc{ref-Lakens2013}{Lakens 2013}).
 
 \tightinputtable{../output/tables/tab_part2_key_findings_display.tex}
 
-Students who completed preparation averaged 5.97 points higher after
-equally weighting the lunch cells (95\% CI {[}4.09, 7.85{]}). The
-standard lunch group averaged 11.06 points higher than the free/reduced
-group (95\% CI {[}9.18, 12.94{]}). Both marginal nulls are rejected. The
+Under equal cell weighting, students who completed preparation averaged
+5.97 points higher (95\% CI \([4.09, 7.85]\)), and the standard lunch
+group averaged 11.06 points higher than the free/reduced group (95\% CI
+\([9.18, 12.94]\)). Both marginal nulls are rejected. The
 difference in preparation effects is -1.14 points and is not significant
 (\(p=0.553\)); the data do not support effect modification by lunch
 category.
@@ -623,7 +638,7 @@ the following contributions:
 
 The final integration review checked every code-to-table/figure handoff,
 the holdout boundary, contrast directions, diagnostics, citations, and
-PDF layout. Dataset discovery is not counted as a contribution.
+LaTeX source integrity. Dataset discovery is not counted as a contribution.
 
 \clearpage
 \appendix
@@ -665,8 +680,8 @@ tables}\label{supplementary-selection-and-model-tables}
 collaboration}\label{reproducibility-and-collaboration}
 
 The canonical analysis is rebuilt from RStudio with
-\texttt{source("analysis/00\_run\_all.R")}, or from a terminal with
-\texttt{Rscript\ -\/-vanilla\ analysis/00\_run\_all.R}. The five
+\texttt{source('analysis/00\_run\_all.R')}, or from a terminal with
+\texttt{Rscript --vanilla analysis/00\_run\_all.R}. The five
 workstreams execute in dependency order, every random operation uses a
 recorded seed, and \texttt{output/artifact\_manifest.csv} stores file
 sizes and MD5 checksums. Row-level holdout outcomes are not serialized.
@@ -702,7 +717,7 @@ Identification.''} \emph{IEEE Transactions on Automatic Control} 19 (6):
 
 \bibitem[\citeproctext]{ref-AllaireRmarkdown2026}
 {Allaire, JJ, Yihui Xie, Christophe Dervieux, et al.} 2026.
-\emph{Rmarkdown: Dynamic Documents for r}.
+\emph{rmarkdown: Dynamic Documents for R}.
 \url{https://github.com/rstudio/rmarkdown}.
 
 \bibitem[\citeproctext]{ref-BrownForsythe1974}
@@ -728,7 +743,7 @@ the Bootstrap}. Chapman \& Hall.
 \url{https://doi.org/10.1007/978-1-4899-4541-9}.
 
 \bibitem[\citeproctext]{ref-FoxWeisberg2019}
-Fox, John, and Sanford Weisberg. 2019. \emph{An r Companion to Applied
+Fox, John, and Sanford Weisberg. 2019. \emph{An R Companion to Applied
 Regression}. 3rd ed. SAGE Publications.
 \url{https://socialsciences.mcmaster.ca/jfox/Books/Companion/}.
 
@@ -784,8 +799,8 @@ Lasso.''} \emph{Journal of the Royal Statistical Society: Series B} 58
 Tukey, John W. 1977. \emph{Exploratory Data Analysis}. Addison-Wesley.
 
 \bibitem[\citeproctext]{ref-XieKnitr2025}
-Xie, Yihui. 2025. \emph{Knitr: A General-Purpose Package for Dynamic
-Report Generation in r}. \url{https://yihui.org/knitr/}.
+Xie, Yihui. 2025. \emph{knitr: A General-Purpose Package for Dynamic
+Report Generation in R}. \url{https://yihui.org/knitr/}.
 
 \bibitem[\citeproctext]{ref-Zou2005}
 Zou, Hui, and Trevor Hastie. 2005. {``Regularization and Variable

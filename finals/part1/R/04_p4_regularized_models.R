@@ -184,7 +184,7 @@ plot_cv_panel <- function(result, title) {
   se_rmse <- sqrt(result$cv_mse + result$cv_se) - y
   graphics::plot(
     x, y, type = "l", lwd = 2, col = "#2878B5",
-    xlab = expression(log(lambda)), ylab = "CV RMSE", main = title,
+    xlab = "log(lambda)", ylab = "CV RMSE", main = title,
     ylim = range(c(y - se_rmse, y + se_rmse), finite = TRUE)
   )
   graphics::polygon(
@@ -197,12 +197,13 @@ plot_cv_panel <- function(result, title) {
 }
 
 open_pdf("fig_p4_cv_curves.pdf", width = 10, height = 4.3)
-graphics::par(mfrow = c(1, 3), mar = c(4.1, 4.1, 2.5, 0.7))
+graphics::par(mfrow = c(1, 3), mar = c(4.1, 4.1, 2.5, 0.7),
+              oma = c(2.2, 0, 0, 0))
 plot_cv_panel(ridge_cv, "Ridge")
 plot_cv_panel(lasso_cv, "Lasso")
 plot_cv_panel(enet_cv, sprintf("Elastic Net (alpha = %.2f)", enet_alpha))
 graphics::mtext("Dashed: lambda.min   Dotted: lambda.1se", side = 1,
-                outer = TRUE, line = -1.2, cex = 0.78)
+                outer = TRUE, line = 0.5, cex = 0.78)
 grDevices::dev.off()
 
 plot_path_panel <- function(fit, selected_lambda, title) {
@@ -210,7 +211,7 @@ plot_path_panel <- function(fit, selected_lambda, title) {
   colors <- grDevices::hcl.colors(nrow(beta), "Dark 3")
   graphics::matplot(
     log(fit$lambda), t(beta), type = "l", lty = 1, lwd = 1.3,
-    col = colors, xlab = expression(log(lambda)),
+    col = colors, xlab = "log(lambda)",
     ylab = "Standardized coefficient", main = title
   )
   graphics::abline(v = log(selected_lambda), col = "#17212B", lty = 2, lwd = 1.5)
@@ -236,10 +237,10 @@ graphics::plot(
   main = "Regularization shrinks correlated coefficients"
 )
 graphics::axis(2, at = y_positions,
-               labels = gsub("_", " ", coefficient_matrix$Feature[plot_order]),
+               labels = display_variable_name(coefficient_matrix$Feature[plot_order]),
                las = 1, cex.axis = 0.78)
 for (name in c("Ridge", "Lasso", "Elastic_Net")) {
-  display_name <- gsub("_", " ", name)
+  display_name <- display_variable_name(name)
   graphics::points(
     coefficient_matrix[[name]][plot_order], y_positions,
     pch = c("Ridge" = 17, "Lasso" = 15, "Elastic_Net" = 18)[[name]],

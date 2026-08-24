@@ -104,7 +104,7 @@ graphics::par(mfrow = c(1, 2), mar = c(4.2, 7.2, 2.7, 0.8))
 vif_order <- order(feature_screening$VIF)
 graphics::barplot(
   feature_screening$VIF[vif_order],
-  names.arg = gsub("_", " ", feature_screening$Feature[vif_order]),
+  names.arg = display_variable_name(feature_screening$Feature[vif_order]),
   horiz = TRUE, las = 1, col = "#E9C46A", border = NA,
   xlab = "Variance inflation factor", main = "Collinearity diagnostic",
   cex.names = 0.72
@@ -116,7 +116,7 @@ coefficient_colors <- ifelse(ols_coefficients[coef_order] >= 0,
                              "#2A9D8F", "#D1495B")
 graphics::barplot(
   ols_coefficients[coef_order],
-  names.arg = gsub("_", " ", names(ols_coefficients)[coef_order]),
+  names.arg = display_variable_name(names(ols_coefficients)[coef_order]),
   horiz = TRUE, las = 1, col = coefficient_colors, border = NA,
   xlab = "OLS coefficient (standardized predictor)",
   main = "Direction and relative magnitude", cex.names = 0.72
