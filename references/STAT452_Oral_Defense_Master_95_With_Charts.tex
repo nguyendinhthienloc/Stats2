@@ -1,0 +1,610 @@
+
+\documentclass[10.5pt,a4paper]{article}
+\usepackage[margin=1.55cm]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{enumitem,fancyhdr,hyperref,microtype}
+\definecolor{navy}{HTML}{19324D}
+\definecolor{blue}{HTML}{2A65A0}
+\definecolor{lightblue}{HTML}{EDF4FA}
+\definecolor{lightgray}{HTML}{F5F6F8}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\pagestyle{fancy}\fancyhf{}
+\lhead{\textsf{STAT452 Oral Defense Master Bank}}
+\rhead{\textsf{Project + Lecture Knowledge}}
+\cfoot{\thepage}
+\setlength{\headheight}{14pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\newtcolorbox{qbox}[1]{enhanced,breakable,colback=white,colframe=navy,boxrule=.8pt,arc=2mm,
+title={\textbf{#1}},fonttitle=\sffamily,coltitle=white,colbacktitle=navy,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{answerbox}{enhanced,breakable,colback=lightblue,colframe=blue,boxrule=.5pt,arc=1.5mm,
+title={\textbf{Sample answer}},fonttitle=\sffamily,coltitle=navy,colbacktitle=lightblue,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newtcolorbox{refbox}{enhanced,breakable,colback=lightgray,colframe=gray!55,boxrule=.4pt,arc=1mm,left=2mm,right=2mm,top=1mm,bottom=1mm}
+\newcommand{\chapref}[1]{\textbf{Lecture reference:} #1}
+\newcommand{\projectref}[1]{\textbf{Project connection:} #1}
+\begin{document}
+\begin{center}
+{\Huge\bfseries\color{navy} STAT452 Oral Defense Master Bank}\\[4pt]
+{\Large 95 Project-Driven Questions}\\[5pt]
+{\small Actual project decisions and numbers $\rightarrow$ lecture formulas $\rightarrow$ reasoning $\rightarrow$ defense}
+\end{center}
+\begin{tcolorbox}[colback=yellow!8,colframe=yellow!45!black,arc=2mm]
+\textbf{Design principle.} These are not pure theory questions. Most begin with something your group actually did or found and then force you to use lecture knowledge to calculate, defend, criticize, or predict what would happen under another scenario.
+\end{tcolorbox}
+
+\section*{A. Response, EDA, transformations and model choice}
+\begin{qbox}{1. Why did we model wine quality with regression instead of logistic regression?}
+\end{qbox}
+\begin{answerbox}Logistic regression is for a categorical response, usually binary: \(Y\in\{0,1\}\). Our quality response is ordered numeric with observed values 3--8. Turning it into ``good'' versus ``bad'' would require an arbitrary threshold and throw away ordering information. Regression lets us predict an expected score directly. The trade-off is that it treats one-point differences as roughly comparable and can produce fractional predictions.\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 regression response; logistic-regression lecture as a contrast.}\\\projectref{Quality is modeled numerically from 11 physicochemical predictors.}\end{refbox}
+\begin{qbox}{2. Why not convert quality into ``good wine'' if quality $\ge 7$ and use logistic regression?}
+\end{qbox}
+\begin{answerbox}That would answer a different question. It would collapse scores 3,4,5,6 into one class and 7,8 into another, losing information. It would also make the result depend on our chosen cutoff. Logistic regression would be reasonable only if the scientific target were specifically the probability of crossing a meaningful threshold.\end{answerbox}
+\begin{refbox}\chapref{Logistic regression: binary response and log-odds.}\\\projectref{Project explicitly avoids an arbitrary good/poor threshold.}\end{refbox}
+\begin{qbox}{3. Why not use ordinal logistic regression instead of ordinary regression?}
+\end{qbox}
+\begin{answerbox}Ordinal regression is a legitimate alternative because the scores are ordered categories. Our regression choice is defensible because we want prediction error in quality-score units and preserve the numeric ordering. But it assumes that a one-point change has roughly comparable meaning across 3--8. So ordinal regression is a limitation/future-work alternative, not something the report proves inferior.\end{answerbox}
+\begin{refbox}\chapref{Regression model choice; logistic/ordinal idea as extension.}\\\projectref{Report states the continuous-score approximation explicitly.}\end{refbox}
+\begin{qbox}{4. Most wines are quality 5 or 6. Why does that make a mean-only model a surprisingly strong baseline?}
+\end{qbox}
+\begin{answerbox}Under squared-error loss, the best constant prediction is the sample mean. Because the response mass is concentrated near 5--6, predicting near the mean will already be close for many wines. A real model therefore has to beat a nontrivial baseline rather than merely look reasonable.\end{answerbox}
+\begin{refbox}\chapref{Least squares: the mean minimizes squared error among constant predictions.}\\\projectref{Training response is heavily concentrated at 5 and 6.}\end{refbox}
+\begin{qbox}{5. Why should rare quality 3 and 8 wines have larger prediction errors even if the model is correctly fitted?}
+\end{qbox}
+\begin{answerbox}Squared-error regression estimates something close to \(E[Y\mid X]\). When extremes are rare and the predictors do not perfectly identify them, conditional means are pulled toward the dense center. So low extremes are overpredicted and high extremes are underpredicted. This is regression toward the center, not automatically a coding error.\end{answerbox}
+\begin{refbox}\chapref{Regression prediction under squared-error loss.}\\\projectref{Holdout RMSE is much larger at scores 3, 4 and 8.}\end{refbox}
+\begin{qbox}{6. Alcohol has $r=0.47$ with quality. What can we say, and what can we not say?}
+\end{qbox}
+\begin{answerbox}We can say alcohol has the strongest positive \emph{marginal linear association} with quality among the reported predictors. We cannot say raising alcohol causes quality to rise, and we cannot assume the adjusted alcohol coefficient equals 0.47. Correlation ignores the other predictors and the data are observational.\end{answerbox}
+\begin{refbox}\chapref{Correlation versus partial regression effects.}\\\projectref{EDA reports alcohol $r=0.47$.}\end{refbox}
+\begin{qbox}{7. Our maximum VIF is 7.90. Recover the corresponding $R\_j^2$ and interpret it.}
+\end{qbox}
+\begin{answerbox}Using
+\[
+VIF_j=\frac{1}{1-R_j^2},
+\]
+we get
+\[
+R_j^2=1-\frac{1}{7.90}\approx0.873.
+\]
+So roughly 87.3\% of the variation in that predictor can be linearly explained by the other predictors. That is strong overlap and explains why individual OLS coefficients may be unstable.\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 MLR: multicollinearity and VIF.}\\\projectref{Fixed acidity has the largest VIF, 7.90.}\end{refbox}
+\begin{qbox}{8. If VIF $=7.90$, approximately how much is the coefficient standard error inflated?}
+\end{qbox}
+\begin{answerbox}VIF multiplies variance, while standard error is the square root of variance:
+\[
+\sqrt{7.90}\approx2.81.
+\]
+So the standard error is about \(2.81\times\) what it would be in an otherwise comparable orthogonal-predictor situation.\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 MLR: variance and standard errors.}\\\projectref{Explains weak/unstable coefficient inference under collinearity.}\end{refbox}
+\begin{qbox}{9. Why did we not delete fixed acidity just because it had the largest VIF?}
+\end{qbox}
+\begin{answerbox}A high VIF says the variable overlaps strongly with other predictors; it does not say the variable contains no predictive information. Deleting it changes the model and may discard shared signal. Because our primary goal is prediction, we preferred regularization to stabilize correlated information rather than automatically deleting one member of a correlated block.\end{answerbox}
+\begin{refbox}\chapref{MLR multicollinearity; regularization motivation.}\\\projectref{Feature screening did not delete variables merely for correlation.}\end{refbox}
+\begin{qbox}{10. Our holdout $R^2$ is about 0.440. Why is ``44 percent accuracy'' wrong?}
+\end{qbox}
+\begin{answerbox}Because
+\[
+R^2=1-\frac{SSE}{SST}.
+\]
+It is a relative squared-error measure, not a percentage of exactly correct predictions. \(R^2\approx0.44\) means the model accounts for/reduces about 44\% of holdout variation relative to the mean benchmark under this definition.\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 MLR: $R^2$.}\\\projectref{Locked Ridge holdout $R^2\approx0.440$.}\end{refbox}
+\begin{qbox}{11. Could holdout $R^2$ be negative even though training $R^2$ is positive?}
+\end{qbox}
+\begin{answerbox}Yes. On new data, if \(SSE>SST\), then
+\[
+R^2=1-\frac{SSE}{SST}<0.
+\]
+That means the model predicts worse than the mean benchmark on that holdout. Test \(R^2\) is not guaranteed to lie between 0 and 1.\end{answerbox}
+\begin{refbox}\chapref{Regression evaluation.}\\\projectref{Mean baseline is used as the no-information benchmark.}\end{refbox}
+\begin{qbox}{12. Our five skewed predictors were log-transformed. Why does that not make the model ``nonlinear regression'' automatically?}
+\end{qbox}
+\begin{answerbox}A model can be nonlinear in the raw predictor but still linear in the unknown coefficients. For example,
+\[
+Y=\beta_0+\beta_1\log(X)+\varepsilon
+\]
+is linear in \(\beta_0,\beta_1\). The transformation changes the predictor scale, not the linearity in parameters.\end{answerbox}
+\begin{refbox}\chapref{Ch. 2 polynomial regression / transformations: linear in parameters.}\\\projectref{Five right-skewed chemistry predictors were log-transformed.}\end{refbox}
+\begin{qbox}{13. Why use $\log(1+x)$ rather than blindly using $\log x$?}
+\end{qbox}
+\begin{answerbox}\(\log(1+x)\) is defined at \(x=0\), while \(\log 0\) is not. It also behaves like a log transform for larger positive values. The exact choice must still be learned from training data and applied consistently to validation/holdout data.\end{answerbox}
+\begin{refbox}\chapref{Ch. 2 transformations.}\\\projectref{Project uses log1p for residual sugar, chlorides, sulfur dioxide and sulphates.}\end{refbox}
+\begin{qbox}{14. Why did we winsorize rather than delete every IQR-flagged observation?}
+\end{qbox}
+\begin{answerbox}The IQR rule flagged about 25.5\% of training rows. Deleting a quarter of the data would be extreme and could remove legitimate unusual wines. Winsorization limits leverage from extreme predictor values while retaining observations. It is a modeling choice, not proof that the extremes are errors.\end{answerbox}
+\begin{refbox}\chapref{Regression diagnostics: outliers/leverage; transformations.}\\\projectref{277 training rows were flagged by the IQR rule.}\end{refbox}
+\begin{qbox}{15. Why must winsorization cutoffs be estimated from training folds only?}
+\end{qbox}
+\begin{answerbox}Because the cutoff is a learned property of the data. If the 1st and 99th percentiles are computed using validation or holdout observations, those future observations influence the training transformation. That is leakage. The fold must learn its own cutoffs, then apply them to its validation fold.\end{answerbox}
+\begin{refbox}\chapref{Model assessment / leakage principle.}\\\projectref{All learned preprocessing is performed inside CV folds.}\end{refbox}
+\section*{B. Multicollinearity, Ridge/LASSO/Elastic Net and tuning}
+\begin{qbox}{16. What is the difference between an outlier in $Y$ and a high-leverage point in $X$?}
+\end{qbox}
+\begin{answerbox}An outlier has an unusual response relative to the fitted model, so it can have a large residual. A high-leverage point has unusual predictor values and can strongly affect the fitted line even if its residual is not huge. Influence combines these ideas; Cook's distance is one diagnostic.\end{answerbox}
+\begin{refbox}\chapref{Regression diagnostics.}\\\projectref{Part 1 and Part 2 both discuss unusual observations/influence.}\end{refbox}
+\begin{qbox}{17. Why can removing a high-leverage observation dramatically change a coefficient?}
+\end{qbox}
+\begin{answerbox}OLS chooses coefficients to minimize squared residuals. A point far from the center of predictor space has strong geometric leverage over the fitted surface. If it is also inconsistent with the general pattern, the model may rotate substantially to reduce that point's squared error.\end{answerbox}
+\begin{refbox}\chapref{Regression diagnostics: leverage and influence.}\\\projectref{Motivates robust treatment of extreme chemistry values.}\end{refbox}
+\begin{qbox}{18. Why is standardization especially important for Ridge/LASSO but less conceptually necessary for plain OLS predictions?}
+\end{qbox}
+\begin{answerbox}OLS predictions are invariant to a simple rescaling if coefficients are transformed correspondingly. Ridge/LASSO are different because they penalize coefficient magnitude. Without standardization, arbitrary measurement units change how expensive a coefficient is under the penalty.\end{answerbox}
+\begin{refbox}\chapref{Regularization and scaling.}\\\projectref{Project standardizes predictors before penalized regression.}\end{refbox}
+\begin{qbox}{19. If we standardized using the whole dataset before the train/holdout split, what information leaks?}
+\end{qbox}
+\begin{answerbox}The holdout values affect the global mean and standard deviation:
+\[
+z=\frac{x-\bar x}{s}.
+\]
+Therefore the representation of the training data is partly determined by the holdout distribution. The leakage may be subtle, but the holdout is no longer fully untouched.\end{answerbox}
+\begin{refbox}\chapref{Model assessment and preprocessing.}\\\projectref{Project learns centering/scaling from training only.}\end{refbox}
+\begin{qbox}{20. Why does Ridge help mathematically when $X^TX$ is nearly singular?}
+\end{qbox}
+\begin{answerbox}OLS uses
+\[
+(X^TX)^{-1}X^Ty.
+\]
+Ridge uses
+\[
+(X^TX+\lambda I)^{-1}X^Ty.
+\]
+Adding \(\lambda\) to the diagonal moves small eigenvalues away from zero, improving conditioning and reducing coefficient variance.\end{answerbox}
+\begin{refbox}\chapref{Ridge regression.}\\\projectref{Correlated wine predictors motivated Ridge.}\end{refbox}
+\begin{qbox}{21. If $\lambda	o0$ in Ridge, what happens in our wine model?}
+\end{qbox}
+\begin{answerbox}The penalty disappears, so the Ridge solution approaches OLS when the OLS solution is well-defined:
+\[
+\lambda\to0\Rightarrow \hat\beta_R\to\hat\beta_{OLS}.
+\]
+So a very small \(\lambda\) gives almost no stabilization.\end{answerbox}
+\begin{refbox}\chapref{Ridge shrinkage path.}\\\projectref{CV chooses the penalty strength.}\end{refbox}
+\begin{qbox}{22. If $\lambda	o\infty$, what happens to the slope coefficients?}
+\end{qbox}
+\begin{answerbox}The penalty dominates the fit term, so penalized slopes are pushed toward zero. Ridge approaches zero continuously; LASSO can reach exact zero for coefficients at finite penalties. The intercept is normally not penalized.\end{answerbox}
+\begin{refbox}\chapref{Ridge/LASSO objectives.}\\\projectref{Explains coefficient paths in the project.}\end{refbox}
+\begin{qbox}{23. The teacher asks: ``When the value approaches 0.5, is it Ridge or LASSO?'' What should you clarify?}
+\end{qbox}
+\begin{answerbox}I should ask whether they mean \(\alpha\) or \(\lambda\). In our Elastic Net parameterization, \(\alpha\) chooses the penalty mixture:
+\[
+\alpha=0:\text{ Ridge},\quad \alpha=1:\text{ LASSO}.
+\]
+Thus \(\alpha=0.5\) is Elastic Net, not pure Ridge or LASSO. A \(\lambda\) value of 0.5 only describes penalty strength.\end{answerbox}
+\begin{refbox}\chapref{Elastic Net parameterization.}\\\projectref{Project searched $\alpha\in\{0.25,0.50,0.75\}$.}\end{refbox}
+\begin{qbox}{24. Our selected Elastic Net has $\alpha=0.75$. Is it more Ridge-like or LASSO-like?}
+\end{qbox}
+\begin{answerbox}More LASSO-like, because \(\alpha=1\) is pure LASSO and \(\alpha=0\) is pure Ridge. At 0.75 the \(L_1\) component receives more weight, although an \(L_2\) component remains.\end{answerbox}
+\begin{refbox}\chapref{Elastic Net mixing parameter.}\\\projectref{Project selected $\alpha=0.75$.}\end{refbox}
+\begin{qbox}{25. Why can LASSO set a coefficient exactly to zero while Ridge usually cannot?}
+\end{qbox}
+\begin{answerbox}LASSO uses the \(L_1\) penalty
+\[
+\lambda\sum_j|\beta_j|,
+\]
+whose constraint geometry has corners on the coordinate axes. Optima often occur at those corners, producing exact zeros. Ridge's smooth \(L_2\) penalty usually shrinks without exact zeros.\end{answerbox}
+\begin{refbox}\chapref{Ridge/LASSO geometry.}\\\projectref{Project uses LASSO for embedded feature selection.}\end{refbox}
+\begin{qbox}{26. Our LASSO has 9 nonzero predictors at $\lambda\_{\min}$ but 7 at $\lambda\_{1se}$. Why?}
+\end{qbox}
+\begin{answerbox}\(\lambda_{1se}\) is typically larger, so it applies stronger shrinkage. The 1-SE rule accepts a model whose CV error is within one standard error of the minimum in exchange for greater simplicity. Stronger \(L_1\) shrinkage drives more coefficients to zero.\end{answerbox}
+\begin{refbox}\chapref{Cross-validation and 1-SE rule.}\\\projectref{Project reports 9 versus 7 nonzero predictors.}\end{refbox}
+\begin{qbox}{27. Why does the 1-SE rule not mean ``choose a model one standard deviation worse''?}
+\end{qbox}
+\begin{answerbox}It uses the \emph{standard error of the estimated CV error}, not one standard deviation of the response. The rule chooses the most regularized model whose estimated CV error remains within one standard error of the minimum.\end{answerbox}
+\begin{refbox}\chapref{Model selection / CV uncertainty.}\\\projectref{Used for the interpretable LASSO feature set.}\end{refbox}
+\begin{qbox}{28. Why use the same five CV folds for OLS, Ridge, LASSO and Elastic Net?}
+\end{qbox}
+\begin{answerbox}Using identical folds makes the comparison paired and fair: each model faces the same training/validation partitions. Otherwise differences in CV error could partly come from different random splits rather than the models themselves.\end{answerbox}
+\begin{refbox}\chapref{Cross-validation design.}\\\projectref{Project uses fixed shared five-fold splits.}\end{refbox}
+\begin{qbox}{29. Why stratify the 80/20 split by quality?}
+\end{qbox}
+\begin{answerbox}The response is imbalanced, with most observations at 5 and 6. Stratification helps preserve a similar quality distribution in training and holdout, reducing the chance that rare scores are accidentally concentrated in one split.\end{answerbox}
+\begin{refbox}\chapref{Sampling/model assessment.}\\\projectref{Project uses a fixed quality-stratified split.}\end{refbox}
+\begin{qbox}{30. Why remove exact duplicates before splitting?}
+\end{qbox}
+\begin{answerbox}If duplicate rows are split across training and holdout, the model may be evaluated on observations essentially identical to ones it already saw. That makes the holdout artificially easy and violates the idea of unseen data.\end{answerbox}
+\begin{refbox}\chapref{Generalization and leakage.}\\\projectref{240 exact duplicate rows were removed before the split.}\end{refbox}
+\section*{C. Cross-validation, leakage and holdout evaluation}
+\begin{qbox}{31. Suppose duplicates represented genuinely repeated independent measurements. Would deleting them always be correct?}
+\end{qbox}
+\begin{answerbox}No. If they are true independent repeated observations, deleting them may discard information. The key question is what a duplicate means scientifically. Our project treats exact duplicate records as repeated dataset entries to avoid train/holdout contamination; that assumption should be stated rather than treated as a universal rule.\end{answerbox}
+\begin{refbox}\chapref{Data audit and sampling assumptions.}\\\projectref{Project removed 240 exact duplicate records.}\end{refbox}
+\begin{qbox}{32. Why did we need both cross-validation and a locked holdout?}
+\end{qbox}
+\begin{answerbox}CV is used to choose models and hyperparameters, so it participates in optimization. The locked holdout is reserved for one final evaluation after the choice is fixed. This separates model selection from model assessment.\end{answerbox}
+\begin{refbox}\chapref{Model selection versus final assessment.}\\\projectref{Ridge was locked before holdout outcomes were inspected.}\end{refbox}
+\begin{qbox}{33. OLS has holdout RMSE 0.6131 and Ridge 0.6134. Why did we not switch the winner to OLS?}
+\end{qbox}
+\begin{answerbox}Because Ridge was selected by the predeclared CV rule before opening the holdout. Switching after seeing holdout results would use the holdout for model selection and contaminate the confirmatory evaluation. Also, the difference of 0.0003 is practically tiny.\end{answerbox}
+\begin{refbox}\chapref{Honest model assessment.}\\\projectref{Project retains locked Ridge despite OLS's slightly smaller holdout RMSE.}\end{refbox}
+\begin{qbox}{34. If OLS beats Ridge on one holdout, does that prove regularization was unnecessary?}
+\end{qbox}
+\begin{answerbox}No. A single holdout contains sampling variation. Ridge was motivated by coefficient instability and selected using CV. The tiny holdout difference does not establish that OLS has lower population prediction error, especially when uncertainty intervals overlap.\end{answerbox}
+\begin{refbox}\chapref{Bias-variance and sampling variability.}\\\projectref{Bootstrap CIs for model errors substantially overlap.}\end{refbox}
+\begin{qbox}{35. Why is Ridge allowed to be biased if OLS is unbiased under the classical model?}
+\end{qbox}
+\begin{answerbox}Prediction error depends on both bias and variance. Ridge intentionally introduces some bias to reduce variance:
+\[
+E[\text{test error}]\approx \text{Bias}^2+\text{Variance}+\text{noise}.
+\]
+With correlated predictors, a small bias increase can be worth a larger variance reduction.\end{answerbox}
+\begin{refbox}\chapref{Bias-variance trade-off.}\\\projectref{Project chooses Ridge for stability and CV performance.}\end{refbox}
+\begin{qbox}{36. Why is RMSE primary while MAE is still reported?}
+\end{qbox}
+\begin{answerbox}RMSE squares residuals, so large wine-quality mistakes receive more weight. MAE is easier to interpret as a typical absolute error in score points. Reporting both shows whether conclusions depend strongly on the loss function.\end{answerbox}
+\begin{refbox}\chapref{Prediction metrics.}\\\projectref{Ridge holdout RMSE about 0.613 and MAE about 0.482.}\end{refbox}
+\begin{qbox}{37. If one model has lower RMSE but higher MAE, what does that tell you?}
+\end{qbox}
+\begin{answerbox}It means the models distribute errors differently. The lower-RMSE model probably avoids some large errors better, while the lower-MAE model may be slightly better on typical observations. There is no contradiction because the metrics weight errors differently.\end{answerbox}
+\begin{refbox}\chapref{Prediction loss functions.}\\\projectref{Project reports both RMSE and MAE.}\end{refbox}
+\begin{qbox}{38. Why do bootstrap confidence intervals matter when RMSE values differ only in the fourth decimal place?}
+\end{qbox}
+\begin{answerbox}A point estimate alone can exaggerate tiny rankings. Bootstrap intervals show sampling uncertainty in the performance estimate. If intervals overlap heavily, the evidence for a meaningful difference between models is weak even if one numerical RMSE is smallest.\end{answerbox}
+\begin{refbox}\chapref{Resampling / uncertainty in evaluation.}\\\projectref{Holdout model RMSEs are extremely close.}\end{refbox}
+\begin{qbox}{39. Why is it dangerous to interpret a standardized Ridge coefficient as a causal effect?}
+\end{qbox}
+\begin{answerbox}Standardization only changes units; Ridge only changes estimation. Neither creates random assignment or removes all confounding. A coefficient is a conditional predictive association under the model, not automatically the effect of intervening on that chemical property.\end{answerbox}
+\begin{refbox}\chapref{Regression interpretation versus causality.}\\\projectref{Wine data are observational.}\end{refbox}
+\begin{qbox}{40. If a LASSO coefficient is zero, can we conclude the predictor has no relationship with quality?}
+\end{qbox}
+\begin{answerbox}No. Zero means the penalized optimization did not retain a separate coefficient at that \(\lambda\), given the other predictors. A correlated variable may carry the same information, and a different sample or penalty could select it.\end{answerbox}
+\begin{refbox}\chapref{LASSO variable selection.}\\\projectref{Important because predictors are correlated.}\end{refbox}
+\begin{qbox}{41. Why might Ridge be more stable than LASSO for a correlated block of acidity variables?}
+\end{qbox}
+\begin{answerbox}Ridge tends to shrink correlated predictors together, while LASSO may select one member and discard others somewhat arbitrarily. If the scientific signal is distributed across a correlated group, Ridge often gives more stable prediction.\end{answerbox}
+\begin{refbox}\chapref{Ridge versus LASSO under correlation.}\\\projectref{Project EDA shows correlated acidity/density/pH blocks.}\end{refbox}
+\begin{qbox}{42. If we doubled every predictor's measurement units without standardizing, what would happen to penalized regression?}
+\end{qbox}
+\begin{answerbox}The numerical coefficients would rescale, changing their penalty contributions. Therefore the fitted penalized model could change merely because units changed. Standardization prevents this arbitrary unit dependence.\end{answerbox}
+\begin{refbox}\chapref{Regularization and scaling.}\\\projectref{Project standardizes all predictors.}\end{refbox}
+\begin{qbox}{43. Why did we not select predictors using ANOVA p-values and then fit Ridge?}
+\end{qbox}
+\begin{answerbox}That would mix inferential screening with predictive modeling and could make selection unstable under multicollinearity. Our goal is prediction; embedded regularization and CV evaluate variables in the context of out-of-sample performance rather than deleting them solely because an individual p-value is large.\end{answerbox}
+\begin{refbox}\chapref{Variable selection and multiple regression.}\\\projectref{Project uses LASSO as embedded selection.}\end{refbox}
+\begin{qbox}{44. What would happen if we tuned $\lambda$ using the holdout set instead of CV?}
+\end{qbox}
+\begin{answerbox}The holdout would no longer estimate performance on untouched data. We would be choosing the penalty that happens to work best on that particular holdout, so its reported error would be optimistically biased.\end{answerbox}
+\begin{refbox}\chapref{Hyperparameter tuning / data leakage.}\\\projectref{Project tunes only inside training data.}\end{refbox}
+\begin{qbox}{45. Why can a transformation chosen after looking at holdout residuals be leakage even if we never fit on holdout $Y$?}
+\end{qbox}
+\begin{answerbox}Because the holdout is influencing a modeling decision. Once we inspect holdout behavior and modify preprocessing, the final model has adapted to that supposedly unseen dataset. Leakage is broader than literally inserting \(Y\) into the design matrix.\end{answerbox}
+\begin{refbox}\chapref{Model assessment discipline.}\\\projectref{Project locks preprocessing and model decisions before holdout evaluation.}\end{refbox}
+\section*{D. Factorial ANOVA using our actual student data}
+\begin{qbox}{46. In Part 2, what are the four actual cells of the $2\times2$ design?}
+\end{qbox}
+\begin{answerbox}They are: free/reduced lunch + no preparation; free/reduced + completed preparation; standard lunch + no preparation; standard + completed preparation. The response is math score.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 two-factor factorial design.}\\\projectref{Part 2 factors are lunch and preparation.}\end{refbox}
+\begin{qbox}{47. Using our cell means, calculate the preparation effect within each lunch group.}
+\end{qbox}
+\begin{answerbox}For free/reduced lunch:
+\[
+63.05-56.51=6.54.
+\]
+For standard lunch:
+\[
+73.53-68.13=5.40.
+\]
+So preparation is associated with higher scores in both lunch groups, with similar magnitudes.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 simple effects.}\\\projectref{Uses the project's four observed cell means.}\end{refbox}
+\begin{qbox}{48. Now calculate the interaction as a difference-in-differences.}
+\end{qbox}
+\begin{answerbox}The interaction contrast is
+\[
+5.40-6.54=-1.14.
+\]
+Equivalently,
+\[
+(73.53-68.13)-(63.05-56.51)=-1.14.
+\]
+A value near zero means the preparation difference is similar across lunch groups.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 interaction contrast.}\\\projectref{Project reports an interaction estimate about -1.14.}\end{refbox}
+\begin{qbox}{49. Why do nearly parallel lines in our interaction plot agree with the $-1.14$ interaction estimate?}
+\end{qbox}
+\begin{answerbox}Each line's slope represents the preparation difference within a lunch group. Parallel lines mean equal slopes, so their difference is zero. Our slopes, 6.54 and 5.40, are close, so the lines should be nearly parallel.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 graphical interpretation of interaction.}\\\projectref{Project Figure 12 shows near-parallel profiles.}\end{refbox}
+\begin{qbox}{50. Our interaction $p=0.553$. What exactly is the correct conclusion?}
+\end{qbox}
+\begin{answerbox}We fail to reject the null of no interaction at conventional levels. The data do not provide strong evidence that the preparation association differs by lunch group. We should not say there is a 55.3\% probability of no interaction, and we should not claim the true interaction is exactly zero.\end{answerbox}
+\begin{refbox}\chapref{ANOVA hypothesis testing.}\\\projectref{Project interaction $p=0.553$.}\end{refbox}
+\begin{qbox}{51. If the interaction had been strongly significant, why would reporting only the two main effects be misleading?}
+\end{qbox}
+\begin{answerbox}A main effect averages over the other factor. With strong interaction, the effect of preparation would depend on lunch type, so one averaged preparation effect could hide opposite or very different simple effects. Chapter 6 says interaction should be interpreted first.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 hierarchy: interaction before main effects.}\\\projectref{Current project has no strong interaction, so additive interpretation is reasonable.}\end{refbox}
+\begin{qbox}{52. Preparation is associated with about +5.97 points and lunch with +11.06. Does the larger raw lunch difference automatically imply a larger F-statistic?}
+\end{qbox}
+\begin{answerbox}Not automatically. The F-statistic is
+\[
+F=\frac{MS_{\text{effect}}}{MS_E}.
+\]
+It depends on the effect sum of squares, degrees of freedom, residual variance, and design. A larger raw difference often helps, but it does not by itself determine \(F\).\end{answerbox}
+\begin{refbox}\chapref{Ch. 5/6 ANOVA F-test.}\\\projectref{Project reports both estimated differences and ANOVA tests.}\end{refbox}
+\begin{qbox}{53. Why is the ANOVA F-statistic a signal-to-noise ratio?}
+\end{qbox}
+\begin{answerbox}The numerator measures variation attributed to the tested factor per degree of freedom, while \(MS_E\) estimates unexplained within-cell variation:
+\[
+F=MS_{\text{effect}}/MS_E.
+\]
+Large \(F\) means the modeled group structure is large relative to residual noise.\end{answerbox}
+\begin{refbox}\chapref{Ch. 5 ANOVA.}\\\projectref{Used for preparation, lunch and interaction tests.}\end{refbox}
+\begin{qbox}{54. Suppose within-cell score variability doubled but the four cell means stayed the same. What would happen to the F-tests?}
+\end{qbox}
+\begin{answerbox}The numerator signal would be similar, but \(MS_E\) would increase. Therefore
+\[
+F=\frac{MS_{\text{effect}}}{MS_E}
+\]
+would decrease, producing weaker evidence and usually larger p-values.\end{answerbox}
+\begin{refbox}\chapref{ANOVA signal versus noise.}\\\projectref{Tests understanding of why variability matters, not just means.}\end{refbox}
+\begin{qbox}{55. Suppose sample size increased greatly but the cell means and variances stayed similar. What generally happens to power?}
+\end{qbox}
+\begin{answerbox}Standard errors usually decrease and the tests gain power to detect smaller departures from the null. This is why statistical significance must be separated from practical importance: with large \(n\), even modest effects can become significant.\end{answerbox}
+\begin{refbox}\chapref{ANOVA power and effect size.}\\\projectref{Part 2 has $n=1000$.}\end{refbox}
+\begin{qbox}{56. Why report partial $\eta\_p^2$ when we already have p-values?}
+\end{qbox}
+\begin{answerbox}A p-value measures evidence against a null and depends strongly on sample size. Partial eta-squared describes effect magnitude relative to effect-plus-error variation:
+\[
+\eta_p^2=\frac{SS_{\text{effect}}}{SS_{\text{effect}}+SS_E}.
+\]
+It helps answer ``how large?'' rather than only ``is there evidence?''\end{answerbox}
+\begin{refbox}\chapref{ANOVA effect sizes.}\\\projectref{Preparation $\eta\_p^2=0.037$; lunch $0.118$; interaction approximately 0.}\end{refbox}
+\begin{qbox}{57. Lunch has partial $\eta\_p^2=0.118$ and preparation 0.037. What can we say?}
+\end{qbox}
+\begin{answerbox}Within this fitted model, lunch accounts for a larger share of effect-plus-error variation than preparation according to partial eta-squared. We can say the observed lunch association is larger by this effect-size measure. We still cannot call lunch a causal treatment because the data are observational.\end{answerbox}
+\begin{refbox}\chapref{Effect-size interpretation.}\\\projectref{Project's reported partial eta-squared values.}\end{refbox}
+\begin{qbox}{58. Why is interaction partial $\eta\_p^2\approx0$ consistent with $p=0.553$?}
+\end{qbox}
+\begin{answerbox}Both indicate little evidence of a meaningful interaction signal: the interaction explains almost none of the effect-plus-error variation, and the F-test does not reject the no-interaction null. They answer different questions but point in the same direction.\end{answerbox}
+\begin{refbox}\chapref{Effect size versus hypothesis test.}\\\projectref{Project interaction is tiny and nonsignificant.}\end{refbox}
+\begin{qbox}{59. Our four cell sizes are unequal. Why does that matter for ANOVA?}
+\end{qbox}
+\begin{answerbox}In an unbalanced design, factor effects are not perfectly orthogonal, so sums of squares can depend on how other terms are handled. That is why the type of sums of squares and the model hierarchy matter more than in a perfectly balanced factorial experiment.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 unbalanced factorial analysis.}\\\projectref{Cell sizes are 224, 131, 418 and 227.}\end{refbox}
+\begin{qbox}{60. Why did we use Type II sums of squares rather than pretending the design was balanced?}
+\end{qbox}
+\begin{answerbox}Our four cell sizes are unequal, so factor terms are not perfectly orthogonal. The report therefore fits the full interaction model with sum-to-zero contrasts and uses one-degree-of-freedom Type-III-style partial tests. This makes the main effects comparisons of equally weighted marginal cell means rather than letting the largest cells dominate the definition of the effect.\end{answerbox}
+\begin{refbox}\chapref{Factorial ANOVA with unequal cell sizes.}\\\projectref{Project explicitly uses Type II ANOVA.}\end{refbox}
+\begin{qbox}{61. If the interaction were strongly significant, would Type II main-effect interpretation become less attractive?}
+\end{qbox}
+\begin{answerbox}Yes. With strong interaction, averaged main effects can be scientifically misleading because effects differ across levels of the other factor. We would focus first on interaction and simple effects rather than treating additive main effects as the primary story.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 interaction hierarchy.}\\\projectref{Current interaction is nonsignificant, supporting additive summaries.}\end{refbox}
+\begin{qbox}{62. Shapiro-Wilk gives $p=0.005$. Why did we not automatically abandon ANOVA?}
+\end{qbox}
+\begin{answerbox}A significant Shapiro-Wilk test says residuals depart detectably from exact normality. With \(n=1000\), the test can detect small deviations. ANOVA can be reasonably robust to modest nonnormality, especially when other diagnostics and robust sensitivity analyses agree. We therefore examine magnitude and consequences, not only the p-value.\end{answerbox}
+\begin{refbox}\chapref{ANOVA assumptions and diagnostics.}\\\projectref{Project reports Shapiro-Wilk $p=0.005$ plus robust checks.}\end{refbox}
+\begin{qbox}{63. What would Shapiro-Wilk $p=0.005$ mean if you incorrectly said ``the residuals are 0.5 percent normal''?}
+\end{qbox}
+\begin{answerbox}That would be wrong. The p-value is the probability of obtaining a test statistic at least this extreme under the normality null, not the probability that residuals are normal. It does not assign a probability to the hypothesis itself.\end{answerbox}
+\begin{refbox}\chapref{Hypothesis-test interpretation.}\\\projectref{Prevents a common defense mistake.}\end{refbox}
+\begin{qbox}{64. Brown-Forsythe gives $p=0.364$. What does that support?}
+\end{qbox}
+\begin{answerbox}We fail to reject equality of within-cell variances. So there is no strong evidence of heteroskedasticity from that test. It does not prove the variances are exactly equal; it means the observed differences are compatible with sampling variation under the null.\end{answerbox}
+\begin{refbox}\chapref{ANOVA equal-variance diagnostics.}\\\projectref{Project Brown-Forsythe $p=0.364$.}\end{refbox}
+\begin{qbox}{65. Why use Brown-Forsythe rather than relying only on a normality test?}
+\end{qbox}
+\begin{answerbox}They test different assumptions. Shapiro-Wilk concerns the shape/normality of residuals. Brown-Forsythe concerns equality of group variances and is relatively robust to nonnormality. Passing one does not imply passing the other.\end{answerbox}
+\begin{refbox}\chapref{ANOVA diagnostics.}\\\projectref{Project checks both normality and homogeneity.}\end{refbox}
+\section*{E. Design criticism, robustness and examiner attacks}
+\begin{qbox}{66. Forty-eight observations crossed the $4/n$ Cook's-distance heuristic, but max $D=0.0185$. Is that automatically alarming?}
+\end{qbox}
+\begin{answerbox}No. \(4/n\) is a heuristic screening threshold, not a law. We examine the magnitude and whether conclusions change. A maximum Cook's distance of 0.0185 is far below values like 1 that would usually signal extreme influence, and robust analyses gave the same substantive conclusions.\end{answerbox}
+\begin{refbox}\chapref{Regression/ANOVA influence diagnostics.}\\\projectref{Project reports 48 heuristic flags but small maximum Cook's D.}\end{refbox}
+\begin{qbox}{67. Why can a dataset have many Cook's-distance flags when $n$ is large?}
+\end{qbox}
+\begin{answerbox}Because the heuristic \(4/n\) becomes very small as \(n\) grows. With \(n=1000\), \(4/n=0.004\), so modest influence values can cross the line. That is why the threshold must be interpreted with actual magnitudes and sensitivity checks.\end{answerbox}
+\begin{refbox}\chapref{Influence diagnostics.}\\\projectref{Part 2 has $n=1000$.}\end{refbox}
+\begin{qbox}{68. What does HC3 robust inference protect us against?}
+\end{qbox}
+\begin{answerbox}HC3 adjusts coefficient standard errors to be more reliable under heteroskedasticity. It does not change the observed cell means or magically create randomization. If HC3 and classical inference agree, our significance conclusions are less dependent on the equal-variance assumption.\end{answerbox}
+\begin{refbox}\chapref{Robust standard errors / model adequacy.}\\\projectref{Project reports HC3 sensitivity checks.}\end{refbox}
+\begin{qbox}{69. If HC3 changed a p-value from $<0.001$ to 0.20, what would that tell you?}
+\end{qbox}
+\begin{answerbox}The classical significance result would be sensitive to the variance assumption. I would not confidently report the original result as robust. The disagreement would signal that heteroskedasticity materially affects uncertainty estimation.\end{answerbox}
+\begin{refbox}\chapref{Robust inference.}\\\projectref{Current project reports unchanged substantive conclusions.}\end{refbox}
+\begin{qbox}{70. Why is Part 2 not a true randomized $2\times2$ factorial experiment even though we analyze it with a factorial model?}
+\end{qbox}
+\begin{answerbox}Because the factor levels were observed, not randomly assigned by us. A factorial regression/ANOVA model can describe group mean structure in observational data, but the design does not gain causal identification merely from using ANOVA terminology.\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 factorial model versus experimental design.}\\\projectref{Report explicitly calls Part 2 observational and non-causal.}\end{refbox}
+\begin{qbox}{71. Why can lunch type be a confounder/proxy rather than a causal treatment?}
+\end{qbox}
+\begin{answerbox}Lunch category may be associated with socioeconomic status, household resources, school context, or other variables that also affect math performance. Therefore the observed +11-point difference cannot be interpreted as the effect of changing a student's lunch category.\end{answerbox}
+\begin{refbox}\chapref{Observational design and confounding.}\\\projectref{Report explicitly warns about socioeconomic confounding.}\end{refbox}
+\begin{qbox}{72. Why can test-preparation completion also be confounded?}
+\end{qbox}
+\begin{answerbox}Students who complete preparation may differ in motivation, prior achievement, parental support, or access to resources. Those variables can affect both preparation status and math score. Without randomization or sufficient adjustment, the +5.97-point association is not a causal effect.\end{answerbox}
+\begin{refbox}\chapref{Observational design and causal interpretation.}\\\projectref{Project explicitly avoids causal language.}\end{refbox}
+\begin{qbox}{73. What would random assignment of preparation solve that a larger observational sample would not?}
+\end{qbox}
+\begin{answerbox}Random assignment breaks systematic association between treatment and both measured and unmeasured pre-treatment confounders in expectation. A huge observational sample can estimate a biased association very precisely; sample size alone does not remove confounding.\end{answerbox}
+\begin{refbox}\chapref{Experimental design principle.}\\\projectref{Motivates the report's proposed randomized follow-up.}\end{refbox}
+\begin{qbox}{74. Suppose students come from schools with very different baseline math performance. How could blocking improve a future experiment?}
+\end{qbox}
+\begin{answerbox}Use school, or a baseline-score stratum, as a block and randomize preparation conditions within each block. Blocking removes predictable between-block variation from the error term, potentially lowering \(MS_E\) and increasing
+\[
+F=\frac{MS_{\text{treatment}}}{MS_E}.
+\]
+That improves precision when the block variable strongly predicts the response.\end{answerbox}
+\begin{refbox}\chapref{Post-Ch. 4 RCBD / blocking.}\\\projectref{Report proposes a blocked randomized follow-up study.}\end{refbox}
+\begin{qbox}{75. When would blocking actually hurt rather than help?}
+\end{qbox}
+\begin{answerbox}If the blocking variable explains little response variation, blocking consumes degrees of freedom without meaningfully reducing error variance. A useful block should be strongly related to the response but not be the treatment of interest.\end{answerbox}
+\begin{refbox}\chapref{RCBD efficiency.}\\\projectref{Tests whether the proposed follow-up design is justified.}\end{refbox}
+\begin{qbox}{76. If we block by school, should school be treated as the main treatment effect?}
+\end{qbox}
+\begin{answerbox}No. The block is primarily a nuisance source of variation we want to control. The treatment question remains preparation or another intervention. Blocking is used to make comparisons fairer and more precise, not to turn the block into the scientific treatment.\end{answerbox}
+\begin{refbox}\chapref{RCBD roles of treatment and block.}\\\projectref{Possible future redesign of Part 2.}\end{refbox}
+\begin{qbox}{77. If the teacher says ``LASSO selected seven variables, so why didn't you fit the final model using only those seven?''}
+\end{qbox}
+\begin{answerbox}Because feature selection and final predictive model selection are different goals. The 1-SE LASSO provides an interpretable sparse subset, but Ridge had the best CV RMSE under the predeclared comparison. Using the seven-variable subset simply because it is sparse could sacrifice predictive stability, especially with correlated predictors.\end{answerbox}
+\begin{refbox}\chapref{Variable selection versus prediction.}\\\projectref{Project separates LASSO selection from locked Ridge prediction.}\end{refbox}
+\begin{qbox}{78. If the teacher says ``why not use all 1,599 wine rows for training to get a better model?''}
+\end{qbox}
+\begin{answerbox}Then we would lose an untouched estimate of generalization. More training data can improve fitting, but without a genuinely unseen evaluation set we cannot honestly measure final predictive performance. After evaluation, a production model could be refit on all data, but its reported test performance must come from data not used in that refit.\end{answerbox}
+\begin{refbox}\chapref{Train/test design.}\\\projectref{Project uses 1,088 training and 271 holdout unique observations.}\end{refbox}
+\begin{qbox}{79. If we reran the entire pipeline with a different random split and selected a different model, would that prove our current result is wrong?}
+\end{qbox}
+\begin{answerbox}No. It would show model-selection uncertainty due to sampling variation. A single split is one realization. Repeated nested resampling could quantify that instability, but the current locked protocol is still valid for the prespecified split.\end{answerbox}
+\begin{refbox}\chapref{Sampling variability / model assessment.}\\\projectref{Project uses a fixed reproducible split.}\end{refbox}
+\begin{qbox}{80. If you had to defend the whole project in one statistical sentence, what would you say?}
+\end{qbox}
+\begin{answerbox}Part 1 is a leakage-controlled predictive comparison showing that regularized linear models give moderate wine-quality prediction with Ridge preselected by CV and evaluated once on a locked holdout; Part 2 is an observational \(2\times2\) factorial analysis showing sizeable preparation and lunch associations but little evidence of interaction, with conclusions that remain non-causal.\end{answerbox}
+\begin{refbox}\chapref{Integration of regression, model assessment and factorial ANOVA.}\\\projectref{Summarizes the report's two components.}\end{refbox}
+
+
+\section*{F. Final-report charts and tables: interpret the numbers}
+
+\begin{qbox}{81. Figure 1 shows that scores 5 and 6 dominate. What two modeling consequences should you predict before fitting anything?}
+\end{qbox}
+\begin{answerbox}
+First, a mean-like predictor will already perform reasonably because most responses lie near the center. Second, rare scores such as 3 and 8 will have less precise error estimates and are likely to be pulled toward the center under squared-error regression. So Figure 1 already predicts both a strong baseline and regression-to-the-mean behavior.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 least squares and prediction error.}\\\projectref{Final report Figure 1: training response concentrated at 5 and 6.}\end{refbox}
+
+\begin{qbox}{82. Figure 2 shows strong right-skew for residual sugar, chlorides, sulfur-dioxide variables and sulphates. Why were these the variables selected for \texttt{log1p}, while density and pH were not?}
+\end{qbox}
+\begin{answerbox}
+The purpose of the transform was to compress long right tails and reduce extreme leverage, not to transform every predictor automatically. The selected variables visibly have much stronger positive skew. Density and pH are comparatively symmetric, so logging them would add complexity without the same visual justification.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 2 transformation of variables.}\\\projectref{Final report Figure 2 and Table 13: five variables use log1p + standardization.}\end{refbox}
+
+\begin{qbox}{83. Table 13 reports raw skewness 5.448 for chlorides but only 0.052 for density. What does that numerical contrast tell you?}
+\end{qbox}
+\begin{answerbox}
+Chlorides are extremely right-skewed relative to density. A skewness near zero indicates approximate symmetry, while a large positive value indicates a long right tail. This supports transforming chlorides but only standardizing density.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 2 transformations and distribution shape.}\\\projectref{Table 13: chlorides skewness 5.4480; density 0.0522.}\end{refbox}
+
+\begin{qbox}{84. Figure 3 shows alcohol \(r=0.47\), volatile acidity \(r=-0.37\), sulphates \(r=0.23\), and citric acid \(r=0.22\). Rank them by absolute marginal signal and explain why that ranking does not equal the final model ranking.}
+\end{qbox}
+\begin{answerbox}
+By absolute correlation the order is alcohol, volatile acidity, sulphates, citric acid. But marginal correlation looks at one predictor at a time. The final coefficient for a predictor depends on the other predictors, their collinearity, transformations, and regularization. Therefore a correlation ranking is not a coefficient-importance ranking.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 correlation versus multiple regression.}\\\projectref{Final report Figures 3--4.}\end{refbox}
+
+\begin{qbox}{85. In Figure 4, the fitted alcohol line slopes upward, but there is heavy vertical overlap at nearly every alcohol value. What does that say about predictive strength?}
+\end{qbox}
+\begin{answerbox}
+The positive slope shows a real marginal trend, but the vertical overlap means alcohol alone cannot determine quality. At the same alcohol value, several quality scores occur. So alcohol is informative but insufficient; the unexplained conditional variability remains large.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 fitted regression and residual variation.}\\\projectref{Figure 4: jittered discrete scores and descriptive OLS trends.}\end{refbox}
+
+\begin{qbox}{86. Figure 5 shows 277 training rows, or 25.5\%, flagged by the Tukey-IQR rule. Why is that number itself evidence against deleting all flagged rows?}
+\end{qbox}
+\begin{answerbox}
+An outlier rule is a diagnostic, not a command to delete data. If one rule labels about one quarter of the training population as outliers, wholesale deletion would substantially redefine the target population. Since rare but valid wines are scientifically plausible, retaining rows and limiting predictor leverage is more defensible.
+\end{answerbox}
+\begin{refbox}\chapref{Regression diagnostics and outlier treatment.}\\\projectref{Figure 5: 277 rows, 25.5\%, flagged but retained.}\end{refbox}
+
+\begin{qbox}{87. Figure 6 shows fixed acidity with the largest VIF, but alcohol has one of the largest standardized OLS coefficients. Why are those two panels answering different questions?}
+\end{qbox}
+\begin{answerbox}
+VIF asks how strongly a predictor is explained by the other predictors; it is about coefficient uncertainty from collinearity. The standardized OLS coefficient asks about the fitted direction and magnitude after adjustment, in standardized units. A predictor can have high VIF and a small coefficient, or a lower VIF and a large coefficient.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 VIF and multiple-regression coefficients.}\\\projectref{Final report Figure 6.}\end{refbox}
+
+\begin{qbox}{88. Table 3 shows mean-model CV RMSE \(0.824\) and OLS CV RMSE \(0.672\). Quantify the improvement and explain what it means.}
+\end{qbox}
+\begin{answerbox}
+The absolute RMSE reduction is
+\[
+0.824-0.672=0.152.
+\]
+Relative to the baseline RMSE, that is about
+\[
+\frac{0.152}{0.824}\approx18.4\%.
+\]
+So chemistry gives substantial predictive information beyond predicting a constant mean, although prediction is still far from perfect.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 1 model comparison and prediction error.}\\\projectref{Table 3: mean versus OLS cross-validation.}\end{refbox}
+
+\begin{qbox}{89. Table 4 gives LASSO coefficients \(0.2996\) for alcohol and \(-0.1664\) for volatile acidity. Can you say alcohol is ``about twice as important''?}
+\end{qbox}
+\begin{answerbox}
+Not safely. Because predictors are standardized, the coefficient magnitudes are more comparable than in raw units, and alcohol has a larger fitted LASSO coefficient. But ``importance'' also depends on correlation structure, selection instability, and the loss function. The ratio \(0.2996/0.1664\approx1.8\) is a coefficient-magnitude comparison, not a causal or universal importance ratio.
+\end{answerbox}
+\begin{refbox}\chapref{Ridge/LASSO coefficient interpretation after standardization.}\\\projectref{Table 4 embedded LASSO selection.}\end{refbox}
+
+\begin{qbox}{90. In Figure 7, what do the dashed \(\lambda_{\min}\) line and dotted \(\lambda_{1se}\) line mean, and why are they not expected to be at the same place?}
+\end{qbox}
+\begin{answerbox}
+The dashed line marks the penalty with the minimum estimated CV error. The dotted line marks a more regularized solution whose CV error is still within one standard error of that minimum. They differ because the 1-SE rule deliberately trades a tiny amount of estimated predictive performance for a simpler or more stable model.
+\end{answerbox}
+\begin{refbox}\chapref{Variable selection and cross-validation.}\\\projectref{Final report Figure 7.}\end{refbox}
+
+\begin{qbox}{91. Table 5 shows Ridge keeps 11 nonzero coefficients at both \(\lambda_{\min}\) and \(\lambda_{1se}\). Why is that exactly what Ridge theory predicts?}
+\end{qbox}
+\begin{answerbox}
+Ridge uses an \(L_2\) penalty. It continuously shrinks coefficients but normally does not drive them exactly to zero. Therefore the effective model size remains 11 even when the penalty becomes stronger.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 3 Ridge versus LASSO geometry.}\\\projectref{Table 5: Ridge nonzero count remains 11.}\end{refbox}
+
+\begin{qbox}{92. The holdout table reports OLS RMSE \(0.6131\) and Ridge \(0.6134\). Compute the raw difference. Is it scientifically meaningful by itself?}
+\end{qbox}
+\begin{answerbox}
+The difference is
+\[
+0.6134-0.6131=0.0003
+\]
+quality-score points in RMSE. That is tiny. By itself it is not evidence of a meaningful performance difference, especially because the bootstrap intervals overlap and the holdout was not intended for reselection.
+\end{answerbox}
+\begin{refbox}\chapref{Model assessment and sampling uncertainty.}\\\projectref{Final holdout comparison table.}\end{refbox}
+
+\begin{qbox}{93. The holdout diagnostics show RMSE about \(1.858\) for quality 3 but about \(0.450\) for quality 5. What is the ratio, and how should you interpret it?}
+\end{qbox}
+\begin{answerbox}
+The ratio is approximately
+\[
+\frac{1.858}{0.450}\approx4.13.
+\]
+So squared-error prediction at quality 3 is more than four times as large in RMSE terms as at quality 5. But only two quality-3 wines are in the holdout, so that estimate is also much less precise. The figure demonstrates both regression-to-the-mean and sparse-extreme uncertainty.
+\end{answerbox}
+\begin{refbox}\chapref{Prediction error by subgroup and sample-size uncertainty.}\\\projectref{Holdout error-by-quality diagnostics.}\end{refbox}
+
+\begin{qbox}{94. Figure 12 has means \(56.51,63.05,68.13,73.53\). Without looking at the ANOVA table, what two main effects and what interaction pattern would you predict?}
+\end{qbox}
+\begin{answerbox}
+Preparation raises the mean in both lunch groups: \(+6.54\) and \(+5.40\). Standard lunch raises the mean in both preparation groups: \(+11.62\) and \(+10.48\). Because those within-factor differences are similar, I would predict two clear positive main associations and a weak interaction.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 6 cell means, simple effects and interaction plots.}\\\projectref{Final report Figure 12 and Table 9.}\end{refbox}
+
+\begin{qbox}{95. Table 8 gives preparation \(F=38.791\), lunch \(F=133.132\), interaction \(F=0.352\). What story do those three numbers tell before you even read the p-values?}
+\end{qbox}
+\begin{answerbox}
+Because all three effects have one numerator degree of freedom, the F values are directly suggestive of relative signal-to-noise strength in this fitted model. Lunch has the strongest signal, preparation is clearly substantial, and interaction is tiny relative to residual noise. The p-values and partial \(\eta_p^2\) then confirm the same qualitative ordering.
+\end{answerbox}
+\begin{refbox}\chapref{Ch. 5--6 ANOVA \(F=MS_{\text{effect}}/MS_E\).}\\\projectref{Table 8: \(38.791,\ 133.132,\ 0.352\).}\end{refbox}
+
+\newpage
+\section*{Survival sheet: numbers and formulas worth knowing cold}
+\begin{tcolorbox}[colback=lightblue,colframe=blue,arc=2mm]
+\[
+VIF_j=\frac{1}{1-R_j^2},\quad VIF=7.90\Rightarrow R_j^2\approx0.873,\quad \sqrt{VIF}\approx2.81.
+\]
+\[
+R^2=1-\frac{SSE}{SST},\quad RMSE=\sqrt{\frac1n\sum e_i^2},\quad MAE=\frac1n\sum|e_i|.
+\]
+\[
+\hat\beta_{OLS}=(X^TX)^{-1}X^Ty,\qquad \hat\beta_R=(X^TX+\lambda I)^{-1}X^Ty.
+\]
+\[
+\alpha=0:\text{ Ridge},\quad \alpha=1:\text{ LASSO},\quad 0<\alpha<1:\text{ Elastic Net}.
+\]
+\[
+F=\frac{MS_{\text{effect}}}{MS_E},\qquad
+\eta_p^2=\frac{SS_{\text{effect}}}{SS_{\text{effect}}+SS_E}.
+\]
+\[
+(73.53-68.13)-(63.05-56.51)=5.40-6.54=-1.14.
+\]
+\end{tcolorbox}
+\begin{tcolorbox}[colback=lightgray,colframe=gray!60,arc=2mm]
+\textbf{Project numbers:}
+1,599 raw wine rows; 240 duplicates removed; 1,359 unique; 1,088 training; 271 holdout.
+Max VIF 7.90. Elastic Net selected \(\alpha=0.75\).
+Ridge CV RMSE 0.6711. Holdout RMSE: OLS 0.6131, Ridge 0.6134.
+Ridge holdout \(R^2\approx0.440\), MAE \(\approx0.482\).
+Part 2 \(n=1000\); cell sizes 224, 131, 418, 227.
+Preparation contrast \(\approx+5.97\); lunch contrast \(\approx+11.06\);
+interaction \(\approx-1.14\), \(p=0.553\).
+Partial \(\eta_p^2\): 0.037, 0.118, approximately 0.
+Shapiro-Wilk \(p=0.005\); Brown-Forsythe \(p=0.364\); max Cook's \(D=0.0185\).
+\end{tcolorbox}
+\end{document}
